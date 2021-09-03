@@ -6,7 +6,7 @@ Welcome to our Git page.
 
 ***This code is a translated copy of deeplearning4j https://github.com/eclipse/deeplearning4j/***
 
-*We translated the Java code into VB.NET code. Some issues are still there and we are fixing it.*
+**We translated the Java code into VB.NET code. Some issues are still there and we are fixing it.**
 
 Please note that this code is still in DEVELOPMENT phase and till contain some issues.
 
