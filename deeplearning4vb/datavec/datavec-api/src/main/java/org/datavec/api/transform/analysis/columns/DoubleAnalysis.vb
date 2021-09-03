@@ -1,0 +1,102 @@
+﻿Imports System
+Imports Data = lombok.Data
+Imports EqualsAndHashCode = lombok.EqualsAndHashCode
+Imports NoArgsConstructor = lombok.NoArgsConstructor
+Imports ColumnType = org.datavec.api.transform.ColumnType
+
+'
+' *  ******************************************************************************
+' *  *
+' *  *
+' *  * This program and the accompanying materials are made available under the
+' *  * terms of the Apache License, Version 2.0 which is available at
+' *  * https://www.apache.org/licenses/LICENSE-2.0.
+' *  *
+' *  *  See the NOTICE file distributed with this work for additional
+' *  *  information regarding copyright ownership.
+' *  * Unless required by applicable law or agreed to in writing, software
+' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+' *  * License for the specific language governing permissions and limitations
+' *  * under the License.
+' *  *
+' *  * SPDX-License-Identifier: Apache-2.0
+' *  *****************************************************************************
+' 
+
+Namespace org.datavec.api.transform.analysis.columns
+
+'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data @NoArgsConstructor public class DoubleAnalysis extends NumericalColumnAnalysis
+	<Serializable>
+	Public Class DoubleAnalysis
+		Inherits NumericalColumnAnalysis
+
+		Private min As Double
+		Private max As Double
+		Private countNaN As Long
+
+		Private Sub New(ByVal builder As Builder)
+			MyBase.New(builder)
+			Me.min = builder.min_Conflict
+			Me.max = builder.max_Conflict
+			Me.countNaN = builder.countNaN_Conflict
+		End Sub
+
+		Public Overrides Function ToString() As String
+			Return "DoubleAnalysis(min=" & min & ",max=" & max & "," & MyBase.ToString() & ")"
+		End Function
+
+		Public Overrides ReadOnly Property MinDouble As Double
+			Get
+				Return min
+			End Get
+		End Property
+
+		Public Overrides ReadOnly Property MaxDouble As Double
+			Get
+				Return max
+			End Get
+		End Property
+
+		Public Overrides ReadOnly Property ColumnType As ColumnType
+			Get
+				Return ColumnType.Double
+			End Get
+		End Property
+
+		Public Class Builder
+			Inherits NumericalColumnAnalysis.Builder(Of Builder)
+
+'JAVA TO VB CONVERTER NOTE: The field min was renamed since Visual Basic does not allow fields to have the same name as other class members:
+			Friend min_Conflict As Double
+'JAVA TO VB CONVERTER NOTE: The field max was renamed since Visual Basic does not allow fields to have the same name as other class members:
+			Friend max_Conflict As Double
+'JAVA TO VB CONVERTER NOTE: The field countNaN was renamed since Visual Basic does not allow fields to have the same name as other class members:
+			Friend countNaN_Conflict As Long
+
+'JAVA TO VB CONVERTER NOTE: The parameter min was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
+			Public Overridable Function min(ByVal min_Conflict As Double) As Builder
+				Me.min_Conflict = min_Conflict
+				Return Me
+			End Function
+
+'JAVA TO VB CONVERTER NOTE: The parameter max was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
+			Public Overridable Function max(ByVal max_Conflict As Double) As Builder
+				Me.max_Conflict = max_Conflict
+				Return Me
+			End Function
+
+'JAVA TO VB CONVERTER NOTE: The parameter countNaN was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
+			Public Overridable Function countNaN(ByVal countNaN_Conflict As Long) As Builder
+				Me.countNaN_Conflict = countNaN_Conflict
+				Return Me
+			End Function
+
+			Public Overridable Function build() As DoubleAnalysis
+				Return New DoubleAnalysis(Me)
+			End Function
+		End Class
+	End Class
+
+End Namespace

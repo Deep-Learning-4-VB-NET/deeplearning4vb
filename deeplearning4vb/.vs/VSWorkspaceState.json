@@ -1,0 +1,17 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\rl4j",
+    "\\rl4j\\rl4j-ale",
+    "\\rl4j\\rl4j-ale\\src",
+    "\\rl4j\\rl4j-ale\\src\\main",
+    "\\rl4j\\rl4j-ale\\src\\main\\java",
+    "\\rl4j\\rl4j-ale\\src\\main\\java\\org",
+    "\\rl4j\\rl4j-ale\\src\\main\\java\\org\\deeplearning4j",
+    "\\rl4j\\rl4j-ale\\src\\main\\java\\org\\deeplearning4j\\rl4j",
+    "\\rl4j\\rl4j-ale\\src\\main\\java\\org\\deeplearning4j\\rl4j\\mdp",
+    "\\rl4j\\rl4j-ale\\src\\main\\java\\org\\deeplearning4j\\rl4j\\mdp\\ale"
+  ],
+  "SelectedNode": "\\rl4j\\rl4j-ale\\src\\main\\java\\org\\deeplearning4j\\rl4j\\mdp\\ale\\ALEMDP.vb",
+  "PreviewInSolutionExplorer": false
+}
