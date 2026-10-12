@@ -1,134 +1,147 @@
-﻿Imports System.Collections.Generic
+Imports System.Collections.Generic
+Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB.org.nd4j.common.primitives
-
-'
-' *  ******************************************************************************
-' *  *
-' *  *
-' *  * This program and the accompanying materials are made available under the
-' *  * terms of the Apache License, Version 2.0 which is available at
-' *  * https://www.apache.org/licenses/LICENSE-2.0.
-' *  *
-' *  *  See the NOTICE file distributed with this work for additional
-' *  *  information regarding copyright ownership.
-' *  * Unless required by applicable law or agreed to in writing, software
-' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-' *  * License for the specific language governing permissions and limitations
-' *  * under the License.
-' *  *
-' *  * SPDX-License-Identifier: Apache-2.0
-' *  *****************************************************************************
-' 
 
 Namespace org.nd4j.common.primitives
 
+    ''' <summary>Ported from the DL4J JUnit test of the same name.</summary>
+    <TestClass>
+    Public Class CounterTest
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class CounterTest
-	Public Class CounterTest
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testCounterIncrementAll1()
-		Public Overridable Sub testCounterIncrementAll1()
-			Dim counterA As New Counter(Of String)()
+        <TestMethod>
+        Public Sub testCounterIncrementAll1()
+            Dim counterA As New Counter(Of String)()
 
-			counterA.incrementCount("A", 1)
-			counterA.incrementCount("A", 1)
-			counterA.incrementCount("A", 1)
+            counterA.incrementCount("A", 1)
+            counterA.incrementCount("A", 1)
+            counterA.incrementCount("A", 1)
 
+            Dim counterB As New Counter(Of String)()
+            counterB.incrementCount("B", 2)
+            counterB.incrementCount("B", 2)
 
+            assertEquals(3.0, counterA.getCount("A"), 0.00001)
+            assertEquals(4.0, counterB.getCount("B"), 0.00001)
 
-			Dim counterB As New Counter(Of String)()
-			counterB.incrementCount("B", 2)
-			counterB.incrementCount("B", 2)
+            counterA.incrementAll(counterB)
 
-			assertEquals(3.0, counterA.getCount("A"), 1e-5)
-			assertEquals(4.0, counterB.getCount("B"), 1e-5)
+            assertEquals(3.0, counterA.getCount("A"), 0.00001)
+            assertEquals(4.0, counterA.getCount("B"), 0.00001)
 
-			counterA.incrementAll(counterB)
+            counterA.setCount("B", 234)
 
-			assertEquals(3.0, counterA.getCount("A"), 1e-5)
-			assertEquals(4.0, counterA.getCount("B"), 1e-5)
+            assertEquals(234.0, counterA.getCount("B"), 0.00001)
+        End Sub
 
-			counterA.setCount("B", 234)
+        <TestMethod>
+        Public Sub testCounterTopN1()
+            Dim counterA As New Counter(Of String)()
 
-			assertEquals(234.0, counterA.getCount("B"), 1e-5)
-		End Sub
+            counterA.incrementCount("A", 1)
+            counterA.incrementCount("B", 2)
+            counterA.incrementCount("C", 3)
+            counterA.incrementCount("D", 4)
+            counterA.incrementCount("E", 5)
 
+            counterA.keepTopNElements(4)
 
+            assertEquals(4, counterA.size())
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testCounterTopN1()
-		Public Overridable Sub testCounterTopN1()
-			Dim counterA As New Counter(Of String)()
+            ' we expect element A to be gone
+            assertEquals(0.0, counterA.getCount("A"), 0.00001)
+            assertEquals(2.0, counterA.getCount("B"), 0.00001)
+            assertEquals(3.0, counterA.getCount("C"), 0.00001)
+            assertEquals(4.0, counterA.getCount("D"), 0.00001)
+            assertEquals(5.0, counterA.getCount("E"), 0.00001)
+        End Sub
 
-			counterA.incrementCount("A", 1)
-			counterA.incrementCount("B", 2)
-			counterA.incrementCount("C", 3)
-			counterA.incrementCount("D", 4)
-			counterA.incrementCount("E", 5)
+        <TestMethod>
+        Public Sub testKeysSorted1()
+            Dim counterA As New Counter(Of String)()
 
-			counterA.keepTopNElements(4)
+            counterA.incrementCount("A", 1)
+            counterA.incrementCount("B", 2)
+            counterA.incrementCount("C", 3)
+            counterA.incrementCount("D", 4)
+            counterA.incrementCount("E", 5)
 
-			assertEquals(4,counterA.size())
+            assertEquals("E", counterA.argMax())
 
-			' we expect element A to be gone
-			assertEquals(0.0, counterA.getCount("A"), 1e-5)
-			assertEquals(2.0, counterA.getCount("B"), 1e-5)
-			assertEquals(3.0, counterA.getCount("C"), 1e-5)
-			assertEquals(4.0, counterA.getCount("D"), 1e-5)
-			assertEquals(5.0, counterA.getCount("E"), 1e-5)
-		End Sub
+            Dim list As IList(Of String) = counterA.keySetSorted()
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testKeysSorted1() throws Exception
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-		Public Overridable Sub testKeysSorted1()
-			Dim counterA As New Counter(Of String)()
+            assertEquals(5, list.Count)
 
-			counterA.incrementCount("A", 1)
-			counterA.incrementCount("B", 2)
-			counterA.incrementCount("C", 3)
-			counterA.incrementCount("D", 4)
-			counterA.incrementCount("E", 5)
+            assertEquals("E", list(0))
+            assertEquals("D", list(1))
+            assertEquals("C", list(2))
+            assertEquals("B", list(3))
+            assertEquals("A", list(4))
+        End Sub
 
-			assertEquals("E", counterA.argMax())
+        <TestMethod>
+        Public Sub testCounterTotal()
+            Dim counter As New Counter(Of String)()
 
-			Dim list As IList(Of String) = counterA.keySetSorted()
+            counter.incrementCount("A", 1)
+            counter.incrementCount("B", 1)
+            counter.incrementCount("C", 1)
 
-			assertEquals(5, list.Count)
+            assertEquals(3.0, counter.totalCount(), 0.00001)
 
-			assertEquals("E", list(0))
-			assertEquals("D", list(1))
-			assertEquals("C", list(2))
-			assertEquals("B", list(3))
-			assertEquals("A", list(4))
-		End Sub
+            counter.setCount("B", 234)
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testCounterTotal()
-		Public Overridable Sub testCounterTotal()
-			Dim counter As New Counter(Of String)()
+            assertEquals(236.0, counter.totalCount(), 0.00001)
 
-			counter.incrementCount("A", 1)
-			counter.incrementCount("B", 1)
-			counter.incrementCount("C", 1)
+            counter.setCount("D", 1)
 
-			assertEquals(3.0, counter.totalCount(), 1e-5)
+            assertEquals(237.0, counter.totalCount(), 0.00001)
 
-			counter.setCount("B", 234)
+            counter.removeKey("B")
 
-			assertEquals(236.0, counter.totalCount(), 1e-5)
+            assertEquals(3.0, counter.totalCount(), 0.00001)
+        End Sub
 
-			counter.setCount("D", 1)
+        <TestMethod>
+        Public Sub testProbabilityNormalizeAndThreshold()
+            Dim counter As New Counter(Of String)()
+            assertThrows(Of System.InvalidOperationException)(Sub() counter.getProbability("A"))
 
-			assertEquals(237.0, counter.totalCount(), 1e-5)
+            counter.incrementCount("A", 1)
+            counter.incrementCount("B", 3)
+            assertEquals(0.25, counter.getProbability("A"), 0.00001)
+            assertEquals(0.75, counter.getProbability("B"), 0.00001)
 
-			counter.removeKey("B")
+            counter.normalize()
+            assertEquals(1.0, counter.totalCount(), 0.00001)
+            assertEquals(0.25, counter.getCount("A"), 0.00001)
 
-			assertEquals(3.0, counter.totalCount(), 1e-5)
+            counter.dropElementsBelowThreshold(0.5)
+            assertEquals(1, counter.size())
+            assertFalse(counter.containsElement("A"))
+            assertTrue(counter.containsElement("B"))
 
-		End Sub
+            counter.clear()
+            assertTrue(counter.Empty)
+            assertEquals(0.0, counter.totalCount(), 0.0)
+        End Sub
 
-	End Class
+        <TestMethod>
+        Public Sub testEqualityAndReversedQueue()
+            Dim a As New Counter(Of Integer)()
+            Dim b As New Counter(Of Integer)()
+            a.incrementCount(1, 2.0)
+            a.incrementCount(2, 1.0)
+            b.incrementCount(2, 1.0)
+            b.incrementCount(1, 2.0)
+            assertEquals(a, b)
+            assertEquals(a.GetHashCode(), b.GetHashCode())
+
+            Dim reversed = a.asReversedPriorityQueue()
+            assertEquals(2, reversed.poll().First)
+            assertEquals(1, reversed.poll().First)
+            assertTrue(reversed.isEmpty())
+        End Sub
+
+    End Class
+
 End Namespace

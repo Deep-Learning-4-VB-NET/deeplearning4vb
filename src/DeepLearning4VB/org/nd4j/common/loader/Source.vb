@@ -24,8 +24,6 @@ Namespace org.nd4j.common.loader
 
 
 	Public Interface Source
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: java.io.InputStream getInputStream() throws java.io.IOException;
 		ReadOnly Property InputStream As Stream
 
 		ReadOnly Property Path As String

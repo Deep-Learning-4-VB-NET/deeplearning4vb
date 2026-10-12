@@ -160,7 +160,7 @@ Namespace org.nd4j.common.util
             Return targetMap.ContainsKey(key)
         End Function
 
-        Public Sub Add(ByVal key As K, ByVal value As IList(Of V)) Implements IDictionary(Of K, IList(Of V)).Add
+        Public Overloads Sub Add(ByVal key As K, ByVal value As IList(Of V)) Implements IDictionary(Of K, IList(Of V)).Add
             targetMap.Add(key, value)
         End Sub
 

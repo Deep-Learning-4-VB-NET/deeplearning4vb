@@ -23,8 +23,7 @@
 Namespace org.nd4j.common.tools
 
 
-
-	Public Class InfoLine
+Public Class InfoLine
 		'
 		Public Sub New()
 			'
@@ -111,6 +110,5 @@ Namespace org.nd4j.common.tools
 		End Function
 
 
-
-	End Class
+End Class
 End Namespace

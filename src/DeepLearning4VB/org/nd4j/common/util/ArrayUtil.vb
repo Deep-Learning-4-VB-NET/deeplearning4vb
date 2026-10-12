@@ -511,7 +511,6 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-'JAVA TO VB CONVERTER NOTE: The parameter mod was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
 		Public Shared Function [mod](ByVal input() As Integer, ByVal mod_Conflict As Integer) As Integer()
 			Dim ret(input.Length - 1) As Integer
 			For i As Integer = 0 To ret.Length - 1
@@ -597,8 +596,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Product of an int array </summary>
 		''' <param name="mult"> the elements
 		'''            to calculate the sum for </param>
@@ -1008,14 +1006,12 @@ Namespace org.nd4j.common.util
 			Return arr
 		End Function
 
-'JAVA TO VB CONVERTER NOTE: The parameter copy was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
 		Public Shared Function copy(ByVal copy_Conflict() As Integer) As Integer()
 			Dim ret(copy_Conflict.Length - 1) As Integer
 			Array.Copy(copy_Conflict, 0, ret, 0, ret.Length)
 			Return ret
 		End Function
 
-'JAVA TO VB CONVERTER NOTE: The parameter copy was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
 		Public Shared Function copy(ByVal copy_Conflict() As Long) As Long()
 			Dim ret(copy_Conflict.Length - 1) As Long
 			Array.Copy(copy_Conflict, 0, ret, 0, ret.Length)
@@ -1472,8 +1468,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Zip 2 arrays in to:
 		''' </summary>
 		''' <param name="as"> </param>
@@ -1518,8 +1513,7 @@ Namespace org.nd4j.common.util
 			Next i
 
 
-
-			Dim listB As IList(Of Integer) = New List(Of Integer)()
+Dim listB As IList(Of Integer) = New List(Of Integer)()
 			For i As Integer = 0 To bShape.Length - 1
 				If Not Ints.contains(axes(1), i) Then
 					listB.Add(i)
@@ -1615,8 +1609,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Convert all dimensions in the specified
 		''' axes array to be positive
 		''' based on the specified range of values </summary>
@@ -1634,8 +1627,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Generate an array from 0 to length
 		''' and generate take a subset </summary>
 		''' <param name="length"> the length to generate to </param>
@@ -1826,8 +1818,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Returns the array with the item in index
 		''' removed, if the array is empty it will return the array itself
 		''' </summary>
@@ -2022,8 +2013,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' For use with row vectors to ensure consistent strides
 		''' with varying offsets
 		''' </summary>
@@ -2798,8 +2788,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 
-
-		''' <summary>
+''' <summary>
 		''' Combines a applyTransformToDestination of int arrays in to one flat int array
 		''' </summary>
 		''' <param name="nums"> the int arrays to combineDouble </param>

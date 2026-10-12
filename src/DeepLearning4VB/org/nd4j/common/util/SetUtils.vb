@@ -63,5 +63,4 @@ Namespace org.nd4j.common.util
 	End Class
 
 
-
 End Namespace

@@ -26,16 +26,12 @@ Imports DeepLearning4VB.org.nd4j.common.primitives
 Namespace org.nd4j.common.util
 
 
+Public Class MathUtils
 
 
-	Public Class MathUtils
-
-
-
-		''' <summary>
+''' <summary>
 		''' The natural logarithm of 2.
 		''' </summary>
-'JAVA TO VB CONVERTER NOTE: The field log2 was renamed since Visual Basic does not allow fields to have the same name as other class members:
 		Public Shared ReadOnly log2_Conflict As Double = Math.Log(2)
 		''' <summary>
 		''' The small deviation allowed in double comparisons.
@@ -425,7 +421,6 @@ Namespace org.nd4j.common.util
 		End Function 'end squaredLoss
 
 		Public Shared Function w_1(ByVal x() As Double, ByVal y() As Double, ByVal n As Integer) As Double
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
 			Return (n * sumOfProducts(x, y) - sum(x) * sum(y)) / (n * sumOfSquares(x) - Math.Pow(sum(x), 2))
 		End Function
 
@@ -557,9 +552,6 @@ Namespace org.nd4j.common.util
 		''' <returns> a double array containing all of the numbers in that column
 		''' for all of the arrays. </returns>
 		''' <exception cref="IllegalArgumentException"> if the index is < 0 </exception>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: private static double[] column(int column, double[]... nums) throws IllegalArgumentException
-'JAVA TO VB CONVERTER NOTE: The parameter column was renamed since Visual Basic will not allow parameters with the same name as their enclosing function or property:
 		Private Shared Function column(ByVal column_Conflict As Integer, ParamArray ByVal nums()() As Double) As Double()
 
 			Dim ret(nums.Length - 1) As Double
@@ -595,14 +587,10 @@ Namespace org.nd4j.common.util
 			For i As Integer = 0 To vector.Length - 1
 				'even value, x coordinate
 				If i Mod 2 = 0 Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: xVals[xTracker++] = vector[i];
 					xVals(xTracker) = vector(i)
 						xTracker += 1
 				'y coordinate
 				Else
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: yVals[yTracker++] = vector[i];
 					yVals(yTracker) = vector(i)
 						yTracker += 1
 				End If
@@ -667,14 +655,10 @@ Namespace org.nd4j.common.util
 			For i As Integer = 0 To vector.Count - 1
 				'even value, x coordinate
 				If i Mod 2 = 0 Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: xVals[xTracker++] = vector.[get](i);
 					xVals(xTracker) = vector(i)
 						xTracker += 1
 				'y coordinate
 				Else
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: yVals[yTracker++] = vector.[get](i);
 					yVals(yTracker) = vector(i)
 						yTracker += 1
 				End If
@@ -701,8 +685,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To vector.Length - 1
 				If i Mod 2 <> 0 Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: x[count++] = vector[i];
 					x(count) = vector(i)
 						count += 1
 				End If
@@ -720,8 +702,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To vector.Length - 1
 				If i Mod 2 = 0 Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: y[count++] = vector[i];
 					y(count) = vector(i)
 						count += 1
 				End If
@@ -762,7 +742,6 @@ Namespace org.nd4j.common.util
 			If a = 0 Then
 				Return 0.0
 			End If
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
 			Return Math.Log(a) / log2_Conflict
 		End Function
 
@@ -913,7 +892,6 @@ Namespace org.nd4j.common.util
 		Public Shared Function maxIndex(ByVal doubles() As Double) As Integer
 
 			Dim maximum As Double = 0
-'JAVA TO VB CONVERTER NOTE: The local variable maxIndex was renamed since Visual Basic will not allow local variables with the same name as their enclosing function or property:
 			Dim maxIndex_Conflict As Integer = 0
 
 			For i As Integer = 0 To doubles.Length - 1

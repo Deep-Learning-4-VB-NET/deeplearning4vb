@@ -1,73 +1,79 @@
-﻿Imports SIS = DeepLearning4VB.org.nd4j.common.tools.SIS
-
-'
-' *  ******************************************************************************
-' *  *
-' *  *
-' *  * This program and the accompanying materials are made available under the
-' *  * terms of the Apache License, Version 2.0 which is available at
-' *  * https://www.apache.org/licenses/LICENSE-2.0.
-' *  *
-' *  *  See the NOTICE file distributed with this work for additional
-' *  *  information regarding copyright ownership.
-' *  * Unless required by applicable law or agreed to in writing, software
-' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-' *  * License for the specific language governing permissions and limitations
-' *  * under the License.
-' *  *
-' *  * SPDX-License-Identifier: Apache-2.0
-' *  *****************************************************************************
-' 
+Imports System
+Imports System.IO
+Imports Microsoft.VisualStudio.TestTools.UnitTesting
+Imports DeepLearning4VB.org.nd4j.common.tools
 
 Namespace org.nd4j.common.tools
 
+    ''' <summary>Ported from the DL4J JUnit test of the same name.</summary>
+    <TestClass>
+    Public Class SISTest
+        Private sis As SIS
+        Private tmpFld As String
 
+        <TestInitialize>
+        Public Sub CreateTempDir()
+            tmpFld = Path.Combine(Path.GetTempPath(), "dl4vb-sis-" & Guid.NewGuid().ToString("N"))
+            Directory.CreateDirectory(tmpFld)
+        End Sub
 
-	Public Class SISTest
-		'
-		'
-		Private sis As SIS
-		'
+        Private console As StringWriter
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testAll(@TempDir Path tmpFld) throws Exception
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-		Public Overridable Sub testAll(ByVal tmpFld As Path)
-			'
-			sis = New SIS()
-			'
-			Dim mtLv As Integer = 0
-			'
-			sis.initValues(mtLv, "TEST", System.out, System.err, tmpFld.getRoot().toAbsolutePath().ToString(), "Test", "ABC", True, True)
-			'
-			Dim fFName As String = sis.getfullFileName()
-			sis.info(fFName)
-			sis.info("aaabbbcccdddeefff")
-			'
-			assertEquals(33, fFName.Length)
-			assertEquals("Z", fFName.Substring(0, 1))
-						Dim tempVar = fFName.length() - 13
-			assertEquals("_Test_ABC.txt", fFName.Substring(tempVar, fFName.Length - (tempVar)))
-		'	assertEquals( "", fFName );
-		'	assertEquals( "", tmpFld.getRoot().getAbsolutePath() );
-			'
-		End Sub
+        <TestMethod>
+        Public Sub testAll()
+            sis = New SIS()
+            console = New StringWriter()
+            Dim mtLv As Integer = 0
+            sis.initValues(mtLv, "TEST", console, console, tmpFld, "Test", "ABC", True, True)
+            Dim fFName As String = sis.getfullFileName()
+            sis.info(fFName)
+            sis.info("aaabbbcccdddeefff")
+            assertEquals(33, fFName.Length)
+            assertEquals("Z", fFName.Substring(0, 1))
+            Dim tempVar = fFName.Length - 13
+            assertEquals("_Test_ABC.txt", fFName.Substring(tempVar, fFName.Length - tempVar))
+            ' initValues with ShowFullInfo also logs a line, so the count is at least the two explicit messages
+            assertTrue(sis.getcharsCount() >= fFName.Length + "aaabbbcccdddeefff".Length)
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AfterEach public void after()
-		Public Overridable Sub after()
-			'
-			Dim mtLv As Integer = 0
-			If sis IsNot Nothing Then
-				sis.onStop(mtLv)
-			End If
-			'
-		'	tmpFld.delete();
-			'
-		End Sub
+            sis.onStop(mtLv)
+            sis = Nothing
 
+            ' the file was written, time-stamped, and the console echo contains the same lines
+            Dim logFile As String = Path.Combine(tmpFld, fFName)
+            assertTrue(File.Exists(logFile), logFile)
+            Dim lines() As String = File.ReadAllLines(logFile)
+            assertTrue(lines.Length >= 3, "expected at least 3 log lines, got " & lines.Length)
+            assertTrue(Array.Exists(lines, Function(l) l.EndsWith(": aaabbbcccdddeefff")), String.Join(" / ", lines))
+            assertTrue(console.ToString().Contains("aaabbbcccdddeefff"))
+        End Sub
 
+        <TestMethod>
+        Public Sub testInfoAfterStopIsReportedNotWritten()
+            sis = New SIS()
+            console = New StringWriter()
+            sis.initValues(0, "TEST", console, console, tmpFld, "Test", "X", False, False)
+            sis.onStop(0)
+            sis.info("late message")
+            sis = Nothing
+            assertTrue(console.ToString().Contains("File is closed !!!"))
+        End Sub
 
-	End Class
+        <TestCleanup>
+        Public Sub after()
+            Dim mtLv As Integer = 0
+            If sis IsNot Nothing Then
+                sis.onStop(mtLv)
+                sis = Nothing
+            End If
+            If console IsNot Nothing Then
+                console.Dispose()
+                console = Nothing
+            End If
+            If Directory.Exists(tmpFld) Then
+                Directory.Delete(tmpFld, True)
+            End If
+        End Sub
+
+    End Class
+
 End Namespace

@@ -119,19 +119,71 @@ Friend Module Arrays
         If o Is Nothing Then Return "null"
         If TypeOf o Is Array Then Return toString(o)
         If TypeOf o Is Boolean Then Return If(CBool(o), "true", "false")
-        If TypeOf o Is Double Then Return FormatFloating(CDbl(o))
-        If TypeOf o Is Single Then Return FormatFloating(CDbl(CSng(o)))
+        If TypeOf o Is Double Then Return JavaDoubleToString(CDbl(o))
+        If TypeOf o Is Single Then Return JavaFloatToString(CSng(o))
         If TypeOf o Is IFormattable Then Return DirectCast(o, IFormattable).ToString(Nothing, CultureInfo.InvariantCulture)
         Return o.ToString()
     End Function
 
-    Private Function FormatFloating(ByVal d As Double) As String
-        If Double.IsNaN(d) Then Return "NaN"
-        If Double.IsPositiveInfinity(d) Then Return "Infinity"
-        If Double.IsNegativeInfinity(d) Then Return "-Infinity"
-        Dim s As String = d.ToString("R", CultureInfo.InvariantCulture)
-        If s.IndexOf("."c) < 0 AndAlso s.IndexOf("E"c) < 0 Then s &= ".0"
-        Return s
+    ''' <summary>Java <c>Double.toString</c>: shortest round-trip digits, plain between 1E-3 and 1E7, otherwise <c>d.dddE±n</c>.</summary>
+    Public Function JavaDoubleToString(ByVal d As Double) As String
+        Return JavaFloatingToString(d.ToString("R", CultureInfo.InvariantCulture), d)
+    End Function
+
+    ''' <summary>Java <c>Float.toString</c> (shortest round-trip digits at single precision).</summary>
+    Public Function JavaFloatToString(ByVal f As Single) As String
+        Return JavaFloatingToString(f.ToString("R", CultureInfo.InvariantCulture), CDbl(f))
+    End Function
+
+    Private Function JavaFloatingToString(ByVal repr As String, ByVal value As Double) As String
+        If Double.IsNaN(value) Then Return "NaN"
+        If Double.IsPositiveInfinity(value) Then Return "Infinity"
+        If Double.IsNegativeInfinity(value) Then Return "-Infinity"
+        If value = 0 Then Return If(BitConverter.DoubleToInt64Bits(value) < 0, "-0.0", "0.0")
+        Dim negative As Boolean = repr.StartsWith("-", StringComparison.Ordinal)
+        If negative Then repr = repr.Substring(1)
+        Dim exp As Integer = 0
+        Dim ePos As Integer = repr.IndexOfAny(New Char() {"E"c, "e"c})
+        Dim mantissa As String = repr
+        If ePos >= 0 Then
+            exp = Integer.Parse(repr.Substring(ePos + 1), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture)
+            mantissa = repr.Substring(0, ePos)
+        End If
+        Dim dot As Integer = mantissa.IndexOf("."c)
+        Dim intPart As String = If(dot < 0, mantissa, mantissa.Substring(0, dot))
+        Dim fracPart As String = If(dot < 0, "", mantissa.Substring(dot + 1))
+        Dim digits As String = intPart & fracPart
+        ' value = 0.<digits> * 10^pointPos
+        Dim pointPos As Integer = intPart.Length + exp
+        Dim lead As Integer = 0
+        While lead < digits.Length - 1 AndAlso digits(lead) = "0"c
+            lead += 1
+        End While
+        digits = digits.Substring(lead)
+        pointPos -= lead
+        digits = digits.TrimEnd("0"c)
+        If digits.Length = 0 Then digits = "0"
+        Dim sciExp As Integer = pointPos - 1
+        Dim sb As New StringBuilder()
+        If negative Then sb.Append("-"c)
+        If sciExp >= -3 AndAlso sciExp < 7 Then
+            If pointPos <= 0 Then
+                sb.Append("0.").Append("0"c, -pointPos).Append(digits)
+            ElseIf pointPos >= digits.Length Then
+                sb.Append(digits).Append("0"c, pointPos - digits.Length).Append(".0")
+            Else
+                sb.Append(digits, 0, pointPos).Append("."c).Append(digits, pointPos, digits.Length - pointPos)
+            End If
+        Else
+            sb.Append(digits(0)).Append("."c)
+            If digits.Length > 1 Then
+                sb.Append(digits, 1, digits.Length - 1)
+            Else
+                sb.Append("0"c)
+            End If
+            sb.Append("E"c).Append(sciExp.ToString(CultureInfo.InvariantCulture))
+        End If
+        Return sb.ToString()
     End Function
 
 End Module

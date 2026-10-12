@@ -1,1358 +1,337 @@
-﻿Imports System
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.fail
-Imports PropertyParser = DeepLearning4VB.org.nd4j.common.tools.PropertyParser
-
-'
-' *  ******************************************************************************
-' *  *
-' *  *
-' *  * This program and the accompanying materials are made available under the
-' *  * terms of the Apache License, Version 2.0 which is available at
-' *  * https://www.apache.org/licenses/LICENSE-2.0.
-' *  *
-' *  *  See the NOTICE file distributed with this work for additional
-' *  *  information regarding copyright ownership.
-' *  * Unless required by applicable law or agreed to in writing, software
-' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-' *  * License for the specific language governing permissions and limitations
-' *  * under the License.
-' *  *
-' *  * SPDX-License-Identifier: Apache-2.0
-' *  *****************************************************************************
-' 
+Imports System
+Imports Microsoft.VisualStudio.TestTools.UnitTesting
+Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.nd4j.common.tools
 
 Namespace org.nd4j.common.tools
 
-	''' <summary>
-	''' Tests for PropertyParser
-	''' 
-	''' @author gagatust
-	''' </summary>
-	Public Class PropertyParserTest
-
-		Public Sub New()
-		End Sub
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @BeforeAll public static void setUpClass()
-		Public Shared Sub setUpClass()
-		End Sub
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AfterClass public static void tearDownClass()
-		Public Shared Sub tearDownClass()
-		End Sub
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @BeforeEach public void setUp()
-		Public Overridable Sub setUp()
-		End Sub
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AfterEach public void tearDown()
-		Public Overridable Sub tearDown()
-		End Sub
-
-		''' <summary>
-		''' Test of getProperties method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testGetProperties()
-		Public Overridable Sub testGetProperties()
-
-		End Sub
-
-		''' <summary>
-		''' Test of setProperties method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testSetProperties()
-		Public Overridable Sub testSetProperties()
-
-		End Sub
-
-		''' <summary>
-		''' Test of parseString method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseString()
-		Public Overridable Sub testParseString()
-			Console.WriteLine("parseString")
-			Dim expResult As String
-			Dim result As String
-
-			Dim props As New Properties()
-			props.put("value1", "sTr1")
-			props.put("value2", "str_2")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "sTr1"
-			result = instance.parseString("value1")
-			assertEquals(expResult, result)
-
-			expResult = "str_2"
-			result = instance.parseString("value2")
-			assertEquals(expResult, result)
-
-			expResult = ""
-			result = instance.parseString("empty")
-			assertEquals(expResult, result)
-
-			expResult = "abc"
-			result = instance.parseString("str")
-			assertEquals(expResult, result)
-
-			expResult = "true"
-			result = instance.parseString("boolean")
-			assertEquals(expResult, result)
-
-			expResult = "24.98"
-			result = instance.parseString("float")
-			assertEquals(expResult, result)
-
-			expResult = "12"
-			result = instance.parseString("int")
-			assertEquals(expResult, result)
-
-			expResult = "a"
-			result = instance.parseString("char")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseString("nonexistent")
-				fail("no exception")
-			Catch e As System.NullReferenceException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseInt method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseInt()
-		Public Overridable Sub testParseInt()
-			Console.WriteLine("parseInt")
-			Dim expResult As Integer
-			Dim result As Integer
-
-			Dim props As New Properties()
-			props.put("value1", "432")
-			props.put("value2", "-242")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 432
-			result = instance.parseInt("value1")
-			assertEquals(expResult, result)
-
-			expResult = -242
-			result = instance.parseInt("value2")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseInt("empty")
-				fail("no exception")
-			Catch e As System.FormatException
-			End Try
-
-			Try
-				instance.parseInt("str")
-				fail("no exception")
-			Catch e As System.FormatException
-			End Try
-
-			Try
-				instance.parseInt("boolean")
-				assertEquals(expResult, result)
-				fail("no exception")
-			Catch e As System.FormatException
-			End Try
-
-			Try
-				instance.parseInt("float")
-				fail("no exception")
-			Catch e As System.FormatException
-			End Try
-
-			expResult = 12
-			result = instance.parseInt("int")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseInt("char")
-				fail("no exception")
-			Catch e As System.FormatException
-			End Try
-
-			Try
-				expResult = 0
-				result = instance.parseInt("nonexistent")
-				fail("no exception")
-				assertEquals(expResult, result)
-			Catch e As System.ArgumentException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseBoolean method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseBoolean()
-		Public Overridable Sub testParseBoolean()
-			Console.WriteLine("parseBoolean")
-			Dim expResult As Boolean
-			Dim result As Boolean
-
-			Dim props As New Properties()
-			props.put("value1", "true")
-			props.put("value2", "false")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = True
-			result = instance.parseBoolean("value1")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("value2")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("empty")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("str")
-			assertEquals(expResult, result)
-
-			expResult = True
-			result = instance.parseBoolean("boolean")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("float")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("int")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.parseBoolean("char")
-			assertEquals(expResult, result)
-
-			Try
-				expResult = False
-				result = instance.parseBoolean("nonexistent")
-				fail("no exception")
-				assertEquals(expResult, result)
-			Catch e As System.ArgumentException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseFloat()
-		Public Overridable Sub testParseFloat()
-			Console.WriteLine("parseFloat")
-			Dim expResult As Double
-			Dim result As Double
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789f
-			result = instance.parseFloat("value1")
-			assertEquals(expResult, result, 0)
-
-			expResult = -9000.001f
-			result = instance.parseFloat("value2")
-			assertEquals(expResult, result, 0)
-
-			Try
-				instance.parseFloat("empty")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseFloat("str")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseFloat("boolean")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			expResult = 24.98f
-			result = instance.parseFloat("float")
-			assertEquals(expResult, result, 0)
-
-			expResult = 12f
-			result = instance.parseFloat("int")
-			assertEquals(expResult, result, 0)
-
-			Try
-				instance.parseFloat("char")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseFloat("nonexistent")
-				fail("no exception")
-			Catch e As System.NullReferenceException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseDouble()
-		Public Overridable Sub testParseDouble()
-			Console.WriteLine("parseDouble")
-			Dim expResult As Double
-			Dim result As Double
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789
-			result = instance.parseDouble("value1")
-			assertEquals(expResult, result, 0)
-
-			expResult = -9000.001
-			result = instance.parseDouble("value2")
-			assertEquals(expResult, result, 0)
-
-			Try
-				instance.parseDouble("empty")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseDouble("str")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseDouble("boolean")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			expResult = 24.98
-			result = instance.parseDouble("float")
-			assertEquals(expResult, result, 0)
-
-			expResult = 12
-			result = instance.parseDouble("int")
-			assertEquals(expResult, result, 0)
-
-			Try
-				instance.parseDouble("char")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseDouble("nonexistent")
-				fail("no exception")
-			Catch e As System.NullReferenceException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseLong method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseLong()
-		Public Overridable Sub testParseLong()
-			Console.WriteLine("parseLong")
-			Dim expResult As Long
-			Dim result As Long
-
-			Dim props As New Properties()
-			props.put("value1", "12345678900")
-			props.put("value2", "-9000001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345678900L
-			result = instance.parseLong("value1")
-			assertEquals(expResult, result)
-
-			expResult = -9000001L
-			result = instance.parseLong("value2")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseLong("empty")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseLong("str")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseLong("boolean")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseLong("float")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			expResult = 12L
-			result = instance.parseLong("int")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseLong("char")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseLong("nonexistent")
-				fail("no exception")
-			Catch e As System.ArgumentException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of parseChar method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testParseChar()
-		Public Overridable Sub testParseChar()
-			Console.WriteLine("parseChar")
-			Dim expResult As Char
-			Dim result As Char
-
-			Dim props As New Properties()
-			props.put("value1", "b")
-			props.put("value2", "c")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "b"c
-			result = instance.parseChar("value1")
-			assertEquals(expResult, result)
-
-			expResult = "c"c
-			result = instance.parseChar("value2")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseChar("empty")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseChar("str")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseChar("boolean")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseChar("float")
-			Catch e As System.ArgumentException
-			End Try
-
-			Try
-				instance.parseChar("int")
-			Catch e As System.ArgumentException
-			End Try
-
-			expResult = "a"c
-			result = instance.parseChar("char")
-			assertEquals(expResult, result)
-
-			Try
-				instance.parseChar("nonexistent")
-				fail("no exception")
-				assertEquals(expResult, result)
-			Catch e As System.NullReferenceException
-			End Try
-		End Sub
-
-		''' <summary>
-		''' Test of toString method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToString_String()
-		Public Overridable Sub testToString_String()
-			Console.WriteLine("toString")
-			Dim expResult As String
-			Dim result As String
-
-			Dim props As New Properties()
-			props.put("value1", "sTr1")
-			props.put("value2", "str_2")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "sTr1"
-			result = instance.toString("value1")
-			assertEquals(expResult, result)
-
-			expResult = "str_2"
-			result = instance.toString("value2")
-			assertEquals(expResult, result)
-
-			expResult = ""
-			result = instance.toString("empty")
-			assertEquals(expResult, result)
-
-			expResult = "abc"
-			result = instance.toString("str")
-			assertEquals(expResult, result)
-
-			expResult = "true"
-			result = instance.toString("boolean")
-			assertEquals(expResult, result)
-
-			expResult = "24.98"
-			result = instance.toString("float")
-			assertEquals(expResult, result)
-
-			expResult = "12"
-			result = instance.toString("int")
-			assertEquals(expResult, result)
-
-			expResult = "a"
-			result = instance.toString("char")
-			assertEquals(expResult, result)
-
-			expResult = ""
-			result = instance.toString("nonexistent")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toInt method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToInt_String()
-		Public Overridable Sub testToInt_String()
-			Console.WriteLine("toInt")
-			Dim expResult As Integer
-			Dim result As Integer
-
-			Dim props As New Properties()
-			props.put("value1", "123")
-			props.put("value2", "-54")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 123
-			result = instance.toInt("value1")
-			assertEquals(expResult, result)
-
-			expResult = -54
-			result = instance.toInt("value2")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("empty")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("str")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("boolean")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("float")
-			assertEquals(expResult, result)
-
-			expResult = 12
-			result = instance.toInt("int")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("char")
-			assertEquals(expResult, result)
-
-			expResult = 0
-			result = instance.toInt("nonexistent")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toBoolean method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToBoolean_String()
-		Public Overridable Sub testToBoolean_String()
-			Console.WriteLine("toBoolean")
-			Dim expResult As Boolean
-			Dim result As Boolean
-
-			Dim props As New Properties()
-			props.put("value1", "true")
-			props.put("value2", "false")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = True
-			result = instance.toBoolean("value1")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("value2")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("empty")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("str")
-			assertEquals(expResult, result)
-
-			expResult = True
-			result = instance.toBoolean("boolean")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("float")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("int")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("char")
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("nonexistent")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToFloat_String()
-		Public Overridable Sub testToFloat_String()
-			Console.WriteLine("toFloat")
-			Dim expResult As Single
-			Dim result As Single
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789f
-			result = instance.toFloat("value1")
-			assertEquals(expResult, result, 0f)
-
-			expResult = -9000.001f
-			result = instance.toFloat("value2")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 0f
-			result = instance.toFloat("empty")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 0f
-			result = instance.toFloat("str")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 0f
-			result = instance.toFloat("boolean")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 24.98f
-			result = instance.toFloat("float")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 12f
-			result = instance.toFloat("int")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 0f
-			result = instance.toFloat("char")
-			assertEquals(expResult, result, 0f)
-
-			expResult = 0f
-			result = instance.toFloat("nonexistent")
-			assertEquals(expResult, result, 0f)
-		End Sub
-
-		''' <summary>
-		''' Test of toDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToDouble_String()
-		Public Overridable Sub testToDouble_String()
-			Console.WriteLine("toDouble")
-			Dim expResult As Double
-			Dim result As Double
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789
-			result = instance.toDouble("value1")
-			assertEquals(expResult, result, 0)
-
-			expResult = -9000.001
-			result = instance.toDouble("value2")
-			assertEquals(expResult, result, 0)
-
-			expResult = 0
-			result = instance.toDouble("empty")
-			assertEquals(expResult, result, 0)
-
-			expResult = 0
-			result = instance.toDouble("str")
-			assertEquals(expResult, result, 0)
-
-			expResult = 0
-			result = instance.toDouble("boolean")
-			assertEquals(expResult, result, 0)
-
-			expResult = 24.98
-			result = instance.toDouble("float")
-			assertEquals(expResult, result, 0)
-
-			expResult = 12
-			result = instance.toDouble("int")
-			assertEquals(expResult, result, 0)
-
-			expResult = 0
-			result = instance.toDouble("char")
-			assertEquals(expResult, result, 0)
-
-			expResult = 0
-			result = instance.toDouble("nonexistent")
-			assertEquals(expResult, result, 0)
-		End Sub
-
-		''' <summary>
-		''' Test of toLong method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToLong_String()
-		Public Overridable Sub testToLong_String()
-			Console.WriteLine("toLong")
-			Dim expResult As Long
-			Dim result As Long
-
-			Dim props As New Properties()
-			props.put("value1", "12345678900")
-			props.put("value2", "-9000001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345678900L
-			result = instance.toLong("value1")
-			assertEquals(expResult, result)
-
-			expResult = -9000001L
-			result = instance.toLong("value2")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("empty")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("str")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("boolean")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("float")
-			assertEquals(expResult, result)
-
-			expResult = 12L
-			result = instance.toLong("int")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("char")
-			assertEquals(expResult, result)
-
-			expResult = 0L
-			result = instance.toLong("nonexistent")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toChar method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToChar_String()
-		Public Overridable Sub testToChar_String()
-			Console.WriteLine("toChar")
-			Dim expResult As Char
-			Dim result As Char
-
-			Dim props As New Properties()
-			props.put("value1", "f")
-			props.put("value2", "w")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "f"c
-			result = instance.toChar("value1")
-			assertEquals(expResult, result)
-
-			expResult = "w"c
-			result = instance.toChar("value2")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("empty")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("str")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("boolean")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("float")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("int")
-			assertEquals(expResult, result)
-
-			expResult = "a"c
-			result = instance.toChar("char")
-			assertEquals(expResult, result)
-
-			expResult = ChrW(&H0000)
-			result = instance.toChar("nonexistent")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toString method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToString_String_String()
-		Public Overridable Sub testToString_String_String()
-			Console.WriteLine("toString")
-			Dim expResult As String
-			Dim result As String
-
-			Dim props As New Properties()
-			props.put("value1", "sTr1")
-			props.put("value2", "str_2")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "sTr1"
-			result = instance.toString("value1", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "str_2"
-			result = instance.toString("value2", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = ""
-			result = instance.toString("empty", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "abc"
-			result = instance.toString("str", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "true"
-			result = instance.toString("boolean", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "24.98"
-			result = instance.toString("float", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "12"
-			result = instance.toString("int", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "a"
-			result = instance.toString("char", "defStr")
-			assertEquals(expResult, result)
-
-			expResult = "defStr"
-			result = instance.toString("nonexistent", "defStr")
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toInt method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToInt_String_int()
-		Public Overridable Sub testToInt_String_int()
-			Console.WriteLine("toInt")
-			Dim expResult As Integer
-			Dim result As Integer
-
-			Dim props As New Properties()
-			props.put("value1", "123")
-			props.put("value2", "-54")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 123
-			result = instance.toInt("value1", 17)
-			assertEquals(expResult, result)
-
-			expResult = -54
-			result = instance.toInt("value2", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("empty", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("str", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("boolean", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("float", 17)
-			assertEquals(expResult, result)
-
-			expResult = 12
-			result = instance.toInt("int", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("char", 17)
-			assertEquals(expResult, result)
-
-			expResult = 17
-			result = instance.toInt("nonexistent", 17)
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toBoolean method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToBoolean_String_boolean()
-		Public Overridable Sub testToBoolean_String_boolean()
-			Console.WriteLine("toBoolean")
-
-			Dim expResult As Boolean
-			Dim result As Boolean
-
-			Dim props As New Properties()
-			props.put("value1", "true")
-			props.put("value2", "false")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = True
-			result = instance.toBoolean("value1", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("value2", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("empty", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("str", True)
-			assertEquals(expResult, result)
-
-			expResult = True
-			result = instance.toBoolean("boolean", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("float", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("int", True)
-			assertEquals(expResult, result)
-
-			expResult = False
-			result = instance.toBoolean("char", True)
-			assertEquals(expResult, result)
-
-			expResult = True
-			result = instance.toBoolean("nonexistent", True)
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToFloat_String_float()
-		Public Overridable Sub testToFloat_String_float()
-			Console.WriteLine("toFloat")
-			Dim expResult As Single
-			Dim result As Single
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789f
-			result = instance.toFloat("value1", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = -9000.001f
-			result = instance.toFloat("value2", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123f
-			result = instance.toFloat("empty", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123f
-			result = instance.toFloat("str", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123f
-			result = instance.toFloat("boolean", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 24.98f
-			result = instance.toFloat("float", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 12
-			result = instance.toFloat("int", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123f
-			result = instance.toFloat("char", 0.123f)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123f
-			result = instance.toFloat("nonexistent", 0.123f)
-			assertEquals(expResult, result, 0)
-		End Sub
-
-		''' <summary>
-		''' Test of toDouble method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToDouble_String_double()
-		Public Overridable Sub testToDouble_String_double()
-			Console.WriteLine("toDouble")
-			Dim expResult As Double
-			Dim result As Double
-
-			Dim props As New Properties()
-			props.put("value1", "12345.6789")
-			props.put("value2", "-9000.001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345.6789
-			result = instance.toDouble("value1", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = -9000.001
-			result = instance.toDouble("value2", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123
-			result = instance.toDouble("empty", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123
-			result = instance.toDouble("str", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123
-			result = instance.toDouble("boolean", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 24.98
-			result = instance.toDouble("float", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 12
-			result = instance.toDouble("int", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123
-			result = instance.toDouble("char", 0.123)
-			assertEquals(expResult, result, 0)
-
-			expResult = 0.123
-			result = instance.toDouble("nonexistent", 0.123)
-			assertEquals(expResult, result, 0)
-		End Sub
-
-		''' <summary>
-		''' Test of toLong method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToLong_String_long()
-		Public Overridable Sub testToLong_String_long()
-			Console.WriteLine("toLong")
-			Dim expResult As Long
-			Dim result As Long
-
-			Dim props As New Properties()
-			props.put("value1", "12345678900")
-			props.put("value2", "-9000001")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = 12345678900L
-			result = instance.toLong("value1", 3L)
-			assertEquals(expResult, result)
-
-			expResult = -9000001L
-			result = instance.toLong("value2", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("empty", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("str", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("boolean", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("float", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 12L
-			result = instance.toLong("int", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("char", 3L)
-			assertEquals(expResult, result)
-
-			expResult = 3L
-			result = instance.toLong("nonexistent", 3L)
-			assertEquals(expResult, result)
-		End Sub
-
-		''' <summary>
-		''' Test of toChar method, of class PropertyParser.
-		''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Test public void testToChar_String_char()
-		Public Overridable Sub testToChar_String_char()
-			Console.WriteLine("toChar")
-			Dim expResult As Char
-			Dim result As Char
-
-			Dim props As New Properties()
-			props.put("value1", "f")
-			props.put("value2", "w")
-			props.put("empty", "")
-			props.put("str", "abc")
-			props.put("boolean", "true")
-			props.put("float", "24.98")
-			props.put("int", "12")
-			props.put("char", "a")
-			Dim instance As New PropertyParser(props)
-
-			expResult = "f"c
-			result = instance.toChar("value1", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "w"c
-			result = instance.toChar("value2", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("empty", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("str", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("boolean", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("float", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("int", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "a"c
-			result = instance.toChar("char", "t"c)
-			assertEquals(expResult, result)
-
-			expResult = "t"c
-			result = instance.toChar("nonexistent", "t"c)
-			assertEquals(expResult, result)
-		End Sub
-
-	End Class
+    ''' <summary>
+    ''' Ported from the DL4J JUnit test of the same name (originally by gagatust). The Java test
+    ''' repeated the same property set in every method; here it is built once. Exception types
+    ''' follow Java: malformed numbers throw <see cref="NumberFormatException"/> (an
+    ''' <see cref="ArgumentException"/>), while parseFloat/parseDouble/parseChar/parseString of a
+    ''' missing property throw <see cref="NullReferenceException"/>.
+    ''' </summary>
+    <TestClass>
+    Public Class PropertyParserTest
+
+        Private Shared Function Build(ByVal value1 As String, ByVal value2 As String) As PropertyParser
+            Dim props As New Properties()
+            props.put("value1", value1)
+            props.put("value2", value2)
+            props.put("empty", "")
+            props.put("str", "abc")
+            props.put("boolean", "true")
+            props.put("float", "24.98")
+            props.put("int", "12")
+            props.put("char", "a")
+            Return New PropertyParser(props)
+        End Function
+
+        <TestMethod>
+        Public Sub testGetSetProperties()
+            Dim props As New Properties()
+            Dim instance As New PropertyParser(props)
+            assertTrue(instance.Properties Is props)
+            Dim other As New Properties()
+            instance.Properties = other
+            assertTrue(instance.getProperties() Is other)
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseString()
+            Dim instance = Build("sTr1", "str_2")
+            assertEquals("sTr1", instance.parseString("value1"))
+            assertEquals("str_2", instance.parseString("value2"))
+            assertEquals("", instance.parseString("empty"))
+            assertEquals("abc", instance.parseString("str"))
+            assertEquals("true", instance.parseString("boolean"))
+            assertEquals("24.98", instance.parseString("float"))
+            assertEquals("12", instance.parseString("int"))
+            assertEquals("a", instance.parseString("char"))
+            assertThrows(Of NullReferenceException)(Sub() instance.parseString("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseInt()
+            Dim instance = Build("432", "-242")
+            assertEquals(432, instance.parseInt("value1"))
+            assertEquals(-242, instance.parseInt("value2"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("empty"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("str"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("boolean"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("float"))
+            assertEquals(12, instance.parseInt("int"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("char"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseInt("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseBoolean()
+            Dim instance = Build("true", "false")
+            assertEquals(True, instance.parseBoolean("value1"))
+            assertEquals(False, instance.parseBoolean("value2"))
+            assertEquals(False, instance.parseBoolean("empty"))
+            assertEquals(False, instance.parseBoolean("str"))
+            assertEquals(True, instance.parseBoolean("boolean"))
+            assertEquals(False, instance.parseBoolean("float"))
+            assertEquals(False, instance.parseBoolean("int"))
+            assertEquals(False, instance.parseBoolean("char"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseBoolean("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseFloat()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789F, instance.parseFloat("value1"), 0.0F)
+            assertEquals(-9000.001F, instance.parseFloat("value2"), 0.0F)
+            assertThrows(Of ArgumentException)(Sub() instance.parseFloat("empty"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseFloat("str"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseFloat("boolean"))
+            assertEquals(24.98F, instance.parseFloat("float"), 0.0F)
+            assertEquals(12.0F, instance.parseFloat("int"), 0.0F)
+            assertThrows(Of ArgumentException)(Sub() instance.parseFloat("char"))
+            assertThrows(Of NullReferenceException)(Sub() instance.parseFloat("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseDouble()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789, instance.parseDouble("value1"), 0.0)
+            assertEquals(-9000.001, instance.parseDouble("value2"), 0.0)
+            assertThrows(Of ArgumentException)(Sub() instance.parseDouble("empty"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseDouble("str"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseDouble("boolean"))
+            assertEquals(24.98, instance.parseDouble("float"), 0.0)
+            assertEquals(12.0, instance.parseDouble("int"), 0.0)
+            assertThrows(Of ArgumentException)(Sub() instance.parseDouble("char"))
+            assertThrows(Of NullReferenceException)(Sub() instance.parseDouble("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseLong()
+            Dim instance = Build("12345678900", "-9000001")
+            assertEquals(12345678900L, instance.parseLong("value1"))
+            assertEquals(-9000001L, instance.parseLong("value2"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("empty"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("str"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("boolean"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("float"))
+            assertEquals(12L, instance.parseLong("int"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("char"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseLong("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testParseChar()
+            Dim instance = Build("b", "c")
+            assertEquals("b"c, instance.parseChar("value1"))
+            assertEquals("c"c, instance.parseChar("value2"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseChar("empty"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseChar("str"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseChar("boolean"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseChar("float"))
+            assertThrows(Of ArgumentException)(Sub() instance.parseChar("int"))
+            assertEquals("a"c, instance.parseChar("char"))
+            assertThrows(Of NullReferenceException)(Sub() instance.parseChar("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToString_String()
+            Dim instance = Build("sTr1", "str_2")
+            assertEquals("sTr1", instance.toString("value1"))
+            assertEquals("str_2", instance.toString("value2"))
+            assertEquals("", instance.toString("empty"))
+            assertEquals("abc", instance.toString("str"))
+            assertEquals("true", instance.toString("boolean"))
+            assertEquals("24.98", instance.toString("float"))
+            assertEquals("12", instance.toString("int"))
+            assertEquals("a", instance.toString("char"))
+            assertEquals("", instance.toString("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToInt_String()
+            Dim instance = Build("123", "-54")
+            assertEquals(123, instance.toInt("value1"))
+            assertEquals(-54, instance.toInt("value2"))
+            assertEquals(0, instance.toInt("empty"))
+            assertEquals(0, instance.toInt("str"))
+            assertEquals(0, instance.toInt("boolean"))
+            assertEquals(0, instance.toInt("float"))
+            assertEquals(12, instance.toInt("int"))
+            assertEquals(0, instance.toInt("char"))
+            assertEquals(0, instance.toInt("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToBoolean_String()
+            Dim instance = Build("true", "false")
+            assertEquals(True, instance.toBoolean("value1"))
+            assertEquals(False, instance.toBoolean("value2"))
+            assertEquals(False, instance.toBoolean("empty"))
+            assertEquals(False, instance.toBoolean("str"))
+            assertEquals(True, instance.toBoolean("boolean"))
+            assertEquals(False, instance.toBoolean("float"))
+            assertEquals(False, instance.toBoolean("int"))
+            assertEquals(False, instance.toBoolean("char"))
+            assertEquals(False, instance.toBoolean("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToFloat_String()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789F, instance.toFloat("value1"), 0.0F)
+            assertEquals(-9000.001F, instance.toFloat("value2"), 0.0F)
+            assertEquals(0.0F, instance.toFloat("empty"), 0.0F)
+            assertEquals(0.0F, instance.toFloat("str"), 0.0F)
+            assertEquals(0.0F, instance.toFloat("boolean"), 0.0F)
+            assertEquals(24.98F, instance.toFloat("float"), 0.0F)
+            assertEquals(12.0F, instance.toFloat("int"), 0.0F)
+            assertEquals(0.0F, instance.toFloat("char"), 0.0F)
+            assertEquals(0.0F, instance.toFloat("nonexistent"), 0.0F)
+        End Sub
+
+        <TestMethod>
+        Public Sub testToDouble_String()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789, instance.toDouble("value1"), 0.0)
+            assertEquals(-9000.001, instance.toDouble("value2"), 0.0)
+            assertEquals(0.0, instance.toDouble("empty"), 0.0)
+            assertEquals(0.0, instance.toDouble("str"), 0.0)
+            assertEquals(0.0, instance.toDouble("boolean"), 0.0)
+            assertEquals(24.98, instance.toDouble("float"), 0.0)
+            assertEquals(12.0, instance.toDouble("int"), 0.0)
+            assertEquals(0.0, instance.toDouble("char"), 0.0)
+            assertEquals(0.0, instance.toDouble("nonexistent"), 0.0)
+        End Sub
+
+        <TestMethod>
+        Public Sub testToLong_String()
+            Dim instance = Build("12345678900", "-9000001")
+            assertEquals(12345678900L, instance.toLong("value1"))
+            assertEquals(-9000001L, instance.toLong("value2"))
+            assertEquals(0L, instance.toLong("empty"))
+            assertEquals(0L, instance.toLong("str"))
+            assertEquals(0L, instance.toLong("boolean"))
+            assertEquals(0L, instance.toLong("float"))
+            assertEquals(12L, instance.toLong("int"))
+            assertEquals(0L, instance.toLong("char"))
+            assertEquals(0L, instance.toLong("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToChar_String()
+            Dim instance = Build("f", "w")
+            assertEquals("f"c, instance.toChar("value1"))
+            assertEquals("w"c, instance.toChar("value2"))
+            assertEquals(ChrW(0), instance.toChar("empty"))
+            assertEquals(ChrW(0), instance.toChar("str"))
+            assertEquals(ChrW(0), instance.toChar("boolean"))
+            assertEquals(ChrW(0), instance.toChar("float"))
+            assertEquals(ChrW(0), instance.toChar("int"))
+            assertEquals("a"c, instance.toChar("char"))
+            assertEquals(ChrW(0), instance.toChar("nonexistent"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToString_String_String()
+            Dim instance = Build("sTr1", "str_2")
+            assertEquals("sTr1", instance.toString("value1", "defStr"))
+            assertEquals("str_2", instance.toString("value2", "defStr"))
+            assertEquals("", instance.toString("empty", "defStr"))
+            assertEquals("abc", instance.toString("str", "defStr"))
+            assertEquals("true", instance.toString("boolean", "defStr"))
+            assertEquals("24.98", instance.toString("float", "defStr"))
+            assertEquals("12", instance.toString("int", "defStr"))
+            assertEquals("a", instance.toString("char", "defStr"))
+            assertEquals("defStr", instance.toString("nonexistent", "defStr"))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToInt_String_int()
+            Dim instance = Build("123", "-54")
+            assertEquals(123, instance.toInt("value1", 17))
+            assertEquals(-54, instance.toInt("value2", 17))
+            assertEquals(17, instance.toInt("empty", 17))
+            assertEquals(17, instance.toInt("str", 17))
+            assertEquals(17, instance.toInt("boolean", 17))
+            assertEquals(17, instance.toInt("float", 17))
+            assertEquals(12, instance.toInt("int", 17))
+            assertEquals(17, instance.toInt("char", 17))
+            assertEquals(17, instance.toInt("nonexistent", 17))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToBoolean_String_boolean()
+            Dim instance = Build("true", "false")
+            assertEquals(True, instance.toBoolean("value1", True))
+            assertEquals(False, instance.toBoolean("value2", True))
+            assertEquals(False, instance.toBoolean("empty", True))
+            assertEquals(False, instance.toBoolean("str", True))
+            assertEquals(True, instance.toBoolean("boolean", True))
+            assertEquals(False, instance.toBoolean("float", True))
+            assertEquals(False, instance.toBoolean("int", True))
+            assertEquals(False, instance.toBoolean("char", True))
+            assertEquals(True, instance.toBoolean("nonexistent", True))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToFloat_String_float()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789F, instance.toFloat("value1", 0.123F), 0.0F)
+            assertEquals(-9000.001F, instance.toFloat("value2", 0.123F), 0.0F)
+            assertEquals(0.123F, instance.toFloat("empty", 0.123F), 0.0F)
+            assertEquals(0.123F, instance.toFloat("str", 0.123F), 0.0F)
+            assertEquals(0.123F, instance.toFloat("boolean", 0.123F), 0.0F)
+            assertEquals(24.98F, instance.toFloat("float", 0.123F), 0.0F)
+            assertEquals(12.0F, instance.toFloat("int", 0.123F), 0.0F)
+            assertEquals(0.123F, instance.toFloat("char", 0.123F), 0.0F)
+            assertEquals(0.123F, instance.toFloat("nonexistent", 0.123F), 0.0F)
+        End Sub
+
+        <TestMethod>
+        Public Sub testToDouble_String_double()
+            Dim instance = Build("12345.6789", "-9000.001")
+            assertEquals(12345.6789, instance.toDouble("value1", 0.123), 0.0)
+            assertEquals(-9000.001, instance.toDouble("value2", 0.123), 0.0)
+            assertEquals(0.123, instance.toDouble("empty", 0.123), 0.0)
+            assertEquals(0.123, instance.toDouble("str", 0.123), 0.0)
+            assertEquals(0.123, instance.toDouble("boolean", 0.123), 0.0)
+            assertEquals(24.98, instance.toDouble("float", 0.123), 0.0)
+            assertEquals(12.0, instance.toDouble("int", 0.123), 0.0)
+            assertEquals(0.123, instance.toDouble("char", 0.123), 0.0)
+            assertEquals(0.123, instance.toDouble("nonexistent", 0.123), 0.0)
+        End Sub
+
+        <TestMethod>
+        Public Sub testToLong_String_long()
+            Dim instance = Build("12345678900", "-9000001")
+            assertEquals(12345678900L, instance.toLong("value1", 3L))
+            assertEquals(-9000001L, instance.toLong("value2", 3L))
+            assertEquals(3L, instance.toLong("empty", 3L))
+            assertEquals(3L, instance.toLong("str", 3L))
+            assertEquals(3L, instance.toLong("boolean", 3L))
+            assertEquals(3L, instance.toLong("float", 3L))
+            assertEquals(12L, instance.toLong("int", 3L))
+            assertEquals(3L, instance.toLong("char", 3L))
+            assertEquals(3L, instance.toLong("nonexistent", 3L))
+        End Sub
+
+        <TestMethod>
+        Public Sub testToChar_String_char()
+            Dim instance = Build("f", "w")
+            assertEquals("f"c, instance.toChar("value1", "t"c))
+            assertEquals("w"c, instance.toChar("value2", "t"c))
+            assertEquals("t"c, instance.toChar("empty", "t"c))
+            assertEquals("t"c, instance.toChar("str", "t"c))
+            assertEquals("t"c, instance.toChar("boolean", "t"c))
+            assertEquals("t"c, instance.toChar("float", "t"c))
+            assertEquals("t"c, instance.toChar("int", "t"c))
+            assertEquals("a"c, instance.toChar("char", "t"c))
+            assertEquals("t"c, instance.toChar("nonexistent", "t"c))
+        End Sub
+
+    End Class
 
 End Namespace

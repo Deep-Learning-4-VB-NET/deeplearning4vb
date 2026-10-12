@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="PORTING_STATUS.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="src/DeepLearning4VB/DeepLearning4VB.vbproj" />
+  <Project Path="tests/DeepLearning4VB.Tests/DeepLearning4VB.Tests.vbproj" />
+</Solution>

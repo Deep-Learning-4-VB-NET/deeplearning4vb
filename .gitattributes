@@ -1,0 +1,6 @@
+* text=auto
+*.vb text
+*.vbproj text
+*.slnx text
+*.md text
+*.props text

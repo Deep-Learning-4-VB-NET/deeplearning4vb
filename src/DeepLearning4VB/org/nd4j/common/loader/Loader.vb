@@ -23,8 +23,6 @@ Namespace org.nd4j.common.loader
 
 	Public Interface Loader(Of T)
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: T load(Source source) throws java.io.IOException;
 		Function load(ByVal source As Source) As T
 	End Interface
 
