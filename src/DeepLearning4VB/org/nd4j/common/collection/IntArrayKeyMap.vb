@@ -1,6 +1,8 @@
 ﻿Imports System
+Imports System.Collections
 Imports System.Collections.Generic
 Imports System.Linq
+Imports DeepLearning4VB.JavaCompat
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 '
@@ -21,153 +23,239 @@ Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.collection
 
+    ''' <summary>
+    ''' A wrapper that gives an integer array value-based equality and hashing so it can be
+    ''' used as a dictionary key. As in the Java original, the backing array is de-duplicated
+    ''' (order preserved) when wrapped. In Java this was the nested class
+    ''' <c>IntArrayKeyMap.IntArray</c>; VB cannot refer to a nested type of a generic class
+    ''' without type arguments, so it is a top-level class here.
+    ''' </summary>
+    <Serializable>
+    Public Class IntArray
+        Implements IComparable(Of IntArray)
 
-	Public Class IntArrayKeyMap(Of V)
-		Implements IDictionary(Of Integer(), V)
+        Private ReadOnly backing() As Integer
 
-		Private map As IDictionary(Of IntArray, V) = New LinkedHashMap(Of IntArray, V)()
+        Public Sub New(ByVal backingArray() As Integer)
+            Preconditions.checkNotNull(backingArray, "Backing array must not be null!")
+            backing = backingArray.Distinct().ToArray()
+        End Sub
 
-		Public Overridable ReadOnly Property Count As Integer Implements ICollection(Of Integer(), V).Count
-			Get
-				Return map.Count
-			End Get
-		End Property
+        Public ReadOnly Property BackingArray As Integer()
+            Get
+                Return backing
+            End Get
+        End Property
 
-		Public Overrides ReadOnly Property Empty As Boolean
-			Get
-				Return map.Count = 0
-			End Get
-		End Property
+        Public Function getBackingArray() As Integer()
+            Return backing
+        End Function
 
-		Public Overridable Function ContainsKey(ByVal o As Object) As Boolean Implements IDictionary(Of Integer(), V).ContainsKey
-			Return map.ContainsKey(New IntArray(DirectCast(o, Integer())))
-		End Function
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            If Me Is o Then
+                Return True
+            End If
+            Dim other = TryCast(o, IntArray)
+            If other Is Nothing Then
+                Return False
+            End If
+            Return other.backing.SequenceEqual(backing)
+        End Function
 
-		Public Overrides Function containsValue(ByVal o As Object) As Boolean
-			Return map.ContainsValue(New IntArray(DirectCast(o, Integer())))
-		End Function
+        Public Overrides Function GetHashCode() As Integer
+            Return Arrays.hashCode(backing)
+        End Function
 
-		Public Overrides Function [get](ByVal o As Object) As V
-			Return map(New IntArray(DirectCast(o, Integer())))
-		End Function
+        ''' <summary>
+        ''' Ordering used by the Java original: empty arrays and equal arrays compare as 1,
+        ''' otherwise arrays are ordered by their maximum element.
+        ''' </summary>
+        Public Overridable Function CompareTo(ByVal intArray As IntArray) As Integer Implements IComparable(Of IntArray).CompareTo
+            If backing.Length = 0 OrElse intArray.backing.Length = 0 Then
+                Return 1
+            ElseIf backing.SequenceEqual(intArray.backing) Then
+                Return 1
+            End If
+            Return Ints.compare(Ints.max(backing), Ints.max(intArray.backing))
+        End Function
 
-		Public Overrides Function put(ByVal ints() As Integer, ByVal v As V) As V
-				map(New IntArray(ints)) = v
-				Return map(New IntArray(ints))
-		End Function
+        Public Overrides Function ToString() As String
+            Return Arrays.toString(backing)
+        End Function
+    End Class
 
-		Public Overrides Function remove(ByVal o As Object) As V
-			Return map.Remove(New IntArray(DirectCast(o, Integer())))
-		End Function
+    ''' <summary>
+    ''' A dictionary keyed by integer arrays compared by content (the .NET default for array keys is
+    ''' reference equality). Keys are kept in insertion order.
+    ''' </summary>
+    <Serializable>
+    Public Class IntArrayKeyMap(Of V)
+        Implements IDictionary(Of Integer(), V)
 
-		Public Overridable Sub putAll(ByVal map As IDictionary(Of Integer(), V))
-			For Each entry As KeyValuePair(Of Integer(), V) In map
-				Me.map(New IntArray(entry.Key)) = entry.Value
-			Next entry
-		End Sub
+        Private ReadOnly map As New LinkedHashMap(Of IntArray, V)()
 
-		Public Overridable Sub Clear() Implements ICollection(Of Integer(), V).Clear
-			map.Clear()
-		End Sub
+        Private Shared Function Wrap(ByVal key() As Integer) As IntArray
+            Return New IntArray(key)
+        End Function
 
-		Public Overrides Function keySet() As ISet(Of Integer())
-			Dim intArrays As ISet(Of IntArray) = map.Keys
-			Dim ret As ISet(Of Integer()) = New LinkedHashSet(Of Integer())()
-			For Each intArray As IntArray In intArrays
-				ret.Add(intArray.backingArray)
-			Next intArray
-			Return ret
-		End Function
+        Public Function size() As Integer
+            Return map.Count
+        End Function
 
-		Public Overridable Function getValues() As ICollection(Of V) Implements IDictionary(Of Integer(), V).Values
-			Return map.Values
-		End Function
+        Public ReadOnly Property IsEmpty As Boolean
+            Get
+                Return map.Count = 0
+            End Get
+        End Property
 
-		Public Overrides Function entrySet() As ISet(Of Entry(Of Integer(), V))
-			Dim intArrays As ISet(Of KeyValuePair(Of IntArray, V)) = map.SetOfKeyValuePairs()
-			Dim ret As ISet(Of Entry(Of Integer(), V)) = New LinkedHashSet(Of Entry(Of Integer(), V))()
-			For Each intArray As KeyValuePair(Of IntArray, V) In intArrays
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final Map.Entry<IntArray,V> intArray2 = intArray;
-				Dim intArray2 As KeyValuePair(Of IntArray, V) = intArray
-				ret.Add(New EntryAnonymousInnerClass(Me))
-			Next intArray
-			Return ret
-		End Function
+        Public Function containsValue(ByVal value As V) As Boolean
+            Return map.containsValue(value)
+        End Function
 
-		Private Class EntryAnonymousInnerClass
-			Inherits KeyValuePair(Of Integer(), V)
+        ''' <summary>Returns the value for the key, or the default value if absent.</summary>
+        Public Function [get](ByVal key() As Integer) As V
+            Return map.[get](Wrap(key))
+        End Function
 
-			Private ReadOnly outerInstance As IntArrayKeyMap(Of V)
+        ''' <summary>Associates the value with the key and returns the previous value (default if none).</summary>
+        Public Function put(ByVal key() As Integer, ByVal value As V) As V
+            Return map.put(Wrap(key), value)
+        End Function
 
-			Public Sub New(ByVal outerInstance As IntArrayKeyMap(Of V))
-				Me.outerInstance = outerInstance
-			End Sub
+        ''' <summary>Removes the key and returns its value (default if it was absent).</summary>
+        Public Function removeAndGet(ByVal key() As Integer) As V
+            Return map.removeAndGet(Wrap(key))
+        End Function
 
-			Public Overrides ReadOnly Property Key As Integer()
-				Get
-					Return intArray2.getKey().backingArray
-				End Get
-			End Property
+        Public Sub putAll(ByVal other As IDictionary(Of Integer(), V))
+            For Each entry As KeyValuePair(Of Integer(), V) In other
+                map.put(Wrap(entry.Key), entry.Value)
+            Next entry
+        End Sub
 
-			Public Overrides ReadOnly Property Value As V
-				Get
-					Return intArray2.getValue()
-				End Get
-			End Property
+        ''' <summary>A snapshot of the keys (as arrays) in insertion order.</summary>
+        Public Function keySet() As ISet(Of Integer())
+            Dim ret As New IntArrayKeySet()
+            For Each k As IntArray In map.Keys
+                ret.Add(k.getBackingArray())
+            Next k
+            Return ret
+        End Function
 
-			Public Overrides Function setValue(ByVal v As V) As V
-				Return intArray2.setValue(v)
-			End Function
-		End Class
+        ''' <summary>A snapshot of the entries in insertion order.</summary>
+        Public Function entrySet() As IList(Of KeyValuePair(Of Integer(), V))
+            Dim ret As New List(Of KeyValuePair(Of Integer(), V))(map.Count)
+            For Each entry As KeyValuePair(Of IntArray, V) In map
+                ret.Add(New KeyValuePair(Of Integer(), V)(entry.Key.getBackingArray(), entry.Value))
+            Next entry
+            Return ret
+        End Function
 
+        ' ---- IDictionary(Of Integer(), V) ----
 
-		Public Class IntArray
-			Implements IComparable(Of IntArray)
+        Default Public Property Item(ByVal key() As Integer) As V Implements IDictionary(Of Integer(), V).Item
+            Get
+                Return map(Wrap(key))
+            End Get
+            Set(ByVal value As V)
+                map(Wrap(key)) = value
+            End Set
+        End Property
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter private int[] backingArray;
-			Friend backingArray() As Integer
+        Public ReadOnly Property Keys As ICollection(Of Integer()) Implements IDictionary(Of Integer(), V).Keys
+            Get
+                Return keySet()
+            End Get
+        End Property
 
-			Public Sub New(ByVal backingArray() As Integer)
-				Preconditions.checkNotNull(backingArray,"Backing array must not be null!")
-				Me.backingArray = backingArray.Distinct().ToArray()
-			End Sub
+        Public ReadOnly Property Values As ICollection(Of V) Implements IDictionary(Of Integer(), V).Values
+            Get
+                Return map.Values
+            End Get
+        End Property
 
-			Public Overrides Function Equals(ByVal o As Object) As Boolean
-				If Me Is o Then
-					Return True
-				End If
-				If o Is Nothing OrElse Me.GetType() <> o.GetType() Then
-					Return False
-				End If
+        Public ReadOnly Property Count As Integer Implements ICollection(Of KeyValuePair(Of Integer(), V)).Count
+            Get
+                Return map.Count
+            End Get
+        End Property
 
-				Dim intArray As IntArray = DirectCast(o, IntArray)
+        Public ReadOnly Property IsReadOnly As Boolean Implements ICollection(Of KeyValuePair(Of Integer(), V)).IsReadOnly
+            Get
+                Return False
+            End Get
+        End Property
 
-				Return intArray.backingArray.SequenceEqual(backingArray)
-			End Function
+        Public Function ContainsKey(ByVal key() As Integer) As Boolean Implements IDictionary(Of Integer(), V).ContainsKey
+            Return map.ContainsKey(Wrap(key))
+        End Function
 
-			Public Overrides Function GetHashCode() As Integer
-				Return Arrays.hashCode(backingArray)
-			End Function
+        Public Sub Add(ByVal key() As Integer, ByVal value As V) Implements IDictionary(Of Integer(), V).Add
+            map.Add(Wrap(key), value)
+        End Sub
 
-			Public Overridable Function CompareTo(ByVal intArray As IntArray) As Integer Implements IComparable(Of IntArray).CompareTo
-				If Me.backingArray.Length = 0 OrElse intArray.backingArray.Length = 0 Then
-					Return 1
+        Public Function Remove(ByVal key() As Integer) As Boolean Implements IDictionary(Of Integer(), V).Remove
+            Return map.Remove(Wrap(key))
+        End Function
 
-				ElseIf backingArray.SequenceEqual(intArray.backingArray) Then
-					Return 1
-				End If
+        Public Function TryGetValue(ByVal key() As Integer, ByRef value As V) As Boolean Implements IDictionary(Of Integer(), V).TryGetValue
+            Return map.TryGetValue(Wrap(key), value)
+        End Function
 
-				Return Ints.compare(Ints.max(backingArray),Ints.max(intArray.backingArray))
-			End Function
-		End Class
+        Private Sub AddPair(ByVal item As KeyValuePair(Of Integer(), V)) Implements ICollection(Of KeyValuePair(Of Integer(), V)).Add
+            Add(item.Key, item.Value)
+        End Sub
 
+        Public Sub Clear() Implements ICollection(Of KeyValuePair(Of Integer(), V)).Clear
+            map.Clear()
+        End Sub
 
-	End Class
+        Private Function ContainsPair(ByVal item As KeyValuePair(Of Integer(), V)) As Boolean Implements ICollection(Of KeyValuePair(Of Integer(), V)).Contains
+            Dim v As V = Nothing
+            Return TryGetValue(item.Key, v) AndAlso EqualityComparer(Of V).Default.Equals(v, item.Value)
+        End Function
+
+        Private Sub CopyTo(ByVal array() As KeyValuePair(Of Integer(), V), ByVal arrayIndex As Integer) Implements ICollection(Of KeyValuePair(Of Integer(), V)).CopyTo
+            For Each entry In entrySet()
+                array(arrayIndex) = entry
+                arrayIndex += 1
+            Next entry
+        End Sub
+
+        Private Function RemovePair(ByVal item As KeyValuePair(Of Integer(), V)) As Boolean Implements ICollection(Of KeyValuePair(Of Integer(), V)).Remove
+            If ContainsPair(item) Then
+                Return Remove(item.Key)
+            End If
+            Return False
+        End Function
+
+        Public Function GetEnumerator() As IEnumerator(Of KeyValuePair(Of Integer(), V)) Implements IEnumerable(Of KeyValuePair(Of Integer(), V)).GetEnumerator
+            Return entrySet().GetEnumerator()
+        End Function
+
+        Private Function GetEnumeratorNonGeneric() As IEnumerator Implements IEnumerable.GetEnumerator
+            Return GetEnumerator()
+        End Function
+
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            Dim other = TryCast(o, IntArrayKeyMap(Of V))
+            If other Is Nothing Then
+                Return False
+            End If
+            Return map.Equals(other.map)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return map.GetHashCode()
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return map.ToString()
+        End Function
+    End Class
 
 End Namespace

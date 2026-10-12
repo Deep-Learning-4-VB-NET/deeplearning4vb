@@ -53,7 +53,7 @@ Namespace org.nd4j.common.util
 				Return 1 / pow(base, exponent * -1)
 			End If
 
-			Return FastMath.pow(base, exponent)
+			Return Math.pow(base, exponent)
 		End Function
 
 		''' <summary>
@@ -127,13 +127,13 @@ Namespace org.nd4j.common.util
 		''' <param name="n"> </param>
 		''' <param name="p">
 		''' @return </param>
-		Public Shared Function binomial(ByVal rng As RandomGenerator, ByVal n As Integer, ByVal p As Double) As Integer
+		Public Shared Function binomial(ByVal rng As Random, ByVal n As Integer, ByVal p As Double) As Integer
 			If (p < 0) OrElse (p > 1) Then
 				Return 0
 			End If
 			Dim c As Integer = 0
 			For i As Integer = 0 To n - 1
-				If rng.nextDouble() < p Then
+				If rng.NextDouble() < p Then
 					c += 1
 				End If
 			Next i
@@ -626,7 +626,7 @@ Namespace org.nd4j.common.util
 
 			Do While count < arr.Count
 
-				Dim sublist As IList(Of Double) = arr.subList(count, count + chunk)
+				Dim sublist As IList(Of Double) = arr.Skip(count).Take(chunk).ToList()
 				count += chunk
 				ret.Add(sublist)
 
@@ -1177,7 +1177,7 @@ Namespace org.nd4j.common.util
 			For i As Integer = 0 To vector.Length - 1
 				Dim d As Double = vector(i)
 				Dim j As Integer = CInt(Math.Truncate(d))
-				Dim binary As String = Integer.toBinaryString(j)
+				Dim binary As String = Convert.ToString(j, 2)
 				binaryReps.Add(binary)
 			Next i
 			'append from left to right, the least to the most significant bit
@@ -1317,11 +1317,11 @@ Namespace org.nd4j.common.util
 		''' <param name="begin"> the begin of the interval </param>
 		''' <param name="end">   the end of the interval </param>
 		''' <returns> an int between begin and end </returns>
-		Public Shared Function randomNumberBetween(ByVal begin As Double, ByVal [end] As Double, ByVal rng As RandomGenerator) As Integer
+		Public Shared Function randomNumberBetween(ByVal begin As Double, ByVal [end] As Double, ByVal rng As Random) As Integer
 			If begin > [end] Then
 				Throw New System.ArgumentException("Begin must not be less than end")
 			End If
-			Return CInt(Math.Truncate(begin)) + CInt(Math.Truncate(rng.nextDouble() * (([end] - begin) + 1)))
+			Return CInt(Math.Truncate(begin)) + CInt(Math.Truncate(rng.NextDouble() * (([end] - begin) + 1)))
 		End Function
 
 		Public Shared Function randomFloatBetween(ByVal begin As Single, ByVal [end] As Single) As Single

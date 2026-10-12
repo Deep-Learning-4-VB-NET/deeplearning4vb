@@ -1,4 +1,5 @@
-﻿Imports System.Collections.Generic
+Imports System
+Imports System.Collections.Generic
 Imports System.Numerics
 
 '
@@ -19,113 +20,89 @@ Imports System.Numerics
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
+    ''' <summary>
+    ''' Bernoulli numbers B_n as exact rationals, computed on demand and cached.
+    ''' </summary>
+    Public Class Bernoulli
 
-	''' <summary>
-	''' Bernoulli numbers.
-	''' </summary>
+        ''' <summary>Cache of the even-indexed Bernoulli numbers: a(k) = B_(2k).</summary>
+        Private Shared ReadOnly a As New List(Of Rational)()
+        Private Shared ReadOnly cacheLock As New Object()
 
-	Friend Class Bernoulli
-	'    
-	'     * The list of all Bernoulli numbers as a vector, n=0,2,4,....
-	'     
+        Public Sub New()
+            SyncLock cacheLock
+                If a.Count = 0 Then
+                    a.Add(Rational.ONE)
+                    a.Add(New Rational(1, 6))
+                End If
+            End SyncLock
+        End Sub
 
-		Friend Shared a As IList(Of Rational) = New List(Of Rational)()
+        ''' <summary>Sets a coefficient in the internal table.</summary>
+        ''' <param name="n">The zero-based index of the coefficient (must be even).</param>
+        ''' <param name="value">The new value of the coefficient.</param>
+        Protected Friend Overridable Sub [set](ByVal n As Integer, ByVal value As Rational)
+            Dim nindx As Integer = n \ 2
+            SyncLock cacheLock
+                If nindx < a.Count Then
+                    a(nindx) = value
+                Else
+                    Do While a.Count < nindx
+                        a.Add(Rational.ZERO)
+                    Loop
+                    a.Add(value)
+                End If
+            End SyncLock
+        End Sub
 
-		Private Class ComparatorAnonymousInnerClass2
-			Implements IComparer(Of KeyValuePair(Of K, V))
+        ''' <summary>The Bernoulli number at the index provided.</summary>
+        ''' <param name="n">The index, non-negative.</param>
+        ''' <returns>B_0 = 1 for n = 0, B_1 = -1/2 for n = 1, B_2 = 1/6 for n = 2, etc.</returns>
+        Public Overridable Function at(ByVal n As Integer) As Rational
+            If n < 0 Then
+                Throw New ArgumentOutOfRangeException(NameOf(n), "Index must be non-negative")
+            End If
+            If n = 1 Then
+                Return New Rational(-1, 2)
+            ElseIf n Mod 2 <> 0 Then
+                Return Rational.ZERO
+            Else
+                Dim nindx As Integer = n \ 2
+                SyncLock cacheLock
+                    If a.Count <= nindx Then
+                        For i As Integer = 2 * a.Count To n Step 2
+                            [set](i, doubleSum(i))
+                        Next i
+                    End If
+                    Return a(nindx)
+                End SyncLock
+            End If
+        End Function
 
-			Private ReadOnly outerInstance As ArrayUtil
-
-			Public Sub New(ByVal outerInstance As ArrayUtil)
-				Me.outerInstance = outerInstance
-			End Sub
-
-			Public Function Compare(ByVal o1 As KeyValuePair(Of K, V), ByVal o2 As KeyValuePair(Of K, V)) As Integer Implements IComparer(Of KeyValuePair(Of K, V)).Compare
-				Return (o1.Value).compareTo(o2.Value)
-			End Function
-		End Class
-
-		Public Sub New()
-			If a.Count = 0 Then
-				a.Add(Rational.ONE)
-				a.Add(New Rational(1, 6))
-			End If
-		End Sub
-
-		''' <summary>
-		''' Set a coefficient in the internal table.
-		''' </summary>
-		''' <param name="n">     the zero-based index of the coefficient. n=0 for the constant term. </param>
-		''' <param name="value"> the new value of the coefficient. </param>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: protected void [set](final int n, final Rational value)
-		Protected Friend Overridable Sub [set](ByVal n As Integer, ByVal value As Rational)
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final int nindx = n / 2;
-			Dim nindx As Integer = n \ 2
-			If nindx < a.Count Then
-				a(nindx) = value
-			Else
-				Do While a.Count < nindx
-					a.Add(Rational.ZERO)
-				Loop
-				a.Add(value)
-			End If
-		End Sub
-
-		''' <summary>
-		''' The Bernoulli number at the index provided.
-		''' </summary>
-		''' <param name="n"> the index, non-negative. </param>
-		''' <returns> the B_0=1 for n=0, B_1=-1/2 for n=1, B_2=1/6 for n=2 etc </returns>
-		Public Overridable Function at(ByVal n As Integer) As Rational
-			If n = 1 Then
-				Return (New Rational(-1, 2))
-			ElseIf n Mod 2 <> 0 Then
-				Return Rational.ZERO
-			Else
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final int nindx = n / 2;
-				Dim nindx As Integer = n \ 2
-				If a.Count <= nindx Then
-					For i As Integer = 2 * a.Count To n Step 2
-						[set](i, doubleSum(i))
-					Next i
-				End If
-				Return a(nindx)
-			End If
-		End Function
-	'     Generate a new B_n by a standard double sum.
-	'     * @param n The index of the Bernoulli number.
-	'     * @return The Bernoulli number at n.
-	'     
-
-		Private Function doubleSum(ByVal n As Integer) As Rational
-			Dim resul As Rational = Rational.ZERO
-			Dim k As Integer = 0
-			Do While k <= n
-				Dim jsum As Rational = Rational.ZERO
-				Dim bin As BigInteger = BigInteger.One
-				For j As Integer = 0 To k
-					Dim jpown As BigInteger = BigInteger.valueOf(j).pow(n)
-					If j Mod 2 = 0 Then
-						jsum = jsum.add(bin * jpown)
-					Else
-						jsum = jsum.subtract(bin * jpown)
-					End If
-	'                 update binomial(k,j) recursively
-	'                 
-					bin = bin * BigInteger.valueOf(k - j).divide(BigInteger.valueOf(j + 1))
-				Next j
-				resul = resul.add(jsum.divide(BigInteger.valueOf(k + 1)))
-				k += 1
-			Loop
-			Return resul
-		End Function
-	End Class ' Bernoulli
+        ''' <summary>Generates a new B_n by the standard double sum.</summary>
+        Private Function doubleSum(ByVal n As Integer) As Rational
+            Dim resul As Rational = Rational.ZERO
+            For k As Integer = 0 To n
+                Dim jsum As Rational = Rational.ZERO
+                Dim bin As BigInteger = BigInteger.One
+                For j As Integer = 0 To k
+                    Dim jpown As BigInteger = BigInteger.Pow(New BigInteger(j), n)
+                    If j Mod 2 = 0 Then
+                        jsum = jsum.add(bin * jpown)
+                    Else
+                        jsum = jsum.subtract(bin * jpown)
+                    End If
+                    ' update binomial(k, j) recursively
+                    bin = BigInteger.Divide(bin * New BigInteger(k - j), New BigInteger(j + 1))
+                Next j
+                resul = resul.add(jsum.divide(New BigInteger(k + 1)))
+            Next k
+            Return resul
+        End Function
+    End Class
 
 End Namespace

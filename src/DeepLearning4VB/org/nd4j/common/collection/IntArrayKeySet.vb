@@ -1,4 +1,4 @@
-Imports System.Collections
+﻿Imports System.Collections
 Imports System.Collections.Generic
 
 '
@@ -32,11 +32,11 @@ Namespace org.nd4j.common.collection
     Public Class IntArrayKeySet
         Implements ISet(Of Integer())
 
-        Private ReadOnly lookup As New HashSet(Of IntArrayKeyMap.IntArray)()
-        Private ReadOnly order As New List(Of IntArrayKeyMap.IntArray)()
+        Private ReadOnly lookup As New HashSet(Of IntArray)()
+        Private ReadOnly order As New List(Of IntArray)()
 
-        Private Shared Function Wrap(ByVal ints() As Integer) As IntArrayKeyMap.IntArray
-            Return New IntArrayKeyMap.IntArray(ints)
+        Private Shared Function Wrap(ByVal ints() As Integer) As IntArray
+            Return New IntArray(ints)
         End Function
 
         Public ReadOnly Property Count As Integer Implements ICollection(Of Integer()).Count
@@ -88,7 +88,7 @@ Namespace org.nd4j.common.collection
             order.Clear()
         End Sub
 
-        Public Sub CopyTo(ByVal array() As Integer(), ByVal arrayIndex As Integer) Implements ICollection(Of Integer()).CopyTo
+        Public Sub CopyTo(ByVal array As Integer()(), ByVal arrayIndex As Integer) Implements ICollection(Of Integer()).CopyTo
             For Each w In order
                 array(arrayIndex) = w.getBackingArray()
                 arrayIndex += 1
@@ -97,7 +97,7 @@ Namespace org.nd4j.common.collection
 
         ''' <summary>Returns the contents of the set, in insertion order.</summary>
         Public Function ToArray() As Integer()()
-            Dim ret(order.Count - 1)() As Integer
+            Dim ret As Integer()() = New Integer(order.Count - 1)() {}
             For i As Integer = 0 To order.Count - 1
                 ret(i) = order(i).getBackingArray()
             Next
@@ -119,7 +119,7 @@ Namespace org.nd4j.common.collection
         End Sub
 
         Public Sub IntersectWith(ByVal other As IEnumerable(Of Integer())) Implements ISet(Of Integer()).IntersectWith
-            Dim keep As New HashSet(Of IntArrayKeyMap.IntArray)(other.Select(AddressOf Wrap))
+            Dim keep As New HashSet(Of IntArray)(other.Select(AddressOf Wrap))
             For Each w In order.ToArray()
                 If Not keep.Contains(w) Then
                     lookup.Remove(w)

@@ -1,4 +1,6 @@
 ﻿Imports System
+Imports System.Runtime.Serialization
+Imports System.Threading
 
 '
 ' *  ******************************************************************************
@@ -18,53 +20,61 @@
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.primitives
 
+    ''' <summary>
+    ''' A value holder whose reads and writes are guarded by a reader/writer lock.
+    ''' </summary>
+    <Serializable>
+    Public Class SynchronizedObject(Of T)
+        Protected Friend storedValue As T
+        <NonSerialized>
+        Protected Friend lock As ReaderWriterLockSlim
 
-	<Serializable>
-	Public Class SynchronizedObject(Of T)
-		Protected Friend value As T
-		<NonSerialized>
-		Protected Friend lock As ReentrantReadWriteLock
+        Public Sub New()
+            lock = New ReaderWriterLockSlim()
+        End Sub
 
-		Public Sub New()
-			lock = New ReentrantReadWriteLock()
-		End Sub
+        Public Sub New(ByVal value As T)
+            Me.New()
+            Me.[set](value)
+        End Sub
 
-		Public Sub New(ByVal value As T)
-			Me.New()
+        ''' <summary>Returns the stored value under the read lock.</summary>
+        Public Function [get]() As T
+            lock.EnterReadLock()
+            Try
+                Return storedValue
+            Finally
+                lock.ExitReadLock()
+            End Try
+        End Function
 
-			Me.[set](value)
-		End Sub
+        ''' <summary>Updates the stored value under the write lock.</summary>
+        Public Sub [set](ByVal newValue As T)
+            lock.EnterWriteLock()
+            Try
+                storedValue = newValue
+            Finally
+                lock.ExitWriteLock()
+            End Try
+        End Sub
 
-		''' <summary>
-		''' This method returns stored value via read lock
-		''' @return
-		''' </summary>
-		Public Function [get]() As T
-			Try
-				lock.readLock().lock()
+        Public Property Value As T
+            Get
+                Return [get]()
+            End Get
+            Set(ByVal newValue As T)
+                [set](newValue)
+            End Set
+        End Property
 
-				Return value
-			Finally
-				lock.readLock().unlock()
-			End Try
-		End Function
-
-		''' <summary>
-		''' This method updates stored value via write lock </summary>
-		''' <param name="value"> </param>
-		Public Sub [set](ByVal value As T)
-			Try
-				lock.writeLock().lock()
-
-				Me.value = value
-			Finally
-				lock.writeLock().unlock()
-			End Try
-		End Sub
-	End Class
+        <OnDeserialized>
+        Private Sub OnDeserialized(ByVal context As StreamingContext)
+            lock = New ReaderWriterLockSlim()
+        End Sub
+    End Class
 
 End Namespace

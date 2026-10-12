@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 
 '
 ' *  ******************************************************************************
@@ -18,68 +18,138 @@
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.primitives
 
+    ''' <summary>An immutable pair of values.</summary>
+    <Serializable>
+    Public Class ImmutablePair(Of K, V)
+        Private Const serialVersionUID As Long = 119L
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data @Builder public class ImmutablePair<K, V> implements java.io.Serializable
-	<Serializable>
-	Public Class ImmutablePair(Of K, V)
-		Private Const serialVersionUID As Long = 119L
+        Protected Friend ReadOnly keyValue As K
+        Protected Friend ReadOnly valueValue As V
 
-		Protected Friend Sub New()
-			'
-		End Sub
+        Protected Friend Sub New()
+        End Sub
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Setter(AccessLevel.NONE) protected K key;
-		Protected Friend key As K
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Setter(AccessLevel.NONE) protected V value;
-		Protected Friend value As V
+        Public Sub New(ByVal key As K, ByVal value As V)
+            keyValue = key
+            valueValue = value
+        End Sub
 
-		Public Overridable ReadOnly Property Left As K
-			Get
-				Return key
-			End Get
-		End Property
+        Public ReadOnly Property Key As K
+            Get
+                Return keyValue
+            End Get
+        End Property
 
-		Public Overridable ReadOnly Property Right As V
-			Get
-				Return value
-			End Get
-		End Property
+        Public ReadOnly Property Value As V
+            Get
+                Return valueValue
+            End Get
+        End Property
 
-		Public Overridable ReadOnly Property First As K
-			Get
-				Return key
-			End Get
-		End Property
+        Public Overridable ReadOnly Property Left As K
+            Get
+                Return keyValue
+            End Get
+        End Property
 
-		Public Overridable ReadOnly Property Second As V
-			Get
-				Return value
-			End Get
-		End Property
+        Public Overridable ReadOnly Property Right As V
+            Get
+                Return valueValue
+            End Get
+        End Property
 
+        Public Overridable ReadOnly Property First As K
+            Get
+                Return keyValue
+            End Get
+        End Property
 
-		Public Shared Function [of](Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
-			Return New ImmutablePair(Of T, E)(key, value)
-		End Function
+        Public Overridable ReadOnly Property Second As V
+            Get
+                Return valueValue
+            End Get
+        End Property
 
-		Public Shared Function makePair(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
-			Return New ImmutablePair(Of T, E)(key, value)
-		End Function
+        Public Function getKey() As K
+            Return keyValue
+        End Function
 
-		Public Shared Function create(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
-			Return New ImmutablePair(Of T, E)(key, value)
-		End Function
+        Public Function getValue() As V
+            Return valueValue
+        End Function
 
-		Public Shared Function pairOf(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
-			Return New ImmutablePair(Of T, E)(key, value)
-		End Function
-	End Class
+        Public Function getFirst() As K
+            Return keyValue
+        End Function
+
+        Public Function getSecond() As V
+            Return valueValue
+        End Function
+
+        Public Function getLeft() As K
+            Return keyValue
+        End Function
+
+        Public Function getRight() As V
+            Return valueValue
+        End Function
+
+        Public Shared Function [of](ByVal key As K, ByVal value As V) As ImmutablePair(Of K, V)
+            Return New ImmutablePair(Of K, V)(key, value)
+        End Function
+
+        Public Shared Function makePair(ByVal key As K, ByVal value As V) As ImmutablePair(Of K, V)
+            Return New ImmutablePair(Of K, V)(key, value)
+        End Function
+
+        Public Shared Function create(ByVal key As K, ByVal value As V) As ImmutablePair(Of K, V)
+            Return New ImmutablePair(Of K, V)(key, value)
+        End Function
+
+        Public Shared Function pairOf(ByVal key As K, ByVal value As V) As ImmutablePair(Of K, V)
+            Return New ImmutablePair(Of K, V)(key, value)
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "ImmutablePair(key=" & Arrays.FormatElement(keyValue) & ", value=" & Arrays.FormatElement(valueValue) & ")"
+        End Function
+
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            If Me Is o Then Return True
+            Dim other = TryCast(o, ImmutablePair(Of K, V))
+            If other Is Nothing Then Return False
+            Return Object.Equals(keyValue, other.keyValue) AndAlso Object.Equals(valueValue, other.valueValue)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(keyValue, valueValue)
+        End Function
+    End Class
+
+    ''' <summary>Factory methods for <see cref="ImmutablePair(Of K, V)"/> with type inference (Java's static methods).</summary>
+    Public NotInheritable Class ImmutablePair
+        Private Sub New()
+        End Sub
+
+        Public Shared Function [of](Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
+            Return New ImmutablePair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function makePair(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
+            Return New ImmutablePair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function create(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
+            Return New ImmutablePair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function pairOf(Of T, E)(ByVal key As T, ByVal value As E) As ImmutablePair(Of T, E)
+            Return New ImmutablePair(Of T, E)(key, value)
+        End Function
+    End Class
 
 End Namespace

@@ -1,4 +1,5 @@
-﻿Imports System
+Imports System
+Imports System.IO
 Imports ND4JSystemProperties = DeepLearning4VB.org.nd4j.common.config.ND4JSystemProperties
 
 '
@@ -19,50 +20,76 @@ Imports ND4JSystemProperties = DeepLearning4VB.org.nd4j.common.config.ND4JSystem
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
+    ''' <summary>
+    ''' Temporary file helpers that honour the ND4J temporary-directory system property.
+    ''' Paths are returned as strings (the Java original returned <c>java.io.File</c>).
+    ''' </summary>
+    Public Class ND4JFileUtils
 
-	Public Class ND4JFileUtils
+        Private Shared ReadOnly random As New Random()
 
-		Private Sub New()
-		End Sub
+        Private Sub New()
+        End Sub
 
-		''' <summary>
-		''' Create a temporary file in the location specified by <seealso cref="ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY"/> if set,
-		''' or the default temporary directory (usually specified by java.io.tmpdir system property) </summary>
-		''' <param name="prefix"> Prefix for generating file's name; must be at least 3 characeters </param>
-		''' <param name="suffix"> Suffix for generating file's name; may be null (".tmp" will be used if null) </param>
-		''' <returns> A temporary file </returns>
-		Public Shared Function createTempFile(ByVal prefix As String, ByVal suffix As String) As File
-			Dim p As String = System.getProperty(ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY)
-			Try
-				If p Is Nothing OrElse p.Length = 0 Then
-					Return File.createTempFile(prefix, suffix)
-				Else
-					Return File.createTempFile(prefix, suffix, New File(p))
-				End If
-			Catch e As IOException
-				Throw New Exception("Error creating temporary file", e)
-			End Try
-		End Function
+        ''' <summary>
+        ''' Creates a new, empty temporary file in the directory given by the
+        ''' <see cref="ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY"/> system property if set,
+        ''' or the default temporary directory otherwise.
+        ''' </summary>
+        ''' <param name="prefix">Prefix for the file name.</param>
+        ''' <param name="suffix">Suffix for the file name; ".tmp" is used when Nothing.</param>
+        ''' <returns>The full path of the created file.</returns>
+        Public Shared Function createTempFile(ByVal prefix As String, ByVal suffix As String) As String
+            Dim dir As String = TempDir
+            Directory.CreateDirectory(dir)
+            If suffix Is Nothing Then
+                suffix = ".tmp"
+            End If
+            If prefix Is Nothing Then
+                prefix = ""
+            End If
+            Try
+                For attempt As Integer = 0 To 99
+                    Dim n As Long
+                    SyncLock random
+                        n = CLng(random.NextDouble() * Long.MaxValue)
+                    End SyncLock
+                    Dim candidate As String = Path.Combine(dir, prefix & n.ToString() & suffix)
+                    If File.Exists(candidate) Then
+                        Continue For
+                    End If
+                    Using New FileStream(candidate, FileMode.CreateNew, FileAccess.Write)
+                    End Using
+                    Return candidate
+                Next attempt
+                Throw New IOException("Could not create a unique temporary file in " & dir)
+            Catch e As IOException
+                Throw New InvalidOperationException("Error creating temporary file", e)
+            End Try
+        End Function
 
-		''' <summary>
-		''' Get the temporary directory. This is the location specified by <seealso cref="ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY"/> if set,
-		''' or the default temporary directory (usually specified by java.io.tmpdir system property) </summary>
-		''' <returns> Temporary directory </returns>
-		Public Shared ReadOnly Property TempDir As File
-			Get
-				Dim p As String = System.getProperty(ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY)
-				If p Is Nothing OrElse p.Length = 0 Then
-					Return New File(System.getProperty("java.io.tmpdir"))
-				Else
-					Return New File(p)
-				End If
-			End Get
-		End Property
+        ''' <summary>
+        ''' The temporary directory: the <see cref="ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY"/> system
+        ''' property if set, otherwise the system temporary directory.
+        ''' </summary>
+        Public Shared ReadOnly Property TempDir As String
+            Get
+                Dim p As String = JavaSystem.getProperty(ND4JSystemProperties.ND4J_TEMP_DIR_PROPERTY)
+                If p Is Nothing OrElse p.Length = 0 Then
+                    Return Path.GetTempPath()
+                End If
+                Return p
+            End Get
+        End Property
 
-	End Class
+        Public Shared Function getTempDir() As String
+            Return TempDir
+        End Function
+
+    End Class
 
 End Namespace

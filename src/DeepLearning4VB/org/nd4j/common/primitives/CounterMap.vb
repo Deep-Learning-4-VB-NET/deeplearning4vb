@@ -1,4 +1,5 @@
-﻿Imports System
+Imports System
+Imports System.Collections
 Imports System.Collections.Concurrent
 Imports System.Collections.Generic
 
@@ -20,244 +21,184 @@ Imports System.Collections.Generic
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.primitives
 
+    ''' <summary>
+    ''' A two-level counter: a map from a first element to a <see cref="Counter(Of T)"/> of second elements.
+    ''' </summary>
+    <Serializable>
+    Public Class CounterMap(Of F, S)
+        Implements IEnumerable(Of Pair(Of F, S))
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode public class CounterMap<F, S> implements java.io.Serializable
-	<Serializable>
-	Public Class CounterMap(Of F, S)
-		Private Const serialVersionUID As Long = 119L
+        Private Const serialVersionUID As Long = 119L
 
-		Protected Friend maps As IDictionary(Of F, Counter(Of S)) = New ConcurrentDictionary(Of F, Counter(Of S))()
+        Protected Friend maps As New ConcurrentDictionary(Of F, Counter(Of S))()
 
-		Public Sub New()
+        Public Sub New()
+        End Sub
 
-		End Sub
+        ''' <summary>True if this CounterMap has no values stored.</summary>
+        Public Overridable ReadOnly Property Empty As Boolean
+            Get
+                Return maps.Count = 0
+            End Get
+        End Property
 
-		''' <summary>
-		''' This method checks if this CounterMap has any values stored
-		''' 
-		''' @return
-		''' </summary>
-		Public Overridable ReadOnly Property Empty As Boolean
-			Get
-				Return maps.Count = 0
-			End Get
-		End Property
+        Public Function isEmpty() As Boolean
+            Return Empty
+        End Function
 
-		''' <summary>
-		''' This method checks if this CounterMap has any values stored for a given first element
-		''' </summary>
-		''' <param name="element">
-		''' @return </param>
-		Public Overridable Function isEmpty(ByVal element As F) As Boolean
-			If Empty Then
-				Return True
-			End If
+        ''' <summary>True if this CounterMap has no values stored for the given first element.</summary>
+        Public Overridable Function isEmpty(ByVal element As F) As Boolean
+            If Empty Then
+                Return True
+            End If
+            Dim m As Counter(Of S) = maps.GetValueOrNull(element)
+            If m Is Nothing Then
+                Return True
+            End If
+            Return m.Empty
+        End Function
 
-			Dim m As Counter(Of S) = maps(element)
-			If m Is Nothing Then
-				Return True
-			Else
-				Return m.Empty
-			End If
-		End Function
+        ''' <summary>Increments the values of this counter by the counts of another counter.</summary>
+        Public Overridable Sub incrementAll(ByVal other As CounterMap(Of F, S))
+            For Each entry As KeyValuePair(Of F, Counter(Of S)) In other.maps
+                Dim key As F = entry.Key
+                Dim innerCounter As Counter(Of S) = entry.Value
+                For Each innerEntry As KeyValuePair(Of S, AtomicDouble) In innerCounter.entrySet()
+                    incrementCount(key, innerEntry.Key, innerEntry.Value.[get]())
+                Next innerEntry
+            Next entry
+        End Sub
 
-		''' <summary>
-		''' This method will increment values of this counter, by counts of other counter
-		''' </summary>
-		''' <param name="other"> </param>
-		Public Overridable Sub incrementAll(ByVal other As CounterMap(Of F, S))
-			For Each entry As KeyValuePair(Of F, Counter(Of S)) In other.maps.SetOfKeyValuePairs()
-				Dim key As F = entry.Key
-				Dim innerCounter As Counter(Of S) = entry.Value
-				For Each innerEntry As KeyValuePair(Of S, AtomicDouble) In innerCounter.entrySet()
-					Dim value As S = innerEntry.Key
-					incrementCount(key, value, innerEntry.Value.[get]())
-				Next innerEntry
-			Next entry
-		End Sub
+        ''' <summary>Increments the count for the given first/second pair.</summary>
+        Public Overridable Sub incrementCount(ByVal first As F, ByVal second As S, ByVal inc As Double)
+            Dim counter As Counter(Of S) = maps.GetOrAdd(first, Function(k) New Counter(Of S)())
+            counter.incrementCount(second, inc)
+        End Sub
 
-		''' <summary>
-		''' This method will increment counts for a given first/second pair
-		''' </summary>
-		''' <param name="first"> </param>
-		''' <param name="second"> </param>
-		''' <param name="inc"> </param>
-		Public Overridable Sub incrementCount(ByVal first As F, ByVal second As S, ByVal inc As Double)
-			Dim counter As Counter(Of S) = maps(first)
-			If counter Is Nothing Then
-				counter = New Counter(Of S)()
-				maps(first) = counter
-			End If
+        ''' <summary>Returns the count for the given first/second pair (0 if absent).</summary>
+        Public Overridable Function getCount(ByVal first As F, ByVal second As S) As Double
+            Dim counter As Counter(Of S) = maps.GetValueOrNull(first)
+            If counter Is Nothing Then
+                Return 0.0
+            End If
+            Return counter.getCount(second)
+        End Function
 
-			counter.incrementCount(second, inc)
-		End Sub
+        ''' <summary>Sets the count for the given first/second pair.</summary>
+        ''' <returns>The previous count.</returns>
+        Public Overridable Function setCount(ByVal first As F, ByVal second As S, ByVal value As Double) As Double
+            Dim counter As Counter(Of S) = maps.GetOrAdd(first, Function(k) New Counter(Of S)())
+            Return counter.setCount(second, value)
+        End Function
 
-		''' <summary>
-		''' This method returns counts for a given first/second pair
-		''' </summary>
-		''' <param name="first"> </param>
-		''' <param name="second">
-		''' @return </param>
-		Public Overridable Function getCount(ByVal first As F, ByVal second As S) As Double
-			Dim counter As Counter(Of S) = maps(first)
-			If counter Is Nothing Then
-				Return 0.0
-			End If
+        ''' <summary>Returns the first/second pair with the highest count (Nothing if empty).</summary>
+        Public Overridable Function argMax() As Pair(Of F, S)
+            Dim maxCount As Double = Double.NegativeInfinity
+            Dim maxKey As Pair(Of F, S) = Nothing
+            For Each entry As KeyValuePair(Of F, Counter(Of S)) In maps
+                Dim counter As Counter(Of S) = entry.Value
+                If counter.Empty Then
+                    Continue For
+                End If
+                Dim localMax As S = counter.argMax()
+                Dim localCount As Double = counter.getCount(localMax)
+                If localCount > maxCount OrElse maxKey Is Nothing Then
+                    maxKey = New Pair(Of F, S)(entry.Key, localMax)
+                    maxCount = localCount
+                End If
+            Next entry
+            Return maxKey
+        End Function
 
-			Return counter.getCount(second)
-		End Function
+        ''' <summary>Purges all counters.</summary>
+        Public Overridable Sub clear()
+            maps.Clear()
+        End Sub
 
-		''' <summary>
-		''' This method allows you to set counter value for a given first/second pair
-		''' </summary>
-		''' <param name="first"> </param>
-		''' <param name="second"> </param>
-		''' <param name="value">
-		''' @return </param>
-		Public Overridable Function setCount(ByVal first As F, ByVal second As S, ByVal value As Double) As Double
-			Dim counter As Counter(Of S) = maps(first)
-			If counter Is Nothing Then
-				counter = New Counter(Of S)()
-				maps(first) = counter
-			End If
+        ''' <summary>Purges the counter for the given first element.</summary>
+        Public Overridable Sub clear(ByVal element As F)
+            Dim s As Counter(Of S) = maps.GetValueOrNull(element)
+            If s IsNot Nothing Then
+                s.clear()
+            End If
+        End Sub
 
-			Return counter.setCount(second, value)
-		End Function
+        ''' <summary>Returns a snapshot of all first elements.</summary>
+        Public Overridable Function keySet() As ISet(Of F)
+            Return New HashSet(Of F)(maps.Keys)
+        End Function
 
-		''' <summary>
-		''' This method returns pair of elements with a max value
-		''' 
-		''' @return
-		''' </summary>
-		Public Overridable Function argMax() As Pair(Of F, S)
-			Dim maxCount As Double? = -Double.MaxValue
-			Dim maxKey As Pair(Of F, S) = Nothing
-			For Each entry As KeyValuePair(Of F, Counter(Of S)) In maps.SetOfKeyValuePairs()
-				Dim counter As Counter(Of S) = entry.Value
-				Dim localMax As S = counter.argMax()
-				If counter.getCount(localMax) > maxCount OrElse maxKey Is Nothing Then
-					maxKey = New Pair(Of F, S)(entry.Key, localMax)
-					maxCount = counter.getCount(localMax)
-				End If
-			Next entry
-			Return maxKey
-		End Function
+        ''' <summary>Returns the counter for the given first element, or Nothing.</summary>
+        Public Overridable Function getCounter(ByVal first As F) As Counter(Of S)
+            Return maps.GetValueOrNull(first)
+        End Function
 
-		''' <summary>
-		''' This method purges all counters
-		''' </summary>
-		Public Overridable Sub clear()
-			maps.Clear()
-		End Sub
+        ''' <summary>Returns an enumerator over all first/second pairs stored in this counter.</summary>
+        Public Overridable Function getIterator() As IEnumerator(Of Pair(Of F, S))
+            Return GetEnumerator()
+        End Function
 
-		''' <summary>
-		''' This method purges counter for a given first element </summary>
-		''' <param name="element"> </param>
-		Public Overridable Sub clear(ByVal element As F)
-			Dim s As Counter(Of S) = maps(element)
-			If s IsNot Nothing Then
-				s.clear()
-			End If
-		End Sub
+        Public Iterator Function GetEnumerator() As IEnumerator(Of Pair(Of F, S)) Implements IEnumerable(Of Pair(Of F, S)).GetEnumerator
+            For Each first As F In keySet()
+                Dim counter As Counter(Of S) = getCounter(first)
+                If counter Is Nothing Then
+                    Continue For
+                End If
+                For Each second As S In counter.keySet()
+                    Yield Pair.makePair(first, second)
+                Next second
+            Next first
+        End Function
 
-		''' <summary>
-		''' This method returns Set of all first elements
-		''' @return
-		''' </summary>
-		Public Overridable Function keySet() As ISet(Of F)
-			Return maps.Keys
-		End Function
+        Private Function GetEnumeratorNonGeneric() As IEnumerator Implements IEnumerable.GetEnumerator
+            Return GetEnumerator()
+        End Function
 
-		''' <summary>
-		''' This method returns counter for a given first element
-		''' </summary>
-		''' <param name="first">
-		''' @return </param>
-		Public Overridable Function getCounter(ByVal first As F) As Counter(Of S)
-			Return maps(first)
-		End Function
+        ''' <summary>Returns the number of first elements.</summary>
+        Public Overridable Function size() As Integer
+            Return maps.Count
+        End Function
 
-		''' <summary>
-		''' This method returns Iterator of all first/second pairs stored in this counter
-		''' 
-		''' @return
-		''' </summary>
-		Public Overridable ReadOnly Property Iterator As IEnumerator(Of Pair(Of F, S))
-			Get
-				Return New IteratorAnonymousInnerClass(Me)
-			End Get
-		End Property
+        ''' <summary>Returns the total number of first/second pairs.</summary>
+        Public Overridable Function totalSize() As Integer
+            Dim total As Integer = 0
+            For Each first As F In keySet()
+                Dim c = getCounter(first)
+                If c IsNot Nothing Then
+                    total += c.size()
+                End If
+            Next first
+            Return total
+        End Function
 
-		Private Class IteratorAnonymousInnerClass
-			Implements IEnumerator(Of Pair(Of F, S))
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            Dim other = TryCast(o, CounterMap(Of F, S))
+            If other Is Nothing Then
+                Return False
+            End If
+            If maps.Count <> other.maps.Count Then
+                Return False
+            End If
+            For Each entry As KeyValuePair(Of F, Counter(Of S)) In maps
+                Dim otherCounter = other.maps.GetValueOrNull(entry.Key)
+                If otherCounter Is Nothing OrElse Not otherCounter.Equals(entry.Value) Then
+                    Return False
+                End If
+            Next entry
+            Return True
+        End Function
 
-			Private ReadOnly outerInstance As CounterMap(Of F, S)
-
-			Public Sub New(ByVal outerInstance As CounterMap(Of F, S))
-				Me.outerInstance = outerInstance
-
-				outerIt = outerInstance.keySet().GetEnumerator()
-			End Sub
-
-
-			Friend outerIt As IEnumerator(Of F)
-			Friend innerIt As IEnumerator(Of S)
-			Friend curKey As F
-
-			Private Function hasInside() As Boolean
-				If innerIt Is Nothing OrElse Not innerIt.hasNext() Then
-					If Not outerIt.hasNext() Then
-						Return False
-					End If
-					curKey = outerIt.next()
-					innerIt = outerInstance.getCounter(curKey).keySet().GetEnumerator()
-				End If
-				Return True
-			End Function
-
-			Public Function hasNext() As Boolean
-				Return hasInside()
-			End Function
-
-			Public Function [next]() As Pair(Of F, S)
-				hasInside()
-				If curKey Is Nothing Then
-					Throw New Exception("Outer element can't be null")
-				End If
-
-				Return Pair.makePair(curKey, innerIt.next())
-			End Function
-
-			Public Sub remove()
-				'
-			End Sub
-		End Class
-
-		''' <summary>
-		''' This method returns number of First elements in this CounterMap
-		''' @return
-		''' </summary>
-		Public Overridable Function size() As Integer
-			Return maps.Count
-		End Function
-
-		''' <summary>
-		''' This method returns total number of elements in this CounterMap
-		''' @return
-		''' </summary>
-		Public Overridable Function totalSize() As Integer
-			Dim size As Integer = 0
-			For Each first As F In keySet()
-				size += getCounter(first).size()
-			Next first
-
-			Return size
-		End Function
-	End Class
+        Public Overrides Function GetHashCode() As Integer
+            Dim h As Integer = 0
+            For Each entry As KeyValuePair(Of F, Counter(Of S)) In maps
+                h = h Xor (Objects.hashCode(entry.Key) Xor entry.Value.GetHashCode())
+            Next entry
+            Return h
+        End Function
+    End Class
 
 End Namespace

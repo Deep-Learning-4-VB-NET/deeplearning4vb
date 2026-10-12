@@ -1,5 +1,7 @@
-﻿Imports System
+Imports System
+Imports System.Collections
 Imports System.Collections.Generic
+Imports DeepLearning4VB.JavaCompat
 
 '
 ' *  ******************************************************************************
@@ -19,141 +21,196 @@ Imports System.Collections.Generic
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
+    ''' <summary>
+    ''' A <see cref="MultiValueMap(Of K, V)"/> that keeps keys in insertion order.
+    ''' </summary>
+    <Serializable>
+    Public Class LinkedMultiValueMap(Of K, V)
+        Implements MultiValueMap(Of K, V)
 
-	<Serializable>
-	Public Class LinkedMultiValueMap(Of K, V)
-		Implements MultiValueMap(Of K, V)
+        Private Const serialVersionUID As Long = 3801124242820219131L
+        Private ReadOnly targetMap As LinkedHashMap(Of K, IList(Of V))
 
-		Private Const serialVersionUID As Long = 3801124242820219131L
-		Private ReadOnly targetMap As IDictionary(Of K, IList(Of V))
+        Public Sub New()
+            targetMap = New LinkedHashMap(Of K, IList(Of V))()
+        End Sub
 
-		Public Sub New()
-			Me.targetMap = New LinkedHashMap()
-		End Sub
+        Public Sub New(ByVal initialCapacity As Integer)
+            targetMap = New LinkedHashMap(Of K, IList(Of V))(initialCapacity)
+        End Sub
 
-		Public Sub New(ByVal initialCapacity As Integer)
-			Me.targetMap = New LinkedHashMap(initialCapacity)
-		End Sub
+        Public Sub New(ByVal otherMap As IDictionary(Of K, IList(Of V)))
+            targetMap = New LinkedHashMap(Of K, IList(Of V))(otherMap)
+        End Sub
 
-		Public Sub New(ByVal otherMap As IDictionary(Of K, IList(Of V)))
-			Me.targetMap = New LinkedHashMap(otherMap)
-		End Sub
+        Public Overloads Overridable Sub add(ByVal key As K, ByVal value As V) Implements MultiValueMap(Of K, V).add
+            Dim values As IList(Of V) = targetMap.[get](key)
+            If values Is Nothing Then
+                values = New List(Of V)()
+                targetMap.put(key, values)
+            End If
+            values.Add(value)
+        End Sub
 
-		Public Overridable Sub add(ByVal key As K, ByVal value As V) Implements MultiValueMap(Of K, V).add
-			Dim values As IList(Of V) = Me.targetMap(key)
-			If values Is Nothing Then
-				values = New LinkedList(Of V)()
-				Me.targetMap(key) = values
-			End If
+        Public Overridable Function getFirst(ByVal key As K) As V Implements MultiValueMap(Of K, V).getFirst
+            Dim values As IList(Of V) = targetMap.[get](key)
+            Return If(values IsNot Nothing AndAlso values.Count > 0, values(0), Nothing)
+        End Function
 
-			values.Add(value)
-		End Sub
+        Public Overridable Sub [set](ByVal key As K, ByVal value As V) Implements MultiValueMap(Of K, V).[set]
+            Dim values As IList(Of V) = New List(Of V)()
+            values.Add(value)
+            targetMap.put(key, values)
+        End Sub
 
-		Public Overridable Function getFirst(ByVal key As K) As V Implements MultiValueMap(Of K, V).getFirst
-			Dim values As IList(Of V) = Me.targetMap(key)
-			Return If(values IsNot Nothing, values(0), Nothing)
-		End Function
+        Public Overridable Sub setAll(ByVal values As IDictionary(Of K, V)) Implements MultiValueMap(Of K, V).setAll
+            For Each entry As KeyValuePair(Of K, V) In values
+                [set](entry.Key, entry.Value)
+            Next entry
+        End Sub
 
-		Public Overridable Sub [set](ByVal key As K, ByVal value As V) Implements MultiValueMap(Of K, V).[set]
-			Dim values As New LinkedList()
-			values.AddLast(value)
-			Me.targetMap(key) = values
-		End Sub
+        Public Overridable Function toSingleValueMap() As IDictionary(Of K, V) Implements MultiValueMap(Of K, V).toSingleValueMap
+            Dim singleValueMap As New LinkedHashMap(Of K, V)(targetMap.Count)
+            For Each entry As KeyValuePair(Of K, IList(Of V)) In targetMap
+                If entry.Value IsNot Nothing AndAlso entry.Value.Count > 0 Then
+                    singleValueMap.put(entry.Key, entry.Value(0))
+                End If
+            Next entry
+            Return singleValueMap
+        End Function
 
-		Public Overridable WriteOnly Property All As IDictionary(Of K, V)
-			Set(ByVal values As IDictionary(Of K, V))
-				Dim i_ As System.Collections.IEnumerator = values.SetOfKeyValuePairs().GetEnumerator()
-    
-				Do While i_.MoveNext()
-					Dim entry As Entry(Of K, V) = CType(i_.Current, Entry)
-					Me.[set](entry.getKey(), entry.getValue())
-				Loop
-    
-			End Set
-		End Property
+        ' ---- Java-style accessors ----
 
-		Public Overridable Function toSingleValueMap() As IDictionary(Of K, V)
-			Dim singleValueMap As New LinkedHashMap(Me.targetMap.Count)
-			Dim i_ As System.Collections.IEnumerator = Me.targetMap.SetOfKeyValuePairs().GetEnumerator()
+        Public Overridable Function size() As Integer
+            Return targetMap.Count
+        End Function
 
-			Do While i_.MoveNext()
-				Dim entry As Entry = CType(i_.Current, Entry)
-				singleValueMap.put(entry.getKey(), CType(entry.getValue(), System.Collections.IList)(0))
-			Loop
+        Public Overridable Function isEmpty() As Boolean
+            Return targetMap.Count = 0
+        End Function
 
-			Return singleValueMap
-		End Function
+        Public Overridable Function [get](ByVal key As K) As IList(Of V)
+            Return targetMap.[get](key)
+        End Function
 
-		Public Overridable ReadOnly Property Count As Integer
-			Get
-				Return Me.targetMap.Count
-			End Get
-		End Property
+        Public Overridable Function put(ByVal key As K, ByVal value As IList(Of V)) As IList(Of V)
+            Return targetMap.put(key, value)
+        End Function
 
-		Public Overridable ReadOnly Property Empty As Boolean
-			Get
-				Return Me.targetMap.Count = 0
-			End Get
-		End Property
+        Public Overridable Function removeAndGet(ByVal key As K) As IList(Of V)
+            Return targetMap.removeAndGet(key)
+        End Function
 
-		Public Overridable Function ContainsKey(ByVal key As Object) As Boolean
-			Return Me.targetMap.ContainsKey(key)
-		End Function
+        Public Overridable Sub putAll(ByVal m As IDictionary(Of K, IList(Of V)))
+            targetMap.putAll(m)
+        End Sub
 
-		Public Overridable Function containsValue(ByVal value As Object) As Boolean
-			Return Me.targetMap.ContainsValue(value)
-		End Function
+        Public Overridable Function containsValue(ByVal value As IList(Of V)) As Boolean
+            Return targetMap.containsValue(value)
+        End Function
 
-		Public Overridable Function [get](ByVal key As Object) As IList(Of V)
-			Return Me.targetMap(key)
-		End Function
+        Public Overridable Function keySet() As ISet(Of K)
+            Return targetMap.keySet()
+        End Function
 
-		Public Overridable Function put(ByVal key As K, ByVal value As IList(Of V)) As IList(Of V)
-				Me.targetMap(key) = value
-				Return Me.targetMap(key)
-		End Function
+        Public Overridable Function entrySet() As ISet(Of KeyValuePair(Of K, IList(Of V)))
+            Return targetMap.entrySet()
+        End Function
 
-		Public Overridable Function remove(ByVal key As Object) As IList(Of V)
-			Return Me.targetMap.Remove(key)
-		End Function
+        ' ---- IDictionary(Of K, IList(Of V)) ----
 
-		Public Overridable Sub putAll(ByVal m As IDictionary(Of K, IList(Of V)))
-			Me.targetMap.PutAll(m)
-		End Sub
+        Default Public Property Item(ByVal key As K) As IList(Of V) Implements IDictionary(Of K, IList(Of V)).Item
+            Get
+                Return targetMap(key)
+            End Get
+            Set(ByVal value As IList(Of V))
+                targetMap(key) = value
+            End Set
+        End Property
 
-		Public Overridable Sub Clear()
-			Me.targetMap.Clear()
-		End Sub
+        Public ReadOnly Property Keys As ICollection(Of K) Implements IDictionary(Of K, IList(Of V)).Keys
+            Get
+                Return targetMap.Keys
+            End Get
+        End Property
 
-		Public Overridable Function keySet() As ISet(Of K)
-			Return Me.targetMap.Keys
-		End Function
+        Public ReadOnly Property Values As ICollection(Of IList(Of V)) Implements IDictionary(Of K, IList(Of V)).Values
+            Get
+                Return targetMap.Values
+            End Get
+        End Property
 
-		Public Overridable ReadOnly Property Values As ICollection(Of IList(Of V))
-			Get
-				Return Me.targetMap.Values
-			End Get
-		End Property
+        Public ReadOnly Property Count As Integer Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).Count
+            Get
+                Return targetMap.Count
+            End Get
+        End Property
 
-		Public Overridable Function entrySet() As ISet(Of Entry(Of K, IList(Of V)))
-			Return Me.targetMap.SetOfKeyValuePairs()
-		End Function
+        Public ReadOnly Property IsReadOnly As Boolean Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).IsReadOnly
+            Get
+                Return False
+            End Get
+        End Property
 
-		Public Overrides Function Equals(ByVal obj As Object) As Boolean
-			Return Me.targetMap.Equals(obj)
-		End Function
+        Public Function ContainsKey(ByVal key As K) As Boolean Implements IDictionary(Of K, IList(Of V)).ContainsKey
+            Return targetMap.ContainsKey(key)
+        End Function
 
-		Public Overrides Function GetHashCode() As Integer
-			Return Me.targetMap.GetHashCode()
-		End Function
+        Public Sub Add(ByVal key As K, ByVal value As IList(Of V)) Implements IDictionary(Of K, IList(Of V)).Add
+            targetMap.Add(key, value)
+        End Sub
 
-		Public Overrides Function ToString() As String
-			Return Me.targetMap.ToString()
-		End Function
-	End Class
+        Public Function Remove(ByVal key As K) As Boolean Implements IDictionary(Of K, IList(Of V)).Remove
+            Return targetMap.Remove(key)
+        End Function
+
+        Public Function TryGetValue(ByVal key As K, ByRef value As IList(Of V)) As Boolean Implements IDictionary(Of K, IList(Of V)).TryGetValue
+            Return targetMap.TryGetValue(key, value)
+        End Function
+
+        Private Sub AddPair(ByVal item As KeyValuePair(Of K, IList(Of V))) Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).Add
+            targetMap.Add(item.Key, item.Value)
+        End Sub
+
+        Public Sub Clear() Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).Clear
+            targetMap.Clear()
+        End Sub
+
+        Private Function ContainsPair(ByVal item As KeyValuePair(Of K, IList(Of V))) As Boolean Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).Contains
+            Return DirectCast(targetMap, ICollection(Of KeyValuePair(Of K, IList(Of V)))).Contains(item)
+        End Function
+
+        Private Sub CopyTo(ByVal array() As KeyValuePair(Of K, IList(Of V)), ByVal arrayIndex As Integer) Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).CopyTo
+            DirectCast(targetMap, ICollection(Of KeyValuePair(Of K, IList(Of V)))).CopyTo(array, arrayIndex)
+        End Sub
+
+        Private Function RemovePair(ByVal item As KeyValuePair(Of K, IList(Of V))) As Boolean Implements ICollection(Of KeyValuePair(Of K, IList(Of V))).Remove
+            Return DirectCast(targetMap, ICollection(Of KeyValuePair(Of K, IList(Of V)))).Remove(item)
+        End Function
+
+        Public Function GetEnumerator() As IEnumerator(Of KeyValuePair(Of K, IList(Of V))) Implements IEnumerable(Of KeyValuePair(Of K, IList(Of V))).GetEnumerator
+            Return targetMap.GetEnumerator()
+        End Function
+
+        Private Function GetEnumeratorNonGeneric() As IEnumerator Implements IEnumerable.GetEnumerator
+            Return targetMap.GetEnumerator()
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Return targetMap.Equals(obj)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return targetMap.GetHashCode()
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return targetMap.ToString()
+        End Function
+    End Class
 
 End Namespace

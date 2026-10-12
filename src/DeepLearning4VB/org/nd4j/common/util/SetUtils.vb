@@ -46,7 +46,9 @@ Namespace org.nd4j.common.util
 
 		Public Shared Function union(Of T, T1 As T, T2 As T)(ByVal s1 As ISet(Of T1), ByVal s2 As ISet(Of T2)) As ISet(Of T)
 			Dim s3 As ISet(Of T) = New HashSet(Of T)(s1)
-			s3.addAll(s2)
+			For Each e As T2 In s2
+				s3.Add(e)
+			Next e
 			Return s3
 		End Function
 

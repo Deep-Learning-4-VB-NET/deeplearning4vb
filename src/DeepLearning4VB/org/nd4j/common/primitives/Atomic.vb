@@ -1,4 +1,6 @@
 ﻿Imports System
+Imports System.Runtime.Serialization
+Imports System.Threading
 
 '
 ' *  ******************************************************************************
@@ -18,116 +20,101 @@
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.primitives
 
+    ''' <summary>
+    ''' A thread-safe holder for a single value, guarded by a reader/writer lock.
+    ''' The Java original used a <c>ReentrantReadWriteLock</c>; this port uses
+    ''' <see cref="ReaderWriterLockSlim"/>, which is recreated after deserialization.
+    ''' </summary>
+    ''' <typeparam name="T">Type of the stored value.</typeparam>
+    <Serializable>
+    Public Class Atomic(Of T)
+        Private currentValue As T
+        <NonSerialized>
+        Private lock As ReaderWriterLockSlim
 
-	''' 
-	''' @param <T> </param>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @NoArgsConstructor public class Atomic<T extends java.io.Serializable> implements java.io.Serializable
-	<Serializable>
-	Public Class Atomic(Of T As java.io.Serializable)
-'JAVA TO VB CONVERTER TODO TASK: There is no VB equivalent to 'volatile':
-'ORIGINAL LINE: private volatile T value;
-		Private value As T
-		<NonSerialized>
-		Private lock As New ReentrantReadWriteLock()
+        Public Sub New()
+            lock = New ReaderWriterLockSlim()
+        End Sub
 
-		Public Sub New(ByVal initialValue As T)
-			Me.value = initialValue
-		End Sub
+        Public Sub New(ByVal initialValue As T)
+            Me.New()
+            currentValue = initialValue
+        End Sub
 
-		''' <summary>
-		''' This method assigns new value </summary>
-		''' <param name="value"> </param>
-		Public Overridable Sub [set](ByVal value As T)
-			Try
-				lock.writeLock().lock()
+        ''' <summary>Assigns a new value under the write lock.</summary>
+        Public Overridable Sub [set](ByVal newValue As T)
+            lock.EnterWriteLock()
+            Try
+                currentValue = newValue
+            Finally
+                lock.ExitWriteLock()
+            End Try
+        End Sub
 
-				Me.value = value
-			Finally
-				lock.writeLock().unlock()
-			End Try
-		End Sub
+        ''' <summary>Returns the current value under the read lock.</summary>
+        Public Overridable Function [get]() As T
+            lock.EnterReadLock()
+            Try
+                Return currentValue
+            Finally
+                lock.ExitReadLock()
+            End Try
+        End Function
 
-		''' <summary>
-		''' This method returns current value
-		''' @return
-		''' </summary>
-		Public Overridable Function [get]() As T
-			Try
-				lock.readLock().lock()
+        Public Property Value As T
+            Get
+                Return [get]()
+            End Get
+            Set(ByVal newValue As T)
+                [set](newValue)
+            End Set
+        End Property
 
-				Return Me.value
-			Finally
-				lock.readLock().unlock()
-			End Try
-		End Function
+        ''' <summary>
+        ''' Compare-and-swap: replaces the value with <paramref name="newValue"/> only if the
+        ''' current value equals <paramref name="expected"/>.
+        ''' </summary>
+        ''' <returns>True if the value was swapped, false otherwise.</returns>
+        Public Overridable Function cas(ByVal expected As T, ByVal newValue As T) As Boolean
+            lock.EnterWriteLock()
+            Try
+                If Object.Equals(currentValue, expected) Then
+                    currentValue = newValue
+                    Return True
+                End If
+                Return False
+            Finally
+                lock.ExitWriteLock()
+            End Try
+        End Function
 
+        <OnDeserialized>
+        Private Sub OnDeserialized(ByVal context As StreamingContext)
+            lock = New ReaderWriterLockSlim()
+        End Sub
 
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            If Me Is o Then
+                Return True
+            End If
+            If o Is Nothing OrElse Me.GetType() IsNot o.GetType() Then
+                Return False
+            End If
+            Dim other = DirectCast(o, Atomic(Of T))
+            Return Object.Equals(Me.[get](), other.[get]())
+        End Function
 
-		''' <summary>
-		''' This method implements compare-and-swap
-		''' </summary>
-		''' <param name="expected"> </param>
-		''' <param name="newValue"> </param>
-		''' <returns> true if value was swapped, false otherwise </returns>
-		Public Overridable Function cas(ByVal expected As T, ByVal newValue As T) As Boolean
-			Try
-				lock.writeLock().lock()
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash([get]())
+        End Function
 
-				If Objects.equals(value, expected) Then
-					Me.value = newValue
-					Return True
-				Else
-					Return False
-				End If
-			Finally
-				lock.writeLock().unlock()
-			End Try
-		End Function
-
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
-		Private Sub readObject(ByVal [in] As java.io.ObjectInputStream)
-			[in].defaultReadObject()
-			lock = New ReentrantReadWriteLock()
-		End Sub
-
-		Public Overrides Function Equals(ByVal o As Object) As Boolean
-			If Me Is o Then
-				Return True
-			End If
-			If o Is Nothing OrElse Me.GetType() <> o.GetType() Then
-				Return False
-			End If
-'JAVA TO VB CONVERTER WARNING: Java wildcard generics have no direct equivalent in VB:
-'ORIGINAL LINE: Atomic<?> atomic = (Atomic<?>) o;
-			Dim atomic As Atomic(Of Object) = DirectCast(o, Atomic(Of Object))
-			Try
-				Me.lock.readLock().lock()
-				atomic.lock.readLock().lock()
-
-				Return Objects.equals(Me.value, atomic.value)
-			Catch e As Exception
-				Throw New Exception(e)
-			Finally
-				atomic.lock.readLock().unlock()
-				Me.lock.readLock().unlock()
-			End Try
-		End Function
-
-		Public Overrides Function GetHashCode() As Integer
-			Try
-				Me.lock.readLock().lock()
-
-				Return Objects.hash(value)
-			Finally
-				Me.lock.readLock().unlock()
-			End Try
-		End Function
-	End Class
+        Public Overrides Function ToString() As String
+            Return "Atomic(" & Arrays.FormatElement([get]()) & ")"
+        End Function
+    End Class
 
 End Namespace

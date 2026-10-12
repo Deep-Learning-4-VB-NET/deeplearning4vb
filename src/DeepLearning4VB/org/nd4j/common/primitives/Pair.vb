@@ -171,4 +171,35 @@ Namespace org.nd4j.common.primitives
         End Function
     End Class
 
+    ''' <summary>
+    ''' Factory methods for <see cref="Pair(Of K, V)"/> with type inference. In Java these are static
+    ''' methods of the generic class; VB needs a non-generic home for them so that
+    ''' <c>Pair.of(key, value)</c> compiles without explicit type arguments.
+    ''' </summary>
+    Public NotInheritable Class Pair
+        Private Sub New()
+        End Sub
+
+        Public Shared Function [of](Of T, E)(ByVal key As T, ByVal value As E) As Pair(Of T, E)
+            Return New Pair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function makePair(Of T, E)(ByVal key As T, ByVal value As E) As Pair(Of T, E)
+            Return New Pair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function create(Of T, E)(ByVal key As T, ByVal value As E) As Pair(Of T, E)
+            Return New Pair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function pairOf(Of T, E)(ByVal key As T, ByVal value As E) As Pair(Of T, E)
+            Return New Pair(Of T, E)(key, value)
+        End Function
+
+        Public Shared Function fromArray(Of T)(ByVal arr() As T) As Pair(Of T, T)
+            Preconditions.checkArgument(arr.Length = 2, "Can only create a pair from an array with two values, got %s", arr.Length)
+            Return New Pair(Of T, T)(arr(0), arr(1))
+        End Function
+    End Class
+
 End Namespace

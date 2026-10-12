@@ -53,8 +53,7 @@ Namespace org.nd4j.common.function
 				If Not ret.ContainsKey(key) Then
 					Dim leftListPair As IList(Of V) = New List(Of V)()
 					Dim rightListPair As IList(Of V) = New List(Of V)()
-					Dim p As Pair(Of IList(Of V), IList(Of V)) = Pair.of(leftListPair,rightListPair)
-					ret(key) = p
+					ret(key) = Pair.of(leftListPair, rightListPair)
 				End If
 
 				Dim p As Pair(Of IList(Of V), IList(Of V)) = ret(key)
@@ -73,8 +72,7 @@ Namespace org.nd4j.common.function
 				If Not ret.ContainsKey(key) Then
 					Dim leftListPair As IList(Of V) = New List(Of V)()
 					Dim rightListPair As IList(Of V) = New List(Of V)()
-					Dim p As Pair(Of IList(Of V), IList(Of V)) = Pair.of(leftListPair,rightListPair)
-					ret(key) = p
+					ret(key) = Pair.of(leftListPair, rightListPair)
 				End If
 
 				Dim p As Pair(Of IList(Of V), IList(Of V)) = ret(key)
@@ -96,7 +94,7 @@ Namespace org.nd4j.common.function
 		Public Shared Function groupByKey(Of K, V)(ByVal listInput As IList(Of Pair(Of K, V))) As IDictionary(Of K, IList(Of V))
 			Dim ret As IDictionary(Of K, IList(Of V)) = New Dictionary(Of K, IList(Of V))()
 			For Each pair As Pair(Of K, V) In listInput
-				Dim currList As IList(Of V) = ret(pair.First)
+				Dim currList As IList(Of V) = ret.GetValueOrNull(pair.First)
 				If currList Is Nothing Then
 					currList = New List(Of V)()
 					ret(pair.First) = currList

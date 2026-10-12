@@ -58,8 +58,8 @@ Namespace org.nd4j.common.util
 'ORIGINAL LINE: final int lastn = a.size() - 1;
 				Dim lastn As Integer = a.Count - 1
 'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final java.math.BigInteger nextn = java.math.BigInteger.valueOf(lastn + 1);
-				Dim nextn As BigInteger = BigInteger.valueOf(lastn + 1)
+'ORIGINAL LINE: final java.math.BigInteger nextn = java.math.New BigInteger(lastn + 1);
+				Dim nextn As BigInteger = New BigInteger(lastn + 1)
 				a.Add(a(lastn) * nextn)
 			Loop
 			Return a(n)

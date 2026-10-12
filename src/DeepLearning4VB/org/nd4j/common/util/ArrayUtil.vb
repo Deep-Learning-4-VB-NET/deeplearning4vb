@@ -1,5 +1,7 @@
 ﻿Imports System
 Imports System.Collections.Generic
+Imports System.IO
+Imports System.Linq
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 '
@@ -32,6 +34,76 @@ Namespace org.nd4j.common.util
 
 
 		Private Sub New()
+		End Sub
+
+		Private Shared ReadOnly sharedRandom As New Random()
+
+		''' <summary>Allocates a rectangular jagged array, like Java's <c>new T[d0][d1]</c>.</summary>
+		Private Shared Function Jagged2(Of T)(ByVal d0 As Integer, ByVal d1 As Integer) As T()()
+			Dim ret(d0 - 1)() As T
+			For i As Integer = 0 To d0 - 1
+				ret(i) = New T(d1 - 1) {}
+			Next i
+			Return ret
+		End Function
+
+		Private Shared Function Jagged3(Of T)(ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As T()()()
+			Dim ret(d0 - 1)()() As T
+			For i As Integer = 0 To d0 - 1
+				ret(i) = Jagged2(Of T)(d1, d2)
+			Next i
+			Return ret
+		End Function
+
+		Private Shared Function Jagged4(Of T)(ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer, ByVal d3 As Integer) As T()()()()
+			Dim ret(d0 - 1)()()() As T
+			For i As Integer = 0 To d0 - 1
+				ret(i) = Jagged3(Of T)(d1, d2, d3)
+			Next i
+			Return ret
+		End Function
+
+		''' <summary>Equivalent of Java's <c>Float.floatToRawIntBits</c>.</summary>
+		Private Shared Function floatToIntBits(ByVal v As Single) As Integer
+			Return BitConverter.ToInt32(BitConverter.GetBytes(v), 0)
+		End Function
+
+		''' <summary>Equivalent of Java's <c>Float.intBitsToFloat</c>.</summary>
+		Private Shared Function intBitsToFloat(ByVal bits As Integer) As Single
+			Return BitConverter.ToSingle(BitConverter.GetBytes(bits), 0)
+		End Function
+
+		''' <summary>Writes the low <paramref name="size"/> bytes of <paramref name="bits"/> big-endian (java.nio.ByteBuffer default order).</summary>
+		Private Shared Sub putBigEndian(ByVal dest As SByte(), ByVal offset As Integer, ByVal bits As Long, ByVal size As Integer)
+			For b As Integer = 0 To size - 1
+				Dim v As Long = (bits >> (8 * (size - 1 - b))) And &HFFL
+				dest(offset + b) = CSByte(If(v > 127, v - 256, v))
+			Next b
+		End Sub
+
+		''' <summary>Reads <paramref name="size"/> big-endian bytes into the low bits of a Long (unsigned, not sign-extended).</summary>
+		Private Shared Function getBigEndian(ByVal src As SByte(), ByVal offset As Integer, ByVal size As Integer) As Long
+			Dim bits As Long = 0
+			For b As Integer = 0 To size - 1
+				bits = (bits << 8) Or (CLng(src(offset + b)) And &HFFL)
+			Next b
+			Return bits
+		End Function
+
+		''' <summary>Reads <paramref name="size"/> big-endian bytes from the reader (java.io.DataInputStream byte order).</summary>
+		Private Shared Function readBigEndian(ByVal dis As BinaryReader, ByVal size As Integer) As Long
+			Dim bits As Long = 0
+			For b As Integer = 0 To size - 1
+				bits = (bits << 8) Or CLng(dis.ReadByte())
+			Next b
+			Return bits
+		End Function
+
+		''' <summary>Writes the low <paramref name="size"/> bytes of <paramref name="bits"/> big-endian (java.io.DataOutputStream byte order).</summary>
+		Private Shared Sub writeBigEndian(ByVal dos As BinaryWriter, ByVal bits As Long, ByVal size As Integer)
+			For b As Integer = size - 1 To 0 Step -1
+				dos.Write(CByte((bits >> (8 * b)) And &HFFL))
+			Next b
 		End Sub
 
 
@@ -144,7 +216,7 @@ Namespace org.nd4j.common.util
 		''' array is contained in the list </returns>
 		Public Shared Function listOfIntsContains(ByVal list As IList(Of Integer()), ByVal target() As Integer) As Boolean
 			For Each arr As Integer() In list
-				If target.SequenceEqual(arr) Then
+				If Arrays.equals(target, arr) Then
 					Return True
 				End If
 			Next arr
@@ -167,12 +239,12 @@ Namespace org.nd4j.common.util
 			If n > Integer.MaxValue Then
 				Throw New Exception("Index overflow in nTimes")
 			End If
-			Dim ret As val = New Long(CInt(n) - 1){}
+			Dim ret As Long() = New Long(CInt(n) - 1){}
 			Arrays.Fill(ret, toReplicate)
 			Return ret
 		End Function
 
-		Public Shared Function nTimes(Of T)(ByVal n As Integer, ByVal toReplicate As T, ByVal tClass As Type(Of T)) As T()
+		Public Shared Function nTimes(Of T)(ByVal n As Integer, ByVal toReplicate As T, ByVal tClass As Type) As T()
 			Preconditions.checkState(n>=0, "Invalid number of times to replicate: must be >= 0, got %s", n)
 			Dim [out]() As T = CType(Array.CreateInstance(tClass, n), T())
 			For i As Integer = 0 To n - 1
@@ -227,7 +299,7 @@ Namespace org.nd4j.common.util
 
 
 		Public Shared Function toBFloat16(ByVal data As Single) As Short
-			Return CShort(Float.floatToIntBits(data) << 16)
+			Return CShort(floatToIntBits(data) >> 16)
 		End Function
 
 		Public Shared Function toBFloat16(ByVal data As Double) As Short
@@ -291,48 +363,48 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As SByte) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = CLng(data(i))
 			Next i
 			Return ret
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As Boolean) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = If(data(i), 1, 0)
 			Next i
 			Return ret
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As Short) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = CLng(data(i))
 			Next i
 			Return ret
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As Integer) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = CLng(data(i))
 			Next i
 			Return ret
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As Single) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = CLng(Math.Truncate(data(i)))
 			Next i
 			Return ret
 		End Function
 
 		Public Shared Function toLongs(ByVal data() As Double) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
-			For i As Integer = 0 To ret.length - 1
+			Dim ret As Long() = New Long(data.Length - 1){}
+			For i As Integer = 0 To ret.Length - 1
 				ret(i) = CLng(Math.Truncate(data(i)))
 			Next i
 			Return ret
@@ -375,9 +447,7 @@ Namespace org.nd4j.common.util
 				Return CShort(&H8001)
 			End If
 
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final int f = Float.floatToIntBits(v);
-			Dim f As Integer = Float.floatToIntBits(v)
+			Dim f As Integer = floatToIntBits(v)
 
 			Return CShort(((f >> 16) And &H8000) Or ((((f And &H7f800000) - &H38000000) >> 13) And &H7c00) Or ((f >> 13) And &H3ff))
 		End Function
@@ -399,7 +469,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toBytes(ByVal array() As Integer) As SByte()
-			Dim retVal As val = New SByte(array.Length - 1){}
+			Dim retVal As SByte() = New SByte(array.Length - 1){}
 			For i As Integer = 0 To array.Length - 1
 				retVal(i) = CSByte(array(i))
 			Next i
@@ -407,7 +477,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toBytes(ByVal array() As Single) As SByte()
-			Dim retVal As val = New SByte(array.Length - 1){}
+			Dim retVal As SByte() = New SByte(array.Length - 1){}
 			For i As Integer = 0 To array.Length - 1
 				retVal(i) = CSByte(Math.Truncate(array(i)))
 			Next i
@@ -415,7 +485,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toBytes(ByVal array() As Double) As SByte()
-			Dim retVal As val = New SByte(array.Length - 1){}
+			Dim retVal As SByte() = New SByte(array.Length - 1){}
 			For i As Integer = 0 To array.Length - 1
 				retVal(i) = CSByte(Math.Truncate(array(i)))
 			Next i
@@ -423,7 +493,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toBytes(ByVal array() As Long) As SByte()
-			Dim retVal As val = New SByte(array.Length - 1){}
+			Dim retVal As SByte() = New SByte(array.Length - 1){}
 			For i As Integer = 0 To array.Length - 1
 				retVal(i) = CSByte(array(i))
 			Next i
@@ -566,13 +636,13 @@ Namespace org.nd4j.common.util
 		''' <param name="mult"> the elements
 		'''            to calculate the sum for </param>
 		''' <returns> the product of this array </returns>
-		Public Shared Function prodLong(Of T1 As Number)(ByVal mult As IList(Of T1)) As Long
+		Public Shared Function prodLong(Of T1)(ByVal mult As IList(Of T1)) As Long
 			If mult.Count = 0 Then
 				Return 0
 			End If
 			Dim ret As Long = 1
 			For i As Integer = 0 To mult.Count - 1
-				ret *= mult(i).longValue()
+				ret *= Convert.ToInt64(mult(i))
 			Next i
 			Return ret
 		End Function
@@ -605,13 +675,13 @@ Namespace org.nd4j.common.util
 			Return ret
 		End Function
 
-		Public Shared Function equals(ByVal data() As Single, ByVal data2() As Double) As Boolean
+		Public Shared Shadows Function equals(ByVal data() As Single, ByVal data2() As Double) As Boolean
 			If data.Length <> data2.Length Then
 				Return False
 			End If
 			For i As Integer = 0 To data.Length - 1
-				Dim equals As Double = Math.Abs(data2(i) - data(i))
-				If equals > 1e-6 Then
+				Dim diff As Double = Math.Abs(data2(i) - data(i))
+				If diff > 1e-6 Then
 					Return False
 				End If
 			Next i
@@ -1016,8 +1086,6 @@ Namespace org.nd4j.common.util
 					If i + j >= data.Length OrElse count >= ret.Length Then
 						Exit For
 					End If
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = data[i + j];
 					ret(count) = data(i + j)
 						count += 1
 				Next j
@@ -1085,8 +1153,6 @@ Namespace org.nd4j.common.util
 					If count >= ret.Length Then
 						Exit For
 					End If
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i;
 					ret(count) = i
 						count += 1
 				Next i
@@ -1096,8 +1162,6 @@ Namespace org.nd4j.common.util
 					If count >= ret.Length Then
 						Exit For
 					End If
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i;
 					ret(count) = i
 						count += 1
 				Next i
@@ -1120,8 +1184,6 @@ Namespace org.nd4j.common.util
 					If count >= ret.Length Then
 						Exit For
 					End If
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i;
 					ret(count) = i
 						count += 1
 				Next i
@@ -1131,8 +1193,6 @@ Namespace org.nd4j.common.util
 					If count >= ret.Length Then
 						Exit For
 					End If
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i;
 					ret(count) = i
 						count += 1
 				Next i
@@ -1188,15 +1248,15 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toFloats(ByVal ints()() As Integer) As Single()
-			Return toFloats(Ints.concat(ints))
+			Return toFloats(Global.DeepLearning4VB.Ints.concat(ints))
 		End Function
 
 		Public Shared Function toDoubles(ByVal ints()() As Integer) As Double()
-			Return toDoubles(Ints.concat(ints))
+			Return toDoubles(Global.DeepLearning4VB.Ints.concat(ints))
 		End Function
 
 		Public Shared Function toShorts(ByVal ints() As Long) As Short()
-			Dim ret As val = New Short(ints.Length - 1){}
+			Dim ret As Short() = New Short(ints.Length - 1){}
 			For i As Integer = 0 To ints.Length - 1
 				ret(i) = CShort(ints(i))
 			Next i
@@ -1204,7 +1264,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toShorts(ByVal ints() As Integer) As Short()
-			Dim ret As val = New Short(ints.Length - 1){}
+			Dim ret As Short() = New Short(ints.Length - 1){}
 			For i As Integer = 0 To ints.Length - 1
 				ret(i) = CShort(ints(i))
 			Next i
@@ -1212,7 +1272,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toShorts(ByVal ints() As Single) As Short()
-			Dim ret As val = New Short(ints.Length - 1){}
+			Dim ret As Short() = New Short(ints.Length - 1){}
 			For i As Integer = 0 To ints.Length - 1
 				ret(i) = CShort(Math.Truncate(ints(i)))
 			Next i
@@ -1220,7 +1280,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function toShorts(ByVal ints() As Double) As Short()
-			Dim ret As val = New Short(ints.Length - 1){}
+			Dim ret As Short() = New Short(ints.Length - 1){}
 			For i As Integer = 0 To ints.Length - 1
 				ret(i) = CShort(Math.Truncate(ints(i)))
 			Next i
@@ -1252,7 +1312,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function cutBelowZero(ByVal data() As Integer) As Integer()
-			Dim ret As val = New Integer(data.Length - 1){}
+			Dim ret As Integer() = New Integer(data.Length - 1){}
 			For i As Integer = 0 To data.Length - 1
 				ret(i) = If(data(i) < 0, 0, data(i))
 			Next i
@@ -1260,7 +1320,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function cutBelowZero(ByVal data() As Long) As Long()
-			Dim ret As val = New Long(data.Length - 1){}
+			Dim ret As Long() = New Long(data.Length - 1){}
 			For i As Integer = 0 To data.Length - 1
 				ret(i) = If(data(i) < 0, 0, data(i))
 			Next i
@@ -1268,7 +1328,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function cutBelowZero(ByVal data() As Short) As Short()
-			Dim ret As val = New Short(data.Length - 1){}
+			Dim ret As Short() = New Short(data.Length - 1){}
 			For i As Integer = 0 To data.Length - 1
 				ret(i) = If(data(i) < 0, 0, data(i))
 			Next i
@@ -1276,7 +1336,7 @@ Namespace org.nd4j.common.util
 		End Function
 
 		Public Shared Function cutBelowZero(ByVal data() As SByte) As SByte()
-			Dim ret As val = New SByte(data.Length - 1){}
+			Dim ret As SByte() = New SByte(data.Length - 1){}
 			For i As Integer = 0 To data.Length - 1
 				ret(i) = If(data(i) < 0, 0, data(i))
 			Next i
@@ -1315,8 +1375,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To data.Length - 1
 				If Ints.contains(index, i) Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = data[i];
 					ret(count) = data(i)
 						count += 1
 				End If
@@ -1342,8 +1400,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To data.Length - 1
 				If Ints.contains(index, i) Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = data[i];
 					ret(count) = data(i)
 						count += 1
 				End If
@@ -1381,8 +1437,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To data.Length - 1
 				If Not Ints.contains(index, i) Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = data[i];
 					ret(count) = data(i)
 						count += 1
 				End If
@@ -1409,8 +1463,6 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 			For i As Integer = 0 To data.Length - 1
 				If Not Ints.contains(index, i) Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = data[i];
 					ret(count) = data(i)
 						count += 1
 				End If
@@ -1428,9 +1480,7 @@ Namespace org.nd4j.common.util
 		''' <param name="bs">
 		''' @return </param>
 		Public Shared Function zip(ByVal [as]() As Integer, ByVal bs() As Integer) As Integer()()
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim result[][] As Integer = new Integer[as.Length][2]
-			Dim result()() As Integer = RectangularArrays.RectangularIntegerArray([as].Length, 2)
+			Dim result()() As Integer = Jagged2(Of Integer)([as].Length, 2)
 			For i As Integer = 0 To result.Length - 1
 				result(i) = New Integer() {[as](i), bs(i)}
 			Next i
@@ -1489,7 +1539,7 @@ Namespace org.nd4j.common.util
 			If listA.Count = 0 Then
 				oldShapeA = New Long() {1}
 			Else
-				oldShapeA = Longs.toArray(listA)
+				oldShapeA = listA.Select(Function(x) CLng(x)).ToArray()
 				For i As Integer = 0 To oldShapeA.Length - 1
 					oldShapeA(i) = aShape(CInt(oldShapeA(i)))
 				Next i
@@ -1506,7 +1556,7 @@ Namespace org.nd4j.common.util
 			If listB.Count = 0 Then
 				oldShapeB = New Long() {1}
 			Else
-				oldShapeB = Longs.toArray(listB)
+				oldShapeB = listB.Select(Function(x) CLng(x)).ToArray()
 				For i As Integer = 0 To oldShapeB.Length - 1
 					oldShapeB(i) = bShape(CInt(oldShapeB(i)))
 				Next i
@@ -1536,7 +1586,7 @@ Namespace org.nd4j.common.util
 
 
 		Public Shared Function permute(ByVal shape() As Long, ByVal dimensions() As Integer) As Long()
-			Dim ret As val = New Long(shape.Length - 1){}
+			Dim ret As Long() = New Long(shape.Length - 1){}
 			For i As Integer = 0 To shape.Length - 1
 				ret(i) = shape(dimensions(i))
 			Next i
@@ -1558,40 +1608,11 @@ Namespace org.nd4j.common.util
 		''' <param name="a"> </param>
 		''' <param name="ascending">
 		''' @return </param>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public static int[] argsort(final int[] a, final boolean ascending)
 		Public Shared Function argsort(ByVal a() As Integer, ByVal ascending As Boolean) As Integer()
-			Dim indexes(a.Length - 1) As Integer?
-			For i As Integer = 0 To indexes.Length - 1
-				indexes(i) = i
-			Next i
-			Array.Sort(indexes, New ComparatorAnonymousInnerClass(a, ascending))
-
-			Dim ret(indexes.Length - 1) As Integer
-			For i As Integer = 0 To ret.Length - 1
-				ret(i) = indexes(i)
-			Next i
-
-			Return ret
+			Dim query As IEnumerable(Of Integer) = Enumerable.Range(0, a.Length)
+			Dim ordered As IEnumerable(Of Integer) = If(ascending, query.OrderBy(Function(i) a(i)), query.OrderByDescending(Function(i) a(i)))
+			Return ordered.ToArray()
 		End Function
-
-		Private Class ComparatorAnonymousInnerClass
-			Implements IComparer(Of Integer)
-
-			private Integer() a
-			private Boolean ascending
-
-			public ComparatorAnonymousInnerClass(Integer() a, Boolean ascending)
-			If True Then
-				Me.a = a
-				Me.ascending = ascending
-			End If
-
-			public Integer compare(final Integer? i1, final Integer? i2)
-			If True Then
-				Return (If(ascending, 1, -1)) * Ints.compare(a(i1), a(i2))
-			End If
-		End Class
 
 
 
@@ -1602,16 +1623,15 @@ Namespace org.nd4j.common.util
 		''' <param name="range"> </param>
 		''' <param name="axes">
 		''' @return </param>
-		public static Integer() convertNegativeIndices(Integer range, Integer() axes)
-		If True Then
+		Public Shared Function convertNegativeIndices(ByVal range As Integer, ByVal axes As Integer()) As Integer()
 			Dim axesRet() As Integer = ArrayUtil.range(0, range)
 			Dim newAxes() As Integer = ArrayUtil.copy(axes)
-			For i As Integer = 0 To axes.length - 1
+			For i As Integer = 0 To axes.Length - 1
 				newAxes(i) = axes(axesRet(i))
 			Next i
 
 			Return newAxes
-		End If
+		End Function
 
 
 
@@ -1622,116 +1642,101 @@ Namespace org.nd4j.common.util
 		''' <param name="from"> the begin of the interval to take </param>
 		''' <param name="to"> the end of the interval to take </param>
 		''' <returns> the generated array </returns>
-		public static Integer() copyOfRangeFrom(Integer length, Integer from, Integer [to])
-		If True Then
+		Public Shared Function copyOfRangeFrom(ByVal length As Integer, ByVal from As Integer, ByVal [to] As Integer) As Integer()
 			Return Arrays.CopyOfRange(ArrayUtil.range(0, length), from, [to])
 
-		End If
+		End Function
 
 		'Credit: https://stackoverflow.com/questions/15533854/converting-byte-array-to-double-array
 
 		''' 
 		''' <param name="doubleArray">
 		''' @return </param>
-		public static SByte() toByteArray(Double() doubleArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Double()) * 8) / (Len(New SByte()) * 8)
-			Dim bytes((doubleArray.length * times) - 1) As SByte
-			For i As Integer = 0 To doubleArray.length - 1
-				ByteBuffer.wrap(bytes, i * times, times).putDouble(doubleArray(i))
+		Public Shared Function toByteArray(ByVal doubleArray As Double()) As SByte()
+			Dim times As Integer = 8
+			Dim bytes((doubleArray.Length * times) - 1) As SByte
+			For i As Integer = 0 To doubleArray.Length - 1
+				putBigEndian(bytes, i * times, BitConverter.DoubleToInt64Bits(doubleArray(i)), times)
 			Next i
 			Return bytes
-		End If
+		End Function
 
 		''' 
 		''' <param name="byteArray">
 		''' @return </param>
-		public static Double() toDoubleArray(SByte() byteArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Double()) * 8) / (Len(New SByte()) * 8)
-			Dim doubles((byteArray.length \ times) - 1) As Double
+		Public Shared Function toDoubleArray(ByVal byteArray As SByte()) As Double()
+			Dim times As Integer = 8
+			Dim doubles((byteArray.Length \ times) - 1) As Double
 			For i As Integer = 0 To doubles.Length - 1
-				doubles(i) = ByteBuffer.wrap(byteArray, i * times, times).getDouble()
+				doubles(i) = BitConverter.Int64BitsToDouble(getBigEndian(byteArray, i * times, times))
 			Next i
 			Return doubles
-		End If
+		End Function
 
 
 		''' 
 		''' <param name="doubleArray">
 		''' @return </param>
-		public static SByte() toByteArray(Single() doubleArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Single()) * 8) / (Len(New SByte()) * 8)
-			Dim bytes((doubleArray.length * times) - 1) As SByte
-			For i As Integer = 0 To doubleArray.length - 1
-				ByteBuffer.wrap(bytes, i * times, times).putFloat(doubleArray(i))
+		Public Shared Function toByteArray(ByVal doubleArray As Single()) As SByte()
+			Dim times As Integer = 4
+			Dim bytes((doubleArray.Length * times) - 1) As SByte
+			For i As Integer = 0 To doubleArray.Length - 1
+				putBigEndian(bytes, i * times, floatToIntBits(doubleArray(i)), times)
 			Next i
 			Return bytes
-		End If
+		End Function
 
-		public static Long() toLongArray(Integer() intArray)
-		If True Then
-			Dim ret(intArray.length - 1) As Long
-			For i As Integer = 0 To intArray.length - 1
+		Public Shared Function toLongArray(ByVal intArray As Integer()) As Long()
+			Dim ret(intArray.Length - 1) As Long
+			For i As Integer = 0 To intArray.Length - 1
 				ret(i) = intArray(i)
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Long() toLongArray(Single() array)
-		If True Then
-			Dim ret As val = New Long(array.length - 1){}
-			For i As Integer = 0 To array.length - 1
+		Public Shared Function toLongArray(ByVal array As Single()) As Long()
+			Dim ret As Long() = New Long(array.Length - 1){}
+			For i As Integer = 0 To array.Length - 1
 				ret(i) = CLng(Math.Truncate(array(i)))
 			Next i
 			Return ret
-		End If
+		End Function
 
 		''' 
 		''' <param name="byteArray">
 		''' @return </param>
-		public static Single() toFloatArray(SByte() byteArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Single()) * 8) / (Len(New SByte()) * 8)
-			Dim doubles((byteArray.length \ times) - 1) As Single
+		Public Shared Function toFloatArray(ByVal byteArray As SByte()) As Single()
+			Dim times As Integer = 4
+			Dim doubles((byteArray.Length \ times) - 1) As Single
 			For i As Integer = 0 To doubles.Length - 1
-				doubles(i) = ByteBuffer.wrap(byteArray, i * times, times).getFloat()
+				doubles(i) = intBitsToFloat(Arrays.WrapToInt32(getBigEndian(byteArray, i * times, times)))
 			Next i
 			Return doubles
-		End If
+		End Function
 
 		''' 
 		''' <param name="intArray">
 		''' @return </param>
-		public static SByte() toByteArray(Integer() intArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Integer()) * 8) / (Len(New SByte()) * 8)
-			Dim bytes((intArray.length * times) - 1) As SByte
-			For i As Integer = 0 To intArray.length - 1
-				ByteBuffer.wrap(bytes, i * times, times).putInt(intArray(i))
+		Public Shared Function toByteArray(ByVal intArray As Integer()) As SByte()
+			Dim times As Integer = 4
+			Dim bytes((intArray.Length * times) - 1) As SByte
+			For i As Integer = 0 To intArray.Length - 1
+				putBigEndian(bytes, i * times, intArray(i), times)
 			Next i
 			Return bytes
-		End If
+		End Function
 
 		''' 
 		''' <param name="byteArray">
 		''' @return </param>
-		public static Integer() toIntArray(SByte() byteArray)
-		If True Then
-'JAVA TO VB CONVERTER WARNING: Java to VB Converter cannot determine whether both operands of this division are integer types - if they are then you should use the VB integer division operator:
-			Dim times As Integer = (Len(New Integer()) * 8) / (Len(New SByte()) * 8)
-			Dim ints((byteArray.length \ times) - 1) As Integer
+		Public Shared Function toIntArray(ByVal byteArray As SByte()) As Integer()
+			Dim times As Integer = 4
+			Dim ints((byteArray.Length \ times) - 1) As Integer
 			For i As Integer = 0 To ints.Length - 1
-				ints(i) = ByteBuffer.wrap(byteArray, i * times, times).getInt()
+				ints(i) = Arrays.WrapToInt32(getBigEndian(byteArray, i * times, times))
 			Next i
 			Return ints
-		End If
+		End Function
 
 
 		''' <summary>
@@ -1742,51 +1747,49 @@ Namespace org.nd4j.common.util
 		''' <param name="index"> the index of the item to remove </param>
 		''' <returns> the new array with the omitted
 		''' item </returns>
-		public static Integer() removeIndex(Integer() data, Integer index)
-		If True Then
+		Public Shared Function removeIndex(ByVal data As Integer(), ByVal index As Integer) As Integer()
 			If data Is Nothing Then
 				Return Nothing
 			End If
 
-			If index >= data.length Then
+			If index >= data.Length Then
 				Throw New System.ArgumentException("Unable to remove index " & index & " was >= data.length")
 			End If
-			If data.length < 1 Then
+			If data.Length < 1 Then
 				Return data
 			End If
 			If index < 0 Then
 				Return data
 			End If
 
-			Dim len As Integer = data.length
+			Dim len As Integer = data.Length
 			Dim result(len - 2) As Integer
 			Array.Copy(data, 0, result, 0, index)
 			Array.Copy(data, index + 1, result, index, len - index - 1)
 			Return result
-		End If
+		End Function
 
-		public static Long() removeIndex(Long() data, Integer index)
-		If True Then
+		Public Shared Function removeIndex(ByVal data As Long(), ByVal index As Integer) As Long()
 			If data Is Nothing Then
 				Return Nothing
 			End If
 
-			If index >= data.length Then
+			If index >= data.Length Then
 				Throw New System.ArgumentException("Unable to remove index " & index & " was >= data.length")
 			End If
-			If data.length < 1 Then
+			If data.Length < 1 Then
 				Return data
 			End If
 			If index < 0 Then
 				Return data
 			End If
 
-			Dim len As Integer = data.length
+			Dim len As Integer = data.Length
 			Dim result(len - 2) As Long
 			Array.Copy(data, 0, result, 0, index)
 			Array.Copy(data, index + 1, result, index, len - index - 1)
 			Return result
-		End If
+		End Function
 
 
 		''' <summary>
@@ -1809,19 +1812,18 @@ Namespace org.nd4j.common.util
 		''' <param name="idxAt"> the index to start at in the return array </param>
 		''' <param name="length"> the length of the array to create </param>
 		''' <returns> the given array </returns>
-		public static Integer() valueStartingAt(Integer valueStarting, Integer() copy, Integer idxFrom, Integer idxAt, Integer length)
-		If True Then
+		Public Shared Function valueStartingAt(ByVal valueStarting As Integer, ByVal copy As Integer(), ByVal idxFrom As Integer, ByVal idxAt As Integer, ByVal length As Integer) As Integer()
 			Dim ret(length - 1) As Integer
 			Arrays.Fill(ret, valueStarting)
 			For i As Integer = 0 To length - 1
-				If i + idxFrom >= copy.length OrElse i + idxAt >= ret.Length Then
+				If i + idxFrom >= copy.Length OrElse i + idxAt >= ret.Length Then
 					Exit For
 				End If
 				ret(i + idxAt) = copy(i + idxFrom)
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 
 
@@ -1833,20 +1835,19 @@ Namespace org.nd4j.common.util
 		''' <param name="index"> the index of the item to remove </param>
 		''' <returns> a copy of the array with the removed item,
 		''' or the array itself if empty </returns>
-		public static Integer?() removeIndex(Integer?() data, Integer index)
-		If True Then
+		Public Shared Function removeIndex(ByVal data As Integer?(), ByVal index As Integer) As Integer?()
 			If data Is Nothing Then
 				Return Nothing
 			End If
-			If data.length < 1 Then
+			If data.Length < 1 Then
 				Return data
 			End If
-			Dim len As Integer = data.length
+			Dim len As Integer = data.Length
 			Dim result(len - 2) As Integer?
 			Array.Copy(data, 0, result, 0, index)
 			Array.Copy(data, index + 1, result, index, len - index - 1)
 			Return result
-		End If
+		End Function
 
 
 		''' <summary>
@@ -1855,15 +1856,14 @@ Namespace org.nd4j.common.util
 		''' <param name="shape">    the shape of a matrix: </param>
 		''' <param name="startNum"> the start number for the strides </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Integer() calcStridesFortran(Integer() shape, Integer startNum)
-		If True Then
-			If shape.length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
+		Public Shared Function calcStridesFortran(ByVal shape As Integer(), ByVal startNum As Integer) As Integer()
+			If shape.Length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
 				Dim ret(1) As Integer
 				Arrays.Fill(ret, startNum)
 				Return ret
 			End If
 
-			Dim dimensions As Integer = shape.length
+			Dim dimensions As Integer = shape.Length
 			Dim stride(dimensions - 1) As Integer
 			Dim st As Integer = startNum
 			For j As Integer = 0 To stride.Length - 1
@@ -1872,7 +1872,7 @@ Namespace org.nd4j.common.util
 			Next j
 
 			Return stride
-		End If
+		End Function
 
 		''' <summary>
 		''' Computes the standard packed array strides for a given shape.
@@ -1880,15 +1880,14 @@ Namespace org.nd4j.common.util
 		''' <param name="shape">    the shape of a matrix: </param>
 		''' <param name="startNum"> the start number for the strides </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Long() calcStridesFortran(Long() shape, Integer startNum)
-		If True Then
-			If shape.length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
+		Public Shared Function calcStridesFortran(ByVal shape As Long(), ByVal startNum As Integer) As Long()
+			If shape.Length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
 				Dim ret(1) As Long
 				Arrays.Fill(ret, startNum)
 				Return ret
 			End If
 
-			Dim dimensions As Integer = shape.length
+			Dim dimensions As Integer = shape.Length
 			Dim stride(dimensions - 1) As Long
 			Dim st As Integer = startNum
 			For j As Integer = 0 To stride.Length - 1
@@ -1897,22 +1896,20 @@ Namespace org.nd4j.common.util
 			Next j
 
 			Return stride
-		End If
+		End Function
 
 		''' <summary>
 		''' Computes the standard packed array strides for a given shape.
 		''' </summary>
 		''' <param name="shape"> the shape of a matrix: </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Integer() calcStridesFortran(Integer() shape)
-		If True Then
+		Public Shared Function calcStridesFortran(ByVal shape As Integer()) As Integer()
 			Return calcStridesFortran(shape, 1)
-		End If
+		End Function
 
-		public static Long() calcStridesFortran(Long() shape)
-		If True Then
+		Public Shared Function calcStridesFortran(ByVal shape As Long()) As Long()
 			Return calcStridesFortran(shape, 1)
-		End If
+		End Function
 
 
 		''' <summary>
@@ -1921,16 +1918,15 @@ Namespace org.nd4j.common.util
 		''' <param name="shape">      the shape of a matrix: </param>
 		''' <param name="startValue"> the startValue for the strides </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Integer() calcStrides(Integer() shape, Integer startValue)
-		If True Then
-			If shape.length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
+		Public Shared Function calcStrides(ByVal shape As Integer(), ByVal startValue As Integer) As Integer()
+			If shape.Length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
 				Dim ret(1) As Integer
 				Arrays.Fill(ret, startValue)
 				Return ret
 			End If
 
 
-			Dim dimensions As Integer = shape.length
+			Dim dimensions As Integer = shape.Length
 			Dim stride(dimensions - 1) As Integer
 
 			Dim st As Integer = startValue
@@ -1940,7 +1936,7 @@ Namespace org.nd4j.common.util
 			Next j
 
 			Return stride
-		End If
+		End Function
 
 		''' <summary>
 		''' Computes the standard packed array strides for a given shape.
@@ -1948,16 +1944,15 @@ Namespace org.nd4j.common.util
 		''' <param name="shape">      the shape of a matrix: </param>
 		''' <param name="startValue"> the startValue for the strides </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Long() calcStrides(Long() shape, Integer startValue)
-		If True Then
-			If shape.length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
+		Public Shared Function calcStrides(ByVal shape As Long(), ByVal startValue As Integer) As Long()
+			If shape.Length = 2 AndAlso (shape(0) = 1 OrElse shape(1) = 1) Then
 				Dim ret(1) As Long
 				Arrays.Fill(ret, startValue)
 				Return ret
 			End If
 
 
-			Dim dimensions As Integer = shape.length
+			Dim dimensions As Integer = shape.Length
 			Dim stride(dimensions - 1) As Long
 
 			Dim st As Integer = startValue
@@ -1967,7 +1962,7 @@ Namespace org.nd4j.common.util
 			Next j
 
 			Return stride
-		End If
+		End Function
 
 
 		''' <summary>
@@ -1976,12 +1971,9 @@ Namespace org.nd4j.common.util
 		''' <param name="first"> </param>
 		''' <param name="second">
 		''' @return </param>
-		public static Boolean isInverse(Integer() first, Integer() second)
-		If True Then
-			Dim backWardCount As Integer = second.length - 1
-			For i As Integer = 0 To first.length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: if (first[i] != second[backWardCount--])
+		Public Shared Function isInverse(ByVal first As Integer(), ByVal second As Integer()) As Boolean
+			Dim backWardCount As Integer = second.Length - 1
+			For i As Integer = 0 To first.Length - 1
 				If first(i) <> second(backWardCount) Then
 						backWardCount -= 1
 					Return False
@@ -1990,48 +1982,44 @@ Namespace org.nd4j.common.util
 					End If
 			Next i
 			Return True
-		End If
+		End Function
 
-		public static Integer() plus(Integer() ints, Integer mult)
-		If True Then
-			Dim ret(ints.length - 1) As Integer
-			For i As Integer = 0 To ints.length - 1
+		Public Shared Function plus(ByVal ints As Integer(), ByVal mult As Integer) As Integer()
+			Dim ret(ints.Length - 1) As Integer
+			For i As Integer = 0 To ints.Length - 1
 				ret(i) = ints(i) + mult
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static Integer() plus(Integer() ints, Integer() mult)
-		If True Then
-			If ints.length <> mult.length Then
+		Public Shared Function plus(ByVal ints As Integer(), ByVal mult As Integer()) As Integer()
+			If ints.Length <> mult.Length Then
 				Throw New System.ArgumentException("Both arrays must have the same length")
 			End If
-			Dim ret(ints.length - 1) As Integer
-			For i As Integer = 0 To ints.length - 1
+			Dim ret(ints.Length - 1) As Integer
+			For i As Integer = 0 To ints.Length - 1
 				ret(i) = ints(i) + mult(i)
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Integer() times(Integer() ints, Integer mult)
-		If True Then
-			Dim ret(ints.length - 1) As Integer
-			For i As Integer = 0 To ints.length - 1
+		Public Shared Function times(ByVal ints As Integer(), ByVal mult As Integer) As Integer()
+			Dim ret(ints.Length - 1) As Integer
+			For i As Integer = 0 To ints.Length - 1
 				ret(i) = ints(i) * mult
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Integer() times(Integer() ints, Integer() mult)
-		If True Then
-			Preconditions.checkArgument(ints.length = mult.length, "Ints and mult must be the same length")
-			Dim ret(ints.length - 1) As Integer
-			For i As Integer = 0 To ints.length - 1
+		Public Shared Function times(ByVal ints As Integer(), ByVal mult As Integer()) As Integer()
+			Preconditions.checkArgument(ints.Length = mult.Length, "Ints and mult must be the same length")
+			Dim ret(ints.Length - 1) As Integer
+			For i As Integer = 0 To ints.Length - 1
 				ret(i) = ints(i) * mult(i)
 			Next i
 			Return ret
-		End If
+		End Function
 
 
 
@@ -2041,15 +2029,14 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="arr"> the array to get the stride for </param>
 		''' <returns> the stride </returns>
-		public static Integer nonOneStride(Integer() arr)
-		If True Then
-			For i As Integer = 0 To arr.length - 1
+		Public Shared Function nonOneStride(ByVal arr As Integer()) As Integer
+			For i As Integer = 0 To arr.Length - 1
 				If arr(i) <> 1 Then
 					Return arr(i)
 				End If
 			Next i
 			Return 1
-		End If
+		End Function
 
 
 		''' <summary>
@@ -2057,15 +2044,13 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="shape"> the shape of a matrix: </param>
 		''' <returns> the strides for a matrix of n dimensions </returns>
-		public static Integer() calcStrides(Integer() shape)
-		If True Then
+		Public Shared Function calcStrides(ByVal shape As Integer()) As Integer()
 			Return calcStrides(shape, 1)
-		End If
+		End Function
 
-		public static Long() calcStrides(Long() shape)
-		If True Then
+		Public Shared Function calcStrides(ByVal shape As Long()) As Long()
 			Return calcStrides(shape, 1)
-		End If
+		End Function
 
 
 		''' <summary>
@@ -2073,95 +2058,87 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="e"> the array to createComplex a reverse clone of </param>
 		''' <returns> the reversed copy </returns>
-		public static Integer() reverseCopy(Integer() e)
-		If True Then
-			If e.length < 1 Then
+		Public Shared Function reverseCopy(ByVal e As Integer()) As Integer()
+			If e.Length < 1 Then
 				Return e
 			End If
 
-			Dim copy(e.length - 1) As Integer
-			For i As Integer = 0 To e.length \ 2
+			Dim copy(e.Length - 1) As Integer
+			For i As Integer = 0 To e.Length \ 2
 				Dim temp As Integer = e(i)
-				copy(i) = e(e.length - i - 1)
-				copy(e.length - i - 1) = temp
+				copy(i) = e(e.Length - i - 1)
+				copy(e.Length - i - 1) = temp
 			Next i
 			Return copy
-		End If
+		End Function
 
-		public static Long() reverseCopy(Long() e)
-		If True Then
-			If e.length < 1 Then
+		Public Shared Function reverseCopy(ByVal e As Long()) As Long()
+			If e.Length < 1 Then
 				Return e
 			End If
 
-			Dim copy(e.length - 1) As Long
-			For i As Integer = 0 To e.length \ 2
+			Dim copy(e.Length - 1) As Long
+			For i As Integer = 0 To e.Length \ 2
 				Dim temp As Long = e(i)
-				copy(i) = e(e.length - i - 1)
-				copy(e.length - i - 1) = temp
+				copy(i) = e(e.Length - i - 1)
+				copy(e.Length - i - 1) = temp
 			Next i
 			Return copy
-		End If
+		End Function
 
 
-		public static Double() read(Integer length, DataInputStream dis) throws IOException
-		If True Then
+		Public Shared Function read(ByVal length As Integer, ByVal dis As BinaryReader) As Double()
 			Dim ret(length - 1) As Double
 			For i As Integer = 0 To length - 1
-				ret(i) = dis.readDouble()
+				ret(i) = BitConverter.Int64BitsToDouble(readBigEndian(dis, 8))
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static void write(Double() data, DataOutputStream dos) throws IOException
-		If True Then
-			For i As Integer = 0 To data.length - 1
-				dos.writeDouble(data(i))
+		Public Shared Sub write(ByVal data As Double(), ByVal dos As BinaryWriter)
+			For i As Integer = 0 To data.Length - 1
+				writeBigEndian(dos, BitConverter.DoubleToInt64Bits(data(i)), 8)
 			Next i
-		End If
+		End Sub
 
-		public static Double() readDouble(Integer length, DataInputStream dis) throws IOException
-		If True Then
+		Public Shared Function readDouble(ByVal length As Integer, ByVal dis As BinaryReader) As Double()
 			Dim ret(length - 1) As Double
 			For i As Integer = 0 To length - 1
-				ret(i) = dis.readDouble()
+				ret(i) = BitConverter.Int64BitsToDouble(readBigEndian(dis, 8))
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static Single() readFloat(Integer length, DataInputStream dis) throws IOException
-		If True Then
+		Public Shared Function readFloat(ByVal length As Integer, ByVal dis As BinaryReader) As Single()
 			Dim ret(length - 1) As Single
 			For i As Integer = 0 To length - 1
-				ret(i) = dis.readFloat()
+				ret(i) = intBitsToFloat(Arrays.WrapToInt32(readBigEndian(dis, 4)))
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static void write(Single() data, DataOutputStream dos) throws IOException
-		If True Then
-			For i As Integer = 0 To data.length - 1
-				dos.writeFloat(data(i))
+		Public Shared Sub write(ByVal data As Single(), ByVal dos As BinaryWriter)
+			For i As Integer = 0 To data.Length - 1
+				writeBigEndian(dos, floatToIntBits(data(i)), 4)
 			Next i
-		End If
+		End Sub
 
 
-		public static void assertSquare(Double()... d)
-		If True Then
-			If d.length > 2 Then
-				For i As Integer = 0 To d.length - 1
+		Public Shared Sub assertSquare(ParamArray d As Double()())
+			If d.Length > 2 Then
+				For i As Integer = 0 To d.Length - 1
 					assertSquare(d(i))
 				Next i
 			Else
-				Dim firstLength As Integer = d(0).length
-				For i As Integer = 1 To d.length - 1
-					Preconditions.checkState(d(i).length = firstLength)
+				Dim firstLength As Integer = d(0).Length
+				For i As Integer = 1 To d.Length - 1
+					Preconditions.checkState(d(i).Length = firstLength)
 				Next i
 			End If
-		End If
+		End Sub
 
 
 		''' <summary>
@@ -2169,260 +2146,229 @@ Namespace org.nd4j.common.util
 		''' by the given scalar </summary>
 		''' <param name="arr"> the array to multily </param>
 		''' <param name="mult"> the scalar to multiply by </param>
-		public static void multiplyBy(Integer() arr, Integer mult)
-		If True Then
-			For i As Integer = 0 To arr.length - 1
+		Public Shared Sub multiplyBy(ByVal arr As Integer(), ByVal mult As Integer)
+			For i As Integer = 0 To arr.Length - 1
 				arr(i) *= mult
 			Next i
 
-		End If
+		End Sub
 
 		''' <summary>
 		''' Reverse the passed in array in place
 		''' </summary>
 		''' <param name="e"> the array to reverse </param>
-		public static void reverse(Integer() e)
-		If True Then
-			For i As Integer = 0 To e.length \ 2
+		Public Shared Sub reverse(ByVal e As Integer())
+			For i As Integer = 0 To e.Length \ 2
 				Dim temp As Integer = e(i)
-				e(i) = e(e.length - i - 1)
-				e(e.length - i - 1) = temp
+				e(i) = e(e.Length - i - 1)
+				e(e.Length - i - 1) = temp
 			Next i
-		End If
+		End Sub
 
-		public static void reverse(Long() e)
-		If True Then
-			For i As Integer = 0 To e.length \ 2
+		Public Shared Sub reverse(ByVal e As Long())
+			For i As Integer = 0 To e.Length \ 2
 				Dim temp As Long = e(i)
-				e(i) = e(e.length - i - 1)
-				e(e.length - i - 1) = temp
+				e(i) = e(e.Length - i - 1)
+				e(e.Length - i - 1) = temp
 			Next i
-		End If
+		End Sub
 
 
-		public static IList(Of Double()) zerosMatrix(Long... dimensions)
-		If True Then
+		Public Shared Function zerosMatrix(ParamArray dimensions As Long()) As IList(Of Double())
 			Dim ret As IList(Of Double()) = New List(Of Double())()
-			For i As Integer = 0 To dimensions.length - 1
+			For i As Integer = 0 To dimensions.Length - 1
 				ret.Add(New Double(CInt(Math.Truncate(dimensions(i))) - 1){})
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static IList(Of Double()) zerosMatrix(Integer... dimensions)
-		If True Then
+		Public Shared Function zerosMatrix(ParamArray dimensions As Integer()) As IList(Of Double())
 			Dim ret As IList(Of Double()) = New List(Of Double())()
-			For i As Integer = 0 To dimensions.length - 1
+			For i As Integer = 0 To dimensions.Length - 1
 				ret.Add(New Double(dimensions(i) - 1){})
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static Single() reverseCopy(Single() e)
-		If True Then
-			Dim copy(e.length - 1) As Single
-			For i As Integer = 0 To e.length \ 2
+		Public Shared Function reverseCopy(ByVal e As Single()) As Single()
+			Dim copy(e.Length - 1) As Single
+			For i As Integer = 0 To e.Length \ 2
 				Dim temp As Single = e(i)
-				copy(i) = e(e.length - i - 1)
-				copy(e.length - i - 1) = temp
+				copy(i) = e(e.Length - i - 1)
+				copy(e.Length - i - 1) = temp
 			Next i
 			Return copy
 
-		End If
+		End Function
 
 
-		public static (Of E) E() reverseCopy(E() e)
-		If True Then
-			Dim copy() As E = DirectCast(New Object(e.length - 1){}, E())
-			For i As Integer = 0 To e.length \ 2
-				Dim temp As E = e(i)
-				copy(i) = e(e.length - i - 1)
-				copy(e.length - i - 1) = temp
+		Public Shared Function reverseCopy(Of T)(ByVal e As T()) As T()
+			Dim copy(e.Length - 1) As T
+			For i As Integer = 0 To e.Length \ 2
+				Dim temp As T = e(i)
+				copy(i) = e(e.Length - i - 1)
+				copy(e.Length - i - 1) = temp
 			Next i
 			Return copy
 
-		End If
+		End Function
 
-		public static (Of E) void reverse(E() e)
-		If True Then
-			For i As Integer = 0 To e.length \ 2
-				Dim temp As E = e(i)
-				e(i) = e(e.length - i - 1)
-				e(e.length - i - 1) = temp
+		Public Shared Sub reverse(Of T)(ByVal e As T())
+			For i As Integer = 0 To e.Length \ 2
+				Dim temp As T = e(i)
+				e(i) = e(e.Length - i - 1)
+				e(e.Length - i - 1) = temp
 			Next i
-		End If
+		End Sub
 
-		public static Boolean() flatten(Boolean()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Boolean()()) As Boolean()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Boolean(){}
 			End If
-			Dim ret((arr.length * arr(0).length) - 1) As Boolean
+			Dim ret((arr.Length * arr(0).Length) - 1) As Boolean
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Boolean() flatten(Boolean()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Boolean()()()) As Boolean()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Boolean(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Boolean = new Boolean[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret() As Boolean = RectangularArrays.RectangularBooleanArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret() As Boolean = New Boolean((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Single() flatten(Single()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Single()()) As Single()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Single(){}
 			End If
-			Dim ret((arr.length * arr(0).length) - 1) As Single
+			Dim ret((arr.Length * arr(0).Length) - 1) As Single
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
 
-		public static Single() flatten(Single()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Single()()()) As Single()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Single(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Single = new Single[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret() As Single = RectangularArrays.RectangularSingleArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret() As Single = New Single((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Double() flatten(Double()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Double()()()) As Double()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Double(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Double = new Double[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret() As Double = RectangularArrays.RectangularDoubleArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret() As Double = New Double((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Integer() flatten(Integer()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Integer()()()) As Integer()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Integer(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Integer = new Integer[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret() As Integer = RectangularArrays.RectangularIntegerArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret() As Integer = New Integer((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Short() flatten(Short()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Short()()()) As Short()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Short(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new Short[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret As val = RectangularArrays.RectangularShortArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret As Short() = New Short((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static SByte() flatten(SByte()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As SByte()()()) As SByte()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New SByte(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new SByte[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret As val = RectangularArrays.RectangularSByteArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret As SByte() = New SByte((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Long() flatten(Long()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new Long[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret As val = RectangularArrays.RectangularLongArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Long()()()()) As Long()
+			Dim ret As Long() = New Long((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2430,22 +2376,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Short() flatten(Short()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new Short[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret As val = RectangularArrays.RectangularShortArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Short()()()()) As Short()
+			Dim ret As Short() = New Short((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2453,22 +2396,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static SByte() flatten(SByte()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new SByte[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret As val = RectangularArrays.RectangularSByteArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As SByte()()()()) As SByte()
+			Dim ret As SByte() = New SByte((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2476,22 +2416,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Boolean() flatten(Boolean()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret As val = new Boolean[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret As val = RectangularArrays.RectangularBooleanArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Boolean()()()()) As Boolean()
+			Dim ret As Boolean() = New Boolean((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2499,22 +2436,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Single() flatten(Single()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Single = new Single[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret() As Single = RectangularArrays.RectangularSingleArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Single()()()()) As Single()
+			Dim ret() As Single = New Single((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2522,22 +2456,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Double() flatten(Double()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Double = new Double[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret() As Double = RectangularArrays.RectangularDoubleArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Double()()()()) As Double()
+			Dim ret() As Double = New Double((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2545,22 +2476,19 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
-		public static Integer() flatten(Integer()()()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Integer = new Integer[arr.length * arr[0].length * arr[0][0].length * arr[0][0][0].length]
-			Dim ret() As Integer = RectangularArrays.RectangularIntegerArray(arr.length * arr(0).length * arr(0)(0).length * arr(0)(0)(0).length)
+		Public Shared Function flatten(ByVal arr As Integer()()()()) As Integer()
+			Dim ret() As Integer = New Integer((arr.Length * arr(0).Length * arr(0)(0).Length * arr(0)(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
+				Do While j < arr(0).Length
 					Dim k As Integer = 0
-					Do While k < arr(0)(0).length
-						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).length)
-						count += arr(0)(0)(0).length
+					Do While k < arr(0)(0).Length
+						Array.Copy(arr(i)(j)(k), 0, ret, count, arr(0)(0)(0).Length)
+						count += arr(0)(0)(0).Length
 						k += 1
 					Loop
 					j += 1
@@ -2568,85 +2496,78 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 
-		public static Integer() flatten(Integer()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Integer()()) As Integer()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Integer(){}
 			End If
-			Dim ret((arr.length * arr(0).length) - 1) As Integer
+			Dim ret((arr.Length * arr(0).Length) - 1) As Integer
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Short() flatten(Short()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Short()()) As Short()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Short(){}
 			End If
-			Dim ret As val = New Short((arr.length * arr(0).length) - 1){}
+			Dim ret As Short() = New Short((arr.Length * arr(0).Length) - 1){}
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static SByte() flatten(SByte()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As SByte()()) As SByte()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New SByte(){}
 			End If
-			Dim ret As val = New SByte((arr.length * arr(0).length) - 1){}
+			Dim ret As SByte() = New SByte((arr.Length * arr(0).Length) - 1){}
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Long() flatten(Long()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Long()()) As Long()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Long(){}
 			End If
-			Dim ret((arr.length * arr(0).length) - 1) As Long
+			Dim ret((arr.Length * arr(0).Length) - 1) As Long
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Long() flatten(Long()()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 OrElse arr(0)(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Long()()()) As Long()
+			If arr.Length = 0 OrElse arr(0).Length = 0 OrElse arr(0)(0).Length = 0 Then
 				Return New Long(){}
 			End If
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[] As Long = new Long[arr.length * arr[0].length * arr[0][0].length]
-			Dim ret() As Long = RectangularArrays.RectangularLongArray(arr.length * arr(0).length * arr(0)(0).length)
+			Dim ret() As Long = New Long((arr.Length * arr(0).Length * arr(0)(0).Length) - 1){}
 
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(0).length
-					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).length)
-					count += arr(0)(0).length
+				Do While j < arr(0).Length
+					Array.Copy(arr(i)(j), 0, ret, count, arr(0)(0).Length)
+					count += arr(0)(0).Length
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
 
 		''' <summary>
@@ -2654,293 +2575,227 @@ Namespace org.nd4j.common.util
 		''' array (row wise) </summary>
 		''' <param name="arr"> the array to flatten </param>
 		''' <returns> a flattened representation of the array </returns>
-		public static Double() flatten(Double()() arr)
-		If True Then
-			If arr.length = 0 OrElse arr(0).length = 0 Then
+		Public Shared Function flatten(ByVal arr As Double()()) As Double()
+			If arr.Length = 0 OrElse arr(0).Length = 0 Then
 				Return New Double(){}
 			End If
-			Dim ret((arr.length * arr(0).length) - 1) As Double
+			Dim ret((arr.Length * arr(0).Length) - 1) As Double
 			Dim count As Integer = 0
-			For i As Integer = 0 To arr.length - 1
-				Array.Copy(arr(i), 0, ret, count, arr(i).length)
-				count += arr(i).length
+			For i As Integer = 0 To arr.Length - 1
+				Array.Copy(arr(i), 0, ret, count, arr(i).Length)
+				count += arr(i).Length
 			Next i
 			Return ret
-		End If
+		End Function
 
 		''' <summary>
 		''' Convert a 2darray in to a flat
 		''' array (row wise) </summary>
 		''' <param name="arr"> the array to flatten </param>
 		''' <returns> a flattened representation of the array </returns>
-		public static Double() flattenF(Double()() arr)
-		If True Then
-			Dim ret((arr.length * arr(0).length) - 1) As Double
+		Public Shared Function flattenF(ByVal arr As Double()()) As Double()
+			Dim ret((arr.Length * arr(0).Length) - 1) As Double
 			Dim count As Integer = 0
 			Dim j As Integer = 0
-			Do While j < arr(0).length
-				For i As Integer = 0 To arr.length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = arr[i][j];
+			Do While j < arr(0).Length
+				For i As Integer = 0 To arr.Length - 1
 					ret(count) = arr(i)(j)
 						count += 1
 				Next i
 				j += 1
 			Loop
 			Return ret
-		End If
+		End Function
 
-		public static Single() flattenF(Single()() arr)
-		If True Then
-			Dim ret((arr.length * arr(0).length) - 1) As Single
+		Public Shared Function flattenF(ByVal arr As Single()()) As Single()
+			Dim ret((arr.Length * arr(0).Length) - 1) As Single
 			Dim count As Integer = 0
 			Dim j As Integer = 0
-			Do While j < arr(0).length
-				For i As Integer = 0 To arr.length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = arr[i][j];
+			Do While j < arr(0).Length
+				For i As Integer = 0 To arr.Length - 1
 					ret(count) = arr(i)(j)
 						count += 1
 				Next i
 				j += 1
 			Loop
 			Return ret
-		End If
+		End Function
 
-		public static Integer() flattenF(Integer()() arr)
-		If True Then
-			Dim ret((arr.length * arr(0).length) - 1) As Integer
+		Public Shared Function flattenF(ByVal arr As Integer()()) As Integer()
+			Dim ret((arr.Length * arr(0).Length) - 1) As Integer
 			Dim count As Integer = 0
 			Dim j As Integer = 0
-			Do While j < arr(0).length
-				For i As Integer = 0 To arr.length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = arr[i][j];
+			Do While j < arr(0).Length
+				For i As Integer = 0 To arr.Length - 1
 					ret(count) = arr(i)(j)
 						count += 1
 				Next i
 				j += 1
 			Loop
 			Return ret
-		End If
+		End Function
 
 
-		public static Long() flattenF(Long()() arr)
-		If True Then
-			Dim ret((arr.length * arr(0).length) - 1) As Long
+		Public Shared Function flattenF(ByVal arr As Long()()) As Long()
+			Dim ret((arr.Length * arr(0).Length) - 1) As Long
 			Dim count As Integer = 0
 			Dim j As Integer = 0
-			Do While j < arr(0).length
-				For i As Integer = 0 To arr.length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = arr[i][j];
+			Do While j < arr(0).Length
+				For i As Integer = 0 To arr.Length - 1
 					ret(count) = arr(i)(j)
 						count += 1
 				Next i
 				j += 1
 			Loop
 			Return ret
-		End If
+		End Function
 
-		public static Integer()() reshapeInt(Integer() [in], Integer rows, Integer cols)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][] As Integer = new Integer[rows][cols]
-			Dim [out]()() As Integer = RectangularArrays.RectangularIntegerArray(rows, cols)
+		Public Shared Function reshapeInt(ByVal [in] As Integer(), ByVal rows As Integer, ByVal cols As Integer) As Integer()()
+			Dim [out]()() As Integer = Jagged2(Of Integer)(rows, cols)
 			Dim x As Integer = 0
 			For i As Integer = 0 To rows - 1
 				For j As Integer = 0 To cols - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j] = in[x++];
 					[out](i)(j) = [in](x)
 						x += 1
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Integer()()() reshapeInt(Integer() [in], Integer d0, Integer d1, Integer d2)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][][] As Integer = new Integer[d0][d1][d2]
-			Dim [out]()()() As Integer = RectangularArrays.RectangularIntegerArray(d0, d1, d2)
+		Public Shared Function reshapeInt(ByVal [in] As Integer(), ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As Integer()()()
+			Dim [out]()()() As Integer = Jagged3(Of Integer)(d0, d1, d2)
 			Dim x As Integer = 0
 			For i As Integer = 0 To d0 - 1
 				For j As Integer = 0 To d1 - 1
 					For k As Integer = 0 To d2 - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j][k] = in[x++];
 						[out](i)(j)(k) = [in](x)
 							x += 1
 					Next k
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Double()() reshapeDouble(Double() [in], Integer rows, Integer cols)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][] As Double = new Double[rows][cols]
-			Dim [out]()() As Double = RectangularArrays.RectangularDoubleArray(rows, cols)
+		Public Shared Function reshapeDouble(ByVal [in] As Double(), ByVal rows As Integer, ByVal cols As Integer) As Double()()
+			Dim [out]()() As Double = Jagged2(Of Double)(rows, cols)
 			Dim x As Integer = 0
 			For i As Integer = 0 To rows - 1
 				For j As Integer = 0 To cols - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j] = in[x++];
 					[out](i)(j) = [in](x)
 						x += 1
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Double()()() reshapeDouble(Double() [in], Integer d0, Integer d1, Integer d2)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][][] As Double = new Double[d0][d1][d2]
-			Dim [out]()()() As Double = RectangularArrays.RectangularDoubleArray(d0, d1, d2)
+		Public Shared Function reshapeDouble(ByVal [in] As Double(), ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As Double()()()
+			Dim [out]()()() As Double = Jagged3(Of Double)(d0, d1, d2)
 			Dim x As Integer = 0
 			For i As Integer = 0 To d0 - 1
 				For j As Integer = 0 To d1 - 1
 					For k As Integer = 0 To d2 - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j][k] = in[x++];
 						[out](i)(j)(k) = [in](x)
 							x += 1
 					Next k
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Long()() reshapeLong(Long() [in], Integer rows, Integer cols)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][] As Long = new Long[rows][cols]
-			Dim [out]()() As Long = RectangularArrays.RectangularLongArray(rows, cols)
+		Public Shared Function reshapeLong(ByVal [in] As Long(), ByVal rows As Integer, ByVal cols As Integer) As Long()()
+			Dim [out]()() As Long = Jagged2(Of Long)(rows, cols)
 			Dim x As Integer = 0
 			For i As Integer = 0 To rows - 1
 				For j As Integer = 0 To cols - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j] = in[x++];
 					[out](i)(j) = [in](x)
 						x += 1
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Long()()() reshapeLong(Long() [in], Integer d0, Integer d1, Integer d2)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][][] As Long = new Long[d0][d1][d2]
-			Dim [out]()()() As Long = RectangularArrays.RectangularLongArray(d0, d1, d2)
+		Public Shared Function reshapeLong(ByVal [in] As Long(), ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As Long()()()
+			Dim [out]()()() As Long = Jagged3(Of Long)(d0, d1, d2)
 			Dim x As Integer = 0
 			For i As Integer = 0 To d0 - 1
 				For j As Integer = 0 To d1 - 1
 					For k As Integer = 0 To d2 - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j][k] = in[x++];
 						[out](i)(j)(k) = [in](x)
 							x += 1
 					Next k
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Boolean()() reshapeBoolean(Boolean() [in], Integer rows, Integer cols)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][] As Boolean = new Boolean[rows][cols]
-			Dim [out]()() As Boolean = RectangularArrays.RectangularBooleanArray(rows, cols)
+		Public Shared Function reshapeBoolean(ByVal [in] As Boolean(), ByVal rows As Integer, ByVal cols As Integer) As Boolean()()
+			Dim [out]()() As Boolean = Jagged2(Of Boolean)(rows, cols)
 			Dim x As Integer = 0
 			For i As Integer = 0 To rows - 1
 				For j As Integer = 0 To cols - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j] = in[x++];
 					[out](i)(j) = [in](x)
 						x += 1
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static Boolean()()() reshapeBoolean(Boolean() [in], Integer d0, Integer d1, Integer d2)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][][] As Boolean = new Boolean[d0][d1][d2]
-			Dim [out]()()() As Boolean = RectangularArrays.RectangularBooleanArray(d0, d1, d2)
+		Public Shared Function reshapeBoolean(ByVal [in] As Boolean(), ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As Boolean()()()
+			Dim [out]()()() As Boolean = Jagged3(Of Boolean)(d0, d1, d2)
 			Dim x As Integer = 0
 			For i As Integer = 0 To d0 - 1
 				For j As Integer = 0 To d1 - 1
 					For k As Integer = 0 To d2 - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j][k] = in[x++];
 						[out](i)(j)(k) = [in](x)
 							x += 1
 					Next k
 				Next j
 			Next i
 			Return [out]
-		End If
+		End Function
 
-		public static (Of T) T()() reshapeObject(T() [in], Integer rows, Integer cols)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][] As Object = new Object[rows][cols]
-			Dim [out]()() As Object = RectangularArrays.RectangularObjectArray(rows, cols)
+		Public Shared Function reshapeObject(Of T)(ByVal [in] As T(), ByVal rows As Integer, ByVal cols As Integer) As T()()
+			Dim [out]()() As T = Jagged2(Of T)(rows, cols)
 			Dim x As Integer = 0
 			For i As Integer = 0 To rows - 1
 				For j As Integer = 0 To cols - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j] = in[x++];
 					[out](i)(j) = [in](x)
 						x += 1
 				Next j
 			Next i
-			Return DirectCast([out], T()())
-		End If
+			Return [out]
+		End Function
 
-		public static (Of T) T()()() reshapeObject(T() [in], Integer d0, Integer d1, Integer d2)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim out[][][] As Object = new Object[d0][d1][d2]
-			Dim [out]()()() As Object = RectangularArrays.RectangularObjectArray(d0, d1, d2)
+		Public Shared Function reshapeObject(Of T)(ByVal [in] As T(), ByVal d0 As Integer, ByVal d1 As Integer, ByVal d2 As Integer) As T()()()
+			Dim [out]()()() As T = Jagged3(Of T)(d0, d1, d2)
 			Dim x As Integer = 0
 			For i As Integer = 0 To d0 - 1
 				For j As Integer = 0 To d1 - 1
 					For k As Integer = 0 To d2 - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[i][j][k] = in[x++];
 						[out](i)(j)(k) = [in](x)
 							x += 1
 					Next k
 				Next j
 			Next i
-			Return DirectCast([out], T()()())
-		End If
+			Return [out]
+		End Function
 
 		''' <summary>
 		''' Cast an int array to a double array </summary>
 		''' <param name="arr"> the array to cast </param>
 		''' <returns> the elements of this
 		''' array cast as an int </returns>
-		public static Double()() toDouble(Integer()() arr)
-		If True Then
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim ret[][] As Double = new Double[arr.length][arr[0].length]
-			Dim ret()() As Double = RectangularArrays.RectangularDoubleArray(arr.length, arr(0).length)
-			For i As Integer = 0 To arr.length - 1
+		Public Shared Function toDouble(ByVal arr As Integer()()) As Double()()
+			Dim ret()() As Double = Jagged2(Of Double)(arr.Length, arr(0).Length)
+			For i As Integer = 0 To arr.Length - 1
 				Dim j As Integer = 0
-				Do While j < arr(i).length
+				Do While j < arr(i).Length
 					ret(i)(j) = arr(i)(j)
 					j += 1
 				Loop
 			Next i
 			Return ret
-		End If
+		End Function
 
 
 
@@ -2949,25 +2804,22 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="nums"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Single() combineFloat(IList(Of Single()) nums)
-		If True Then
+		Public Shared Function combineFloat(ByVal nums As IList(Of Single())) As Single()
 			Dim length As Integer = 0
-			For i As Integer = 0 To nums.size() - 1
-				length += nums.[get](i).length
+			For i As Integer = 0 To nums.Count - 1
+				length += nums(i).Length
 			Next i
 			Dim ret(length - 1) As Single
 			Dim count As Integer = 0
 			For Each i As Single() In nums
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 
 		''' <summary>
@@ -2975,195 +2827,171 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="nums"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Single() combine(IList(Of Single()) nums)
-		If True Then
+		Public Shared Function combine(ByVal nums As IList(Of Single())) As Single()
 			Dim length As Integer = 0
-			For i As Integer = 0 To nums.size() - 1
-				length += nums.[get](i).length
+			For i As Integer = 0 To nums.Count - 1
+				length += nums(i).Length
 			Next i
 			Dim ret(length - 1) As Single
 			Dim count As Integer = 0
 			For Each i As Single() In nums
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 		''' <summary>
 		''' Combines a apply of int arrays in to one flat int array
 		''' </summary>
 		''' <param name="nums"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Double() combineDouble(IList(Of Double()) nums)
-		If True Then
+		Public Shared Function combineDouble(ByVal nums As IList(Of Double())) As Double()
 			Dim length As Integer = 0
-			For i As Integer = 0 To nums.size() - 1
-				length += nums.[get](i).length
+			For i As Integer = 0 To nums.Count - 1
+				length += nums(i).Length
 			Next i
 			Dim ret(length - 1) As Double
 			Dim count As Integer = 0
 			For Each i As Double() In nums
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 		''' <summary>
 		''' Combines a apply of int arrays in to one flat int array
 		''' </summary>
 		''' <param name="ints"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Double() combine(Single()... ints)
-		If True Then
+		Public Shared Function combine(ParamArray ints As Single()()) As Double()
 			Dim length As Integer = 0
-			For i As Integer = 0 To ints.length - 1
-				length += ints(i).length
+			For i As Integer = 0 To ints.Length - 1
+				length += ints(i).Length
 			Next i
 			Dim ret(length - 1) As Double
 			Dim count As Integer = 0
 			For Each i As Single() In ints
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 		''' <summary>
 		''' Combines a apply of int arrays in to one flat int array
 		''' </summary>
 		''' <param name="ints"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Integer() combine(Integer()... ints)
-		If True Then
+		Public Shared Function combine(ParamArray ints As Integer()()) As Integer()
 			Dim length As Integer = 0
-			For i As Integer = 0 To ints.length - 1
-				length += ints(i).length
+			For i As Integer = 0 To ints.Length - 1
+				length += ints(i).Length
 			Next i
 			Dim ret(length - 1) As Integer
 			Dim count As Integer = 0
 			For Each i As Integer() In ints
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 		''' <summary>
 		''' Combines a apply of long arrays in to one flat long array
 		''' </summary>
 		''' <param name="ints"> the int arrays to combineDouble </param>
 		''' <returns> one combined int array </returns>
-		public static Long() combine(Long()... ints)
-		If True Then
+		Public Shared Function combine(ParamArray ints As Long()()) As Long()
 			Dim length As Integer = 0
-			For i As Integer = 0 To ints.length - 1
-				length += ints(i).length
+			For i As Integer = 0 To ints.Length - 1
+				length += ints(i).Length
 			Next i
 			Dim ret(length - 1) As Long
 			Dim count As Integer = 0
 			For Each i As Long() In ints
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 
-		public static (Of E) E() combine(E()... arrs)
-		If True Then
+		Public Shared Function combine(Of E)(ParamArray arrs As E()()) As E()
 			Dim length As Integer = 0
-			For i As Integer = 0 To arrs.length - 1
-				length += arrs(i).length
+			For i As Integer = 0 To arrs.Length - 1
+				length += arrs(i).Length
 			Next i
 
 			Dim ret() As E = CType(Array.CreateInstance(arrs(0)(0).GetType(), length), E())
 			Dim count As Integer = 0
 			For Each i As E() In arrs
 				For j As Integer = 0 To i.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: ret[count++] = i[j];
 					ret(count) = i(j)
 						count += 1
 				Next j
 			Next i
 
 			Return ret
-		End If
+		End Function
 
 
-		public static Integer() toOutcomeArray(Integer outcome, Integer numOutcomes)
-		If True Then
+		Public Shared Function toOutcomeArray(ByVal outcome As Integer, ByVal numOutcomes As Integer) As Integer()
 			Dim nums(numOutcomes - 1) As Integer
 			nums(outcome) = 1
 			Return nums
-		End If
+		End Function
 
-		public static Double() toDouble(Integer() data)
-		If True Then
-			Dim ret(data.length - 1) As Double
+		Public Shared Function toDouble(ByVal data As Integer()) As Double()
+			Dim ret(data.Length - 1) As Double
 			For i As Integer = 0 To ret.Length - 1
 				ret(i) = data(i)
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Double() toDouble(Long() data)
-		If True Then
-			Dim ret(data.length - 1) As Double
+		Public Shared Function toDouble(ByVal data As Long()) As Double()
+			Dim ret(data.Length - 1) As Double
 			For i As Integer = 0 To ret.Length - 1
 				ret(i) = data(i)
 			Next i
 			Return ret
-		End If
+		End Function
 
-		public static Single() copy(Single() data)
-		If True Then
-			Dim result(data.length - 1) As Single
-			Array.Copy(data, 0, result, 0, data.length)
+		Public Shared Function copy(ByVal data As Single()) As Single()
+			Dim result(data.Length - 1) As Single
+			Array.Copy(data, 0, result, 0, data.Length)
 			Return result
-		End If
+		End Function
 
-		public static Double() copy(Double() data)
-		If True Then
-			Dim result(data.length - 1) As Double
-			Array.Copy(data, 0, result, 0, data.length)
+		Public Shared Function copy(ByVal data As Double()) As Double()
+			Dim result(data.Length - 1) As Double
+			Array.Copy(data, 0, result, 0, data.Length)
 			Return result
-		End If
+		End Function
 
 
 		''' <summary>
 		''' Convert an arbitrary-dimensional rectangular double array to flat vector.<br>
 		''' Can pass double[], double[][], double[][][], etc.
 		''' </summary>
-		public static Double() flattenDoubleArray(Object doubleArray)
-		If True Then
+		Public Shared Function flattenDoubleArray(ByVal doubleArray As Object) As Double()
 			If TypeOf doubleArray Is Double() Then
 				Return CType(doubleArray, Double())
 			End If
@@ -3177,12 +3005,11 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 
 			Do While stack.Count > 0
-				Dim current As Object = stack.RemoveFirst()
+				Dim current As Object = stack.First.Value
+				stack.RemoveFirst()
 				If TypeOf current Is Double() Then
 					Dim arr() As Double = DirectCast(current, Double())
 					For i As Integer = 0 To arr.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: flat[count++] = arr[i];
 						flat(count) = arr(i)
 							count += 1
 					Next i
@@ -3200,14 +3027,13 @@ Namespace org.nd4j.common.util
 				Throw New System.ArgumentException("Fewer elements than expected. Array is ragged?")
 			End If
 			Return flat
-		End If
+		End Function
 
 		''' <summary>
 		''' Convert an arbitrary-dimensional rectangular float array to flat vector.<br>
 		''' Can pass float[], float[][], float[][][], etc.
 		''' </summary>
-		public static Single() flattenFloatArray(Object floatArray)
-		If True Then
+		Public Shared Function flattenFloatArray(ByVal floatArray As Object) As Single()
 			If TypeOf floatArray Is Single() Then
 				Return CType(floatArray, Single())
 			End If
@@ -3221,12 +3047,11 @@ Namespace org.nd4j.common.util
 			Dim count As Integer = 0
 
 			Do While stack.Count > 0
-				Dim current As Object = stack.RemoveFirst()
+				Dim current As Object = stack.First.Value
+				stack.RemoveFirst()
 				If TypeOf current Is Single() Then
 					Dim arr() As Single = DirectCast(current, Single())
 					For i As Integer = 0 To arr.Length - 1
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: flat[count++] = arr[i];
 						flat(count) = arr(i)
 							count += 1
 					Next i
@@ -3244,7 +3069,7 @@ Namespace org.nd4j.common.util
 				Throw New System.ArgumentException("Fewer elements than expected. Array is ragged?")
 			End If
 			Return flat
-		End If
+		End Function
 
 		''' <summary>
 		''' Calculate the shape of an arbitrary multi-dimensional array. Assumes:<br>
@@ -3253,10 +3078,9 @@ Namespace org.nd4j.common.util
 		''' Can pass any Java array opType: double[], Object[][][], float[][], etc.<br>
 		''' Length of returned array is number of dimensions; returned[i] is size of ith dimension.
 		''' </summary>
-		public static Integer() arrayShape(Object array)
-		If True Then
+		Public Shared Function arrayShape(ByVal array As Object) As Integer()
 			Return arrayShape(array, False)
-		End If
+		End Function
 
 		''' <summary>
 		''' Calculate the shape of an arbitrary multi-dimensional array.<br>
@@ -3266,8 +3090,7 @@ Namespace org.nd4j.common.util
 		''' Can pass any Java array opType: double[], Object[][][], float[][], etc.<br>
 		''' Length of returned array is number of dimensions; returned[i] is size of ith dimension.
 		''' </summary>
-		public static Integer() arrayShape(Object array, Boolean allowSize0Dims)
-		If True Then
+		Public Shared Function arrayShape(ByVal array As Object, ByVal allowSize0Dims As Boolean) As Integer()
 			Dim nDimensions As Integer = 0
 			Dim c As Type = array.GetType().GetElementType()
 			Do While c IsNot Nothing
@@ -3278,133 +3101,110 @@ Namespace org.nd4j.common.util
 			Dim shape(nDimensions - 1) As Integer
 			Dim current As Object = array
 			For i As Integer = 0 To shape.Length - 2
-				shape(i) = DirectCast(current, Object()).Length
+				shape(i) = DirectCast(current, Array).Length
 				If shape(i) = 0 Then
 					If allowSize0Dims Then
 						Return shape
 					End If
 					Throw New System.InvalidOperationException("Cannot calculate array shape: Array has size 0 for dimension " & i)
 				End If
-				current = DirectCast(current, Object())(0)
+				current = DirectCast(current, Array).GetValue(0)
 			Next i
 
-			If TypeOf current Is Object() Then
-				shape(shape.Length - 1) = DirectCast(current, Object()).Length
-			ElseIf TypeOf current Is Double() Then
-				shape(shape.Length - 1) = DirectCast(current, Double()).Length
-			ElseIf TypeOf current Is Single() Then
-				shape(shape.Length - 1) = DirectCast(current, Single()).Length
-			ElseIf TypeOf current Is Long() Then
-				shape(shape.Length - 1) = DirectCast(current, Long()).Length
-			ElseIf TypeOf current Is Integer() Then
-				shape(shape.Length - 1) = DirectCast(current, Integer()).Length
-			ElseIf TypeOf current Is SByte() Then
-				shape(shape.Length - 1) = DirectCast(current, SByte()).Length
-			ElseIf TypeOf current Is Char() Then
-				shape(shape.Length - 1) = DirectCast(current, Char()).Length
-			ElseIf TypeOf current Is Boolean() Then
-				shape(shape.Length - 1) = DirectCast(current, Boolean()).Length
-			ElseIf TypeOf current Is Short() Then
-				shape(shape.Length - 1) = DirectCast(current, Short()).Length
+			If TypeOf current Is Array Then
+				shape(shape.Length - 1) = DirectCast(current, Array).Length
 			Else
 				Throw New System.InvalidOperationException("Unknown array type") 'Should never happen
 			End If
 			Return shape
-		End If
+		End Function
 
 
 		''' <summary>
 		''' Returns the maximum value in the array </summary>
-		public static Integer max(Integer() [in])
-		If True Then
-			Dim max As Integer = Integer.MinValue
-			For i As Integer = 0 To [in].length - 1
-				If [in](i) > max Then
-					max = [in](i)
+		Public Shared Function max(ByVal [in] As Integer()) As Integer
+			Dim maxVal As Integer = Integer.MinValue
+			For i As Integer = 0 To [in].Length - 1
+				If [in](i) > maxVal Then
+					maxVal = [in](i)
 				End If
 			Next i
-			Return max
-		End If
+			Return maxVal
+		End Function
 
 		''' <summary>
 		''' Returns the minimum value in the array </summary>
-		public static Integer min(Integer() [in])
-		If True Then
-			Dim min As Integer = Integer.MaxValue
-			For i As Integer = 0 To [in].length - 1
-				If [in](i) < min Then
-					min = [in](i)
+		Public Shared Function min(ByVal [in] As Integer()) As Integer
+			Dim minVal As Integer = Integer.MaxValue
+			For i As Integer = 0 To [in].Length - 1
+				If [in](i) < minVal Then
+					minVal = [in](i)
 				End If
 			Next i
-			Return min
-		End If
+			Return minVal
+		End Function
 
 		''' <summary>
 		''' Returns the index of the maximum value in the array.
 		''' If two entries have same maximum value, index of the first one is returned. 
 		''' </summary>
-		public static Integer argMax(Integer() [in])
-		If True Then
+		Public Shared Function argMax(ByVal [in] As Integer()) As Integer
 			Dim maxIdx As Integer = 0
-			For i As Integer = 1 To [in].length - 1
+			For i As Integer = 1 To [in].Length - 1
 				If [in](i) > [in](maxIdx) Then
 					maxIdx = i
 				End If
 			Next i
 			Return maxIdx
-		End If
+		End Function
 
 		''' <summary>
 		''' Returns the index of the minimum value in the array.
 		''' If two entries have same minimum value, index of the first one is returned. 
 		''' </summary>
-		public static Integer argMin(Integer() [in])
-		If True Then
+		Public Shared Function argMin(ByVal [in] As Integer()) As Integer
 			Dim minIdx As Integer = 0
-			For i As Integer = 1 To [in].length - 1
+			For i As Integer = 1 To [in].Length - 1
 				If [in](i) < [in](minIdx) Then
 					minIdx = i
 				End If
 			Next i
 			Return minIdx
-		End If
+		End Function
 
 		''' <summary>
 		''' Returns the index of the maximum value in the array.
 		''' If two entries have same maximum value, index of the first one is returned. 
 		''' </summary>
-		public static Integer argMax(Long() [in])
-		If True Then
+		Public Shared Function argMax(ByVal [in] As Long()) As Integer
 			Dim maxIdx As Integer = 0
-			For i As Integer = 1 To [in].length - 1
+			For i As Integer = 1 To [in].Length - 1
 				If [in](i) > [in](maxIdx) Then
 					maxIdx = i
 				End If
 			Next i
 			Return maxIdx
-		End If
+		End Function
 
 		''' <summary>
 		''' Returns the index of the minimum value in the array.
 		''' If two entries have same minimum value, index of the first one is returned. 
 		''' </summary>
-		public static Integer argMin(Long() [in])
-		If True Then
+		Public Shared Function argMin(ByVal [in] As Long()) As Integer
 			Dim minIdx As Integer = 0
-			For i As Integer = 1 To [in].length - 1
+			For i As Integer = 1 To [in].Length - 1
 				If [in](i) < [in](minIdx) Then
 					minIdx = i
 				End If
 			Next i
 			Return minIdx
-		End If
+		End Function
 
 		''' 
 		''' <summary>
 		''' @return
 		''' </summary>
-		public static Integer() buildHalfVector(Random rng, Integer length)
-		If True Then
+		Public Shared Function buildHalfVector(ByVal rng As Random, ByVal length As Integer) As Integer()
 			Dim result(length - 1) As Integer
 			Dim indexes As IList(Of Integer) = New List(Of Integer)()
 
@@ -3425,10 +3225,9 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return result
-		End If
+		End Function
 
-		public static Integer() buildInterleavedVector(Random rng, Integer length)
-		If True Then
+		Public Shared Function buildInterleavedVector(ByVal rng As Random, ByVal length As Integer) As Integer()
 			Dim result(length - 1) As Integer
 
 			Dim indexes As IList(Of Integer) = New List(Of Integer)()
@@ -3455,7 +3254,7 @@ Namespace org.nd4j.common.util
 
 			' for odd tad numbers, we add special random clause for last element
 			If length Mod 2 <> 0 Then
-				Dim rndClause As Integer = odds(rng.nextInt(odds.Count))
+				Dim rndClause As Integer = odds(rng.Next(odds.Count))
 				Dim tmp As Integer = result(rndClause)
 				result(rndClause) = result(result.Length - 1)
 				result(result.Length - 1) = tmp
@@ -3463,20 +3262,19 @@ Namespace org.nd4j.common.util
 
 
 			Return result
-		End If
+		End Function
 
-		public static Long() buildInterleavedVector(Random rng, Long length)
-		If True Then
+		Public Shared Function buildInterleavedVector(ByVal rng As Random, ByVal length As Long) As Long()
 			If length > Integer.MaxValue Then
 				Throw New Exception("Integer overflow")
 			End If
-			Dim result As val = New Long(CInt(Math.Truncate(length)) - 1){}
+			Dim result As Long() = New Long(CInt(Math.Truncate(length)) - 1){}
 
 			Dim indexes As IList(Of Integer) = New List(Of Integer)()
 			Dim odds As IList(Of Integer) = New List(Of Integer)()
 
 			' we add odd indexes only to list
-			For i As Integer = 1 To result.length - 1 Step 2
+			For i As Integer = 1 To result.Length - 1 Step 2
 				indexes.Add(i)
 				odds.Add(i - 1)
 			Next i
@@ -3484,7 +3282,7 @@ Namespace org.nd4j.common.util
 			JavaCollections.shuffle(indexes, rng)
 
 			' now all even elements will be interleaved with odd elements
-			For i As Integer = 0 To result.length - 1
+			For i As Integer = 0 To result.Length - 1
 				If i Mod 2 = 0 AndAlso indexes.Count > 0 Then
 					Dim idx As Integer = indexes(0)
 					indexes.RemoveAt(0)
@@ -3496,38 +3294,35 @@ Namespace org.nd4j.common.util
 
 			' for odd tad numbers, we add special random clause for last element
 			If length Mod 2 <> 0 Then
-				Dim rndClause As Integer = odds(rng.nextInt(odds.Count))
+				Dim rndClause As Integer = odds(rng.Next(odds.Count))
 				Dim tmp As Long = result(rndClause)
-				result(rndClause) = result(result.length - 1)
-				result(result.length - 1) = tmp
+				result(rndClause) = result(result.Length - 1)
+				result(result.Length - 1) = tmp
 			End If
 
 
 			Return result
-		End If
+		End Function
 
-		protected static (Of T As Object) void swap(IList(Of T) objects, Integer idxA, Integer idxB)
-		If True Then
-			Dim tmpA As T = objects.[get](idxA)
-			Dim tmpB As T = objects.[get](idxB)
-			objects.[set](idxA, tmpB)
-			objects.[set](idxB, tmpA)
-		End If
+		Protected Shared Sub swap(Of T)(ByVal objects As IList(Of T), ByVal idxA As Integer, ByVal idxB As Integer)
+			Dim tmpA As T = objects(idxA)
+			Dim tmpB As T = objects(idxB)
+			objects(idxA) = tmpB
+			objects(idxB) = tmpA
+		End Sub
 
-		public static (Of T As Object) void shuffleWithMap(IList(Of T) objects, Integer() map)
-		If True Then
-			For i As Integer = 0 To map.length - 1
+		Public Shared Sub shuffleWithMap(Of T)(ByVal objects As IList(Of T), ByVal map As Integer())
+			For i As Integer = 0 To map.Length - 1
 				If map(i) >= 0 Then
 					swap(objects, i, map(i))
 				End If
 			Next i
-		End If
+		End Sub
 
-		public static Integer argMinOfMax(Integer() first, Integer() second)
-		If True Then
+		Public Shared Function argMinOfMax(ByVal first As Integer(), ByVal second As Integer()) As Integer
 			Dim minIdx As Integer = 0
 			Dim maxAtMinIdx As Integer = Math.Max(first(0), second(0))
-			For i As Integer = 1 To first.length - 1
+			For i As Integer = 1 To first.Length - 1
 				Dim maxAtIndex As Integer = Math.Max(first(i), second(i))
 				If maxAtMinIdx > maxAtIndex Then
 					maxAtMinIdx = maxAtIndex
@@ -3535,13 +3330,12 @@ Namespace org.nd4j.common.util
 				End If
 			Next i
 			Return minIdx
-		End If
+		End Function
 
-		public static Long argMinOfMax(Long() first, Long() second)
-		If True Then
+		Public Shared Function argMinOfMax(ByVal first As Long(), ByVal second As Long()) As Long
 			Dim minIdx As Long = 0
 			Dim maxAtMinIdx As Long = Math.Max(first(0), second(0))
-			For i As Integer = 1 To first.length - 1
+			For i As Integer = 1 To first.Length - 1
 				Dim maxAtIndex As Long = Math.Max(first(i), second(i))
 				If maxAtMinIdx > maxAtIndex Then
 					maxAtMinIdx = maxAtIndex
@@ -3549,17 +3343,16 @@ Namespace org.nd4j.common.util
 				End If
 			Next i
 			Return minIdx
-		End If
+		End Function
 
-		public static Integer argMinOfMax(Integer()... arrays)
-		If True Then
+		Public Shared Function argMinOfMax(ParamArray arrays As Integer()()) As Integer
 			Dim minIdx As Integer = 0
 			Dim maxAtMinIdx As Integer = Integer.MaxValue
 
 			Dim i As Integer = 0
-			Do While i < arrays(0).length
+			Do While i < arrays(0).Length
 				Dim maxAtIndex As Integer = Integer.MinValue
-				For j As Integer = 0 To arrays.length - 1
+				For j As Integer = 0 To arrays.Length - 1
 					maxAtIndex = Math.Max(maxAtIndex, arrays(j)(i))
 				Next j
 
@@ -3570,17 +3363,16 @@ Namespace org.nd4j.common.util
 				i += 1
 			Loop
 			Return minIdx
-		End If
+		End Function
 
-		public static Long argMinOfMax(Long()... arrays)
-		If True Then
+		Public Shared Function argMinOfMax(ParamArray arrays As Long()()) As Long
 			Dim minIdx As Integer = 0
 			Dim maxAtMinIdx As Long = Long.MaxValue
 
 			Dim i As Integer = 0
-			Do While i < arrays(0).length
+			Do While i < arrays(0).Length
 				Dim maxAtIndex As Long = Long.MinValue
-				For j As Integer = 0 To arrays.length - 1
+				For j As Integer = 0 To arrays.Length - 1
 					maxAtIndex = Math.Max(maxAtIndex, arrays(j)(i))
 				Next j
 
@@ -3591,13 +3383,12 @@ Namespace org.nd4j.common.util
 				i += 1
 			Loop
 			Return minIdx
-		End If
+		End Function
 
-		public static Integer argMinOfSum(Integer() first, Integer() second)
-		If True Then
+		Public Shared Function argMinOfSum(ByVal first As Integer(), ByVal second As Integer()) As Integer
 			Dim minIdx As Integer = 0
 			Dim sumAtMinIdx As Integer = first(0) + second(0)
-			For i As Integer = 1 To first.length - 1
+			For i As Integer = 1 To first.Length - 1
 				Dim sumAtIndex As Integer = first(i) + second(i)
 				If sumAtMinIdx > sumAtIndex Then
 					sumAtMinIdx = sumAtIndex
@@ -3605,242 +3396,206 @@ Namespace org.nd4j.common.util
 				End If
 			Next i
 			Return minIdx
-		End If
+		End Function
 
-'JAVA TO VB CONVERTER TODO TASK: There is no VB equivalent to the Java 'super' constraint:
-'ORIGINAL LINE: public static <K, V extends Comparable<? super V>> Map<K, V> sortMapByValue(Map<K, V> map)
-'JAVA TO VB CONVERTER WARNING: Java wildcard generics have no direct equivalent in VB:
-		public static (Of K, V As IComparable(Of Object)) IDictionary(Of K, V) sortMapByValue(IDictionary(Of K, V) map)
-		If True Then
-			Dim list As IList(Of KeyValuePair(Of K, V)) = New LinkedList(Of KeyValuePair(Of K, V))(map.entrySet())
-			list.Sort(New ComparatorAnonymousInnerClass2(Me))
+		Public Shared Function sortMapByValue(Of K, V)(ByVal map As IDictionary(Of K, V)) As IDictionary(Of K, V)
+			Dim list As List(Of KeyValuePair(Of K, V)) = map.OrderBy(Function(e) e.Value, Comparer(Of V).Default).ToList()
 
-			Dim result As IDictionary(Of K, V) = New LinkedHashMap(Of K, V)()
+			Dim result As IDictionary(Of K, V) = New Dictionary(Of K, V)()
 			For Each entry As KeyValuePair(Of K, V) In list
 				result(entry.Key) = entry.Value
 			Next entry
 			Return result
-		End If
+		End Function
 
 
-		public static (Of T) T getRandomElement(IList(Of T) list)
-		If True Then
-			If list.isEmpty() Then
+		Public Shared Function getRandomElement(Of T)(ByVal list As IList(Of T)) As T
+			If list.Count = 0 Then
 				Return Nothing
 			End If
 
-			Return list.[get](RandomUtils.nextInt(0, list.size()))
-		End If
+			SyncLock sharedRandom
+				Return list(sharedRandom.Next(0, list.Count))
+			End SyncLock
+		End Function
 
 		''' <summary>
 		''' Convert an int </summary>
 		''' <param name="bool">
 		''' @return </param>
-		public static Integer fromBoolean(Boolean bool)
-		If True Then
+		Public Shared Function fromBoolean(ByVal bool As Boolean) As Integer
 			Return If(bool, 1, 0)
-		End If
+		End Function
 
-		public static Long() toPrimitives(Long?() array)
-		If True Then
-			Dim res As val = New Long(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Long?()) As Long()
+			Dim res As Long() = New Long(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Integer() toPrimitives(Integer?() array)
-		If True Then
-			Dim res As val = New Integer(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Integer?()) As Integer()
+			Dim res As Integer() = New Integer(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Short() toPrimitives(Short?() array)
-		If True Then
-			Dim res As val = New Short(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Short?()) As Short()
+			Dim res As Short() = New Short(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static SByte() toPrimitives(SByte?() array)
-		If True Then
-			Dim res As val = New SByte(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As SByte?()) As SByte()
+			Dim res As SByte() = New SByte(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Single() toPrimitives(Single?() array)
-		If True Then
-			Dim res As val = New Single(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Single?()) As Single()
+			Dim res As Single() = New Single(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Double() toPrimitives(Double?() array)
-		If True Then
-			Dim res As val = New Double(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Double?()) As Double()
+			Dim res As Double() = New Double(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Boolean() toPrimitives(Boolean?() array)
-		If True Then
-			Dim res As val = New Boolean(array.length - 1){}
-			For e As Integer = 0 To array.length - 1
+		Public Shared Function toPrimitives(ByVal array As Boolean?()) As Boolean()
+			Dim res As Boolean() = New Boolean(array.Length - 1){}
+			For e As Integer = 0 To array.Length - 1
 				res(e) = array(e)
 			Next e
 
 			Return res
-		End If
+		End Function
 
-		public static Long()() toPrimitives(Long?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Long?()()) As Long()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Long[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularLongArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Long()() = Jagged2(Of Long)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Integer()() toPrimitives(Integer?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Integer?()()) As Integer()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Integer[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularIntegerArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Integer()() = Jagged2(Of Integer)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Short()() toPrimitives(Short?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Short?()()) As Short()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Short[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularShortArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Short()() = Jagged2(Of Short)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static SByte()() toPrimitives(SByte?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As SByte?()()) As SByte()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new SByte[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularSByteArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As SByte()() = Jagged2(Of SByte)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Double()() toPrimitives(Double?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Double?()()) As Double()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Double[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularDoubleArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Double()() = Jagged2(Of Double)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Single()() toPrimitives(Single?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Single?()()) As Single()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Single[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularSingleArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Single()() = Jagged2(Of Single)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Boolean ()() toPrimitives(Boolean?()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Boolean?()()) As Boolean()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Boolean[array.length][array[0].length]
-			Dim res As val = RectangularArrays.RectangularBooleanArray(array.length, array(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Boolean()() = Jagged2(Of Boolean)(array.Length, array(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					res(i)(j) = array(i)(j)
 					j += 1
 				Loop
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Long()()() toPrimitives(Long?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Long?()()()) As Long()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Long[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularLongArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Long()()() = Jagged3(Of Long)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3849,19 +3604,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Integer()()() toPrimitives(Integer?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Integer?()()()) As Integer()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Integer[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularIntegerArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Integer()()() = Jagged3(Of Integer)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3870,19 +3622,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Short()()() toPrimitives(Short?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Short?()()()) As Short()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Short[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularShortArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Short()()() = Jagged3(Of Short)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3891,19 +3640,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static SByte()()() toPrimitives(SByte?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As SByte?()()()) As SByte()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new SByte[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularSByteArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As SByte()()() = Jagged3(Of SByte)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3912,19 +3658,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Double()()() toPrimitives(Double?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Double?()()()) As Double()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Double[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularDoubleArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Double()()() = Jagged3(Of Double)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3933,19 +3676,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Single()()() toPrimitives(Single?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Single?()()()) As Single()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Single[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularSingleArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Single()()() = Jagged3(Of Single)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3954,19 +3694,16 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Boolean()()() toPrimitives(Boolean?()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Boolean?()()()) As Boolean()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Boolean[array.length][array[0].length][array[0][0].length]
-			Dim res As val = RectangularArrays.RectangularBooleanArray(array.length, array(0).length, array(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Boolean()()() = Jagged3(Of Boolean)(array.Length, array(0).Length, array(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						res(i)(j)(k) = array(i)(j)(k)
 						k += 1
 					Loop
@@ -3975,21 +3712,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Long()()()() toPrimitives(Long?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Long?()()()()) As Long()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Long[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularLongArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Long()()()() = Jagged4(Of Long)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4000,21 +3734,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Integer()()()() toPrimitives(Integer?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Integer?()()()()) As Integer()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Integer[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularIntegerArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Integer()()()() = Jagged4(Of Integer)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4025,21 +3756,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Short()()()() toPrimitives(Short?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Short?()()()()) As Short()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Short[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularShortArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Short()()()() = Jagged4(Of Short)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4050,21 +3778,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static SByte()()()() toPrimitives(SByte?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As SByte?()()()()) As SByte()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new SByte[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularSByteArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As SByte()()()() = Jagged4(Of SByte)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4075,21 +3800,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Double()()()() toPrimitives(Double?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Double?()()()()) As Double()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Double[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularDoubleArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Double()()()() = Jagged4(Of Double)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4100,21 +3822,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Single()()()() toPrimitives(Single?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Single?()()()()) As Single()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Single[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularSingleArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Single()()()() = Jagged4(Of Single)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4125,21 +3844,18 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
-		public static Boolean()()()() toPrimitives(Boolean?()()()() array)
-		If True Then
+		Public Shared Function toPrimitives(ByVal array As Boolean?()()()()) As Boolean()()()()
 			ArrayUtil.assertNotRagged(array)
-'JAVA TO VB CONVERTER NOTE: The following call to the 'RectangularArrays' helper class reproduces the rectangular array initialization that is automatic in Java:
-'ORIGINAL LINE: Dim res As val = new Boolean[array.length][array[0].length][array[0][0].length][array[0][0][0].length]
-			Dim res As val = RectangularArrays.RectangularBooleanArray(array.length, array(0).length, array(0)(0).length, array(0)(0)(0).length)
-			For i As Integer = 0 To array.length - 1
+			Dim res As Boolean()()()() = Jagged4(Of Boolean)(array.Length, array(0).Length, array(0)(0).Length, array(0)(0)(0).Length)
+			For i As Integer = 0 To array.Length - 1
 				Dim j As Integer = 0
-				Do While j < array(0).length
+				Do While j < array(0).Length
 					Dim k As Integer = 0
-					Do While j < array(0)(0).length
+					Do While k < array(0)(0).Length
 						Dim l As Integer = 0
-						Do While l < array(0)(0)(0).length
+						Do While l < array(0)(0)(0).Length
 							res(i)(j)(k)(l) = array(i)(j)(k)(l)
 							l += 1
 						Loop
@@ -4150,7 +3866,7 @@ Namespace org.nd4j.common.util
 			Next i
 
 			Return res
-		End If
+		End Function
 
 
 		''' <summary>
@@ -4159,8 +3875,7 @@ Namespace org.nd4j.common.util
 		''' An IllegalStateException is thrown if the array is ragged
 		''' </summary>
 		''' <param name="array"> Array to check </param>
-		public static (Of T) void assertNotRagged(T() array)
-		If True Then
+		Public Shared Sub assertNotRagged(Of T)(ByVal array As T())
 			Dim c As Type = array.GetType().GetElementType()
 			Dim arrayShape() As Integer = ArrayUtil.arrayShape(array, True)
 			Dim rank As Integer = arrayShape.Length
@@ -4188,7 +3903,7 @@ Namespace org.nd4j.common.util
 				Do While i<arrayShape(0)
 					Dim j As Integer=0
 					Do While j<arrayShape(1)
-						Dim subArray As Object = CType(array, Object()())(i)(j)
+						Dim subArray As Object = DirectCast(CObj(array(i)), Array).GetValue(j)
 						Dim len As Integer = arrayLength(subArray)
 						Preconditions.checkState(arrayShape(2) = len, "Ragged array detected: array[0][0].length=%s does not match array[%s][%s].length=%s", arrayShape(2), i, j, len)
 						j += 1
@@ -4207,7 +3922,7 @@ Namespace org.nd4j.common.util
 					Do While j<arrayShape(1)
 						Dim k As Integer=0
 						Do While k<arrayShape(2)
-							Dim subArray As Object = CType(array, Object()()())(i)(j)(k)
+							Dim subArray As Object = DirectCast(DirectCast(CObj(array(i)), Array).GetValue(j), Array).GetValue(k)
 							Dim len As Integer = arrayLength(subArray)
 							Preconditions.checkState(arrayShape(3) = len, "Ragged array detected: array[0][0][0].length=%s does not match array[%s][%s][%s].length=%s", arrayShape(3), i, j, k, len)
 							k += 1
@@ -4217,36 +3932,19 @@ Namespace org.nd4j.common.util
 					i += 1
 				Loop
 			End If
-		End If
+		End Sub
 
 		''' <summary>
 		''' Calculate the length of the object or primitive array. If </summary>
 		''' <param name="current">
 		''' @return </param>
-		public static Integer arrayLength(Object current)
-		If True Then
-			If TypeOf current Is Object() Then
-				Return CType(current, Object()).Length
-			ElseIf TypeOf current Is Double() Then
-				Return CType(current, Double()).Length
-			ElseIf TypeOf current Is Single() Then
-				Return CType(current, Single()).Length
-			ElseIf TypeOf current Is Long() Then
-				Return CType(current, Long()).Length
-			ElseIf TypeOf current Is Integer() Then
-				Return CType(current, Integer()).Length
-			ElseIf TypeOf current Is SByte() Then
-				Return CType(current, SByte()).Length
-			ElseIf TypeOf current Is Char() Then
-				Return CType(current, Char()).Length
-			ElseIf TypeOf current Is Boolean() Then
-				Return CType(current, Boolean()).Length
-			ElseIf TypeOf current Is Short() Then
-				Return CType(current, Short()).Length
-			Else
-				Throw New System.InvalidOperationException("Unknown array type (or not an array): " & current.GetType()) 'Should never happen
+		Public Shared Function arrayLength(ByVal current As Object) As Integer
+			Dim arr As Array = TryCast(current, Array)
+			If arr Is Nothing Then
+				Throw New System.InvalidOperationException("Unknown array type (or not an array): " & current.GetType().ToString()) 'Should never happen
 			End If
-		End If
+			Return arr.Length
+		End Function
 
 		''' <summary>
 		''' Compute the inverse permutation indices for a permutation operation<br>
@@ -4255,31 +3953,29 @@ Namespace org.nd4j.common.util
 		''' </summary>
 		''' <param name="input"> 1D indices for permutation </param>
 		''' <returns> 1D inverted permutation </returns>
-		public static Integer() invertPermutation(Integer... input)
-		If True Then
-			Dim target(input.length - 1) As Integer
+		Public Shared Function invertPermutation(ParamArray input As Integer()) As Integer()
+			Dim target(input.Length - 1) As Integer
 
-			For i As Integer = 0 To input.length - 1
+			For i As Integer = 0 To input.Length - 1
 				target(input(i)) = i
 			Next i
 
 			Return target
-		End If
+		End Function
 
 		''' <seealso cref= #invertPermutation(int...)
 		''' </seealso>
 		''' <param name="input"> 1D indices for permutation </param>
 		''' <returns> 1D inverted permutation </returns>
-		public static Long() invertPermutation(Long... input)
-		If True Then
-			Dim target(input.length - 1) As Long
+		Public Shared Function invertPermutation(ParamArray input As Long()) As Long()
+			Dim target(input.Length - 1) As Long
 
-			For i As Integer = 0 To input.length - 1
+			For i As Integer = 0 To input.Length - 1
 				target(CInt(Math.Truncate(input(i)))) = i
 			Next i
 
 			Return target
-		End If
+		End Function
 
 		''' <summary>
 		''' Is this shape an empty shape?
@@ -4287,15 +3983,14 @@ Namespace org.nd4j.common.util
 		''' Note: a length 0 shape is NOT considered empty (it's rank 0 scalar) </summary>
 		''' <param name="shape"> Shape to check </param>
 		''' <returns> True if shape contains zeros </returns>
-		public static Boolean isEmptyShape(Long() shape)
-		If True Then
+		Public Shared Function isEmptyShape(ByVal shape As Long()) As Boolean
 			For Each l As Long In shape
 				If l = 0 Then
 					Return True
 				End If
 			Next l
 			Return False
-		End If
+		End Function
 
 		''' <summary>
 		''' Is this shape an empty shape?
@@ -4303,36 +3998,32 @@ Namespace org.nd4j.common.util
 		''' Note: a length 0 shape is NOT considered empty (it's rank 0 scalar) </summary>
 		''' <param name="shape"> Shape to check </param>
 		''' <returns> True if shape contains zeros </returns>
-		public static Boolean isEmptyShape(Integer() shape)
-		If True Then
+		Public Shared Function isEmptyShape(ByVal shape As Integer()) As Boolean
 			For Each i As Integer In shape
 				If i = 0 Then
 					Return True
 				End If
 			Next i
 			Return False
-		End If
+		End Function
 
-		public static (Of T) T() filterNull(T... [in])
-		If True Then
+		Public Shared Function filterNull(Of T)(ParamArray [in] As T()) As T()
 			Dim count As Integer = 0
-			For i As Integer = 0 To [in].length - 1
+			For i As Integer = 0 To [in].Length - 1
 				If [in](i) IsNot Nothing Then
 					count += 1
 				End If
 			Next i
 			Dim [out]() As T = CType(Array.CreateInstance([in].GetType().GetElementType(), count), T())
 			Dim j As Integer=0
-			For i As Integer = 0 To [in].length - 1
+			For i As Integer = 0 To [in].Length - 1
 				If [in](i) IsNot Nothing Then
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: out[j++] = in[i];
 					[out](j) = [in](i)
 						j += 1
 				End If
 			Next i
 			Return [out]
-		End If
+		End Function
 	End Class
 
 End Namespace

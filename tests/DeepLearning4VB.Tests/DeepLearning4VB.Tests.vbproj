@@ -26,6 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DeepLearning4VB\DeepLearning4VB.vbproj" />
   </ItemGroup>
 

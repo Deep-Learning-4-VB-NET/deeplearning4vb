@@ -1,6 +1,8 @@
 ﻿Imports System
+Imports System.Collections
 Imports System.Collections.Concurrent
 Imports System.Collections.Generic
+Imports DeepLearning4VB.JavaCompat
 Imports DeepLearning4VB.org.nd4j.common.primitives
 
 '
@@ -21,449 +23,335 @@ Imports DeepLearning4VB.org.nd4j.common.primitives
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.collection
 
+    ''' <summary>
+    ''' Orders pairs by their first element, then by their second (both must be comparable).
+    ''' </summary>
+    Friend Class PairComparer(Of K, T)
+        Implements IComparer(Of Pair(Of K, T))
 
-	''' <summary>
-	''' Multiple key map
-	''' </summary>
-	<Serializable>
-	Public Class MultiDimensionalMap(Of K, T, V)
+        Public Function Compare(ByVal x As Pair(Of K, T), ByVal y As Pair(Of K, T)) As Integer Implements IComparer(Of Pair(Of K, T)).Compare
+            Dim c As Integer = Comparer(Of K).Default.Compare(x.First, y.First)
+            If c <> 0 Then Return c
+            Return Comparer(Of T).Default.Compare(x.Second, y.Second)
+        End Function
+    End Class
 
-		Private backedMap As IDictionary(Of Pair(Of K, T), V)
+    ''' <summary>
+    ''' A dictionary keyed by a pair of values (K, T), with convenience overloads that take the two
+    ''' key components separately.
+    ''' </summary>
+    <Serializable>
+    Public Class MultiDimensionalMap(Of K, T, V)
+        Implements IDictionary(Of Pair(Of K, T), V)
 
-		''' <summary>
-		''' Thread safe sorted map implementation </summary>
-		''' @param <K> </param>
-		''' @param <T> </param>
-		''' @param <V>
-		''' @return </param>
-		Public Shared Function newThreadSafeTreeBackedMap(Of K, T, V)() As MultiDimensionalMap(Of K, T, V)
-			Return New MultiDimensionalMap(Of K, T, V)(New ConcurrentSkipListMap(Of Pair(Of K, T), V)())
-		End Function
+        Private ReadOnly backedMap As IDictionary(Of Pair(Of K, T), V)
 
-		''' <summary>
-		''' Thread safe hash map implementation </summary>
-		''' @param <K> </param>
-		''' @param <T> </param>
-		''' @param <V>
-		''' @return </param>
-		Public Shared Function newThreadSafeHashBackedMap(Of K, T, V)() As MultiDimensionalMap(Of K, T, V)
-			Return New MultiDimensionalMap(Of K, T, V)(New ConcurrentDictionary(Of Pair(Of K, T), V)())
-		End Function
+        ''' <summary>Thread-safe sorted map implementation.</summary>
+        Public Shared Function newThreadSafeTreeBackedMap() As MultiDimensionalMap(Of K, T, V)
+            Return New MultiDimensionalMap(Of K, T, V)(New SynchronizedDictionary(Of Pair(Of K, T), V)(New SortedDictionary(Of Pair(Of K, T), V)(New PairComparer(Of K, T)())))
+        End Function
 
-		''' <summary>
-		''' Thread safe hash map impl </summary>
-		''' @param <K> </param>
-		''' @param <T> </param>
-		''' @param <V>
-		''' @return </param>
-		Public Shared Function newHashBackedMap(Of K, T, V)() As MultiDimensionalMap(Of K, T, V)
-			Return New MultiDimensionalMap(Of K, T, V)(New Dictionary(Of Pair(Of K, T), V)())
-		End Function
+        ''' <summary>Thread-safe hash map implementation.</summary>
+        Public Shared Function newThreadSafeHashBackedMap() As MultiDimensionalMap(Of K, T, V)
+            Return New MultiDimensionalMap(Of K, T, V)(New ConcurrentDictionary(Of Pair(Of K, T), V)())
+        End Function
 
-		''' <summary>
-		''' Tree map implementation </summary>
-		''' @param <K> </param>
-		''' @param <T> </param>
-		''' @param <V>
-		''' @return </param>
-		Public Shared Function newTreeBackedMap(Of K, T, V)() As MultiDimensionalMap(Of K, T, V)
-			Return New MultiDimensionalMap(Of K, T, V)(New SortedDictionary(Of Pair(Of K, T), V)())
-		End Function
+        ''' <summary>Hash map implementation.</summary>
+        Public Shared Function newHashBackedMap() As MultiDimensionalMap(Of K, T, V)
+            Return New MultiDimensionalMap(Of K, T, V)(New Dictionary(Of Pair(Of K, T), V)())
+        End Function
 
-		Public Sub New(ByVal backedMap As IDictionary(Of Pair(Of K, T), V))
-			Me.backedMap = backedMap
-		End Sub
+        ''' <summary>Sorted map implementation (K and T must be comparable).</summary>
+        Public Shared Function newTreeBackedMap() As MultiDimensionalMap(Of K, T, V)
+            Return New MultiDimensionalMap(Of K, T, V)(New SortedDictionary(Of Pair(Of K, T), V)(New PairComparer(Of K, T)()))
+        End Function
 
-		Protected Friend Sub New()
-		End Sub
+        Public Sub New(ByVal backedMap As IDictionary(Of Pair(Of K, T), V))
+            If backedMap Is Nothing Then Throw New ArgumentNullException(NameOf(backedMap))
+            Me.backedMap = backedMap
+        End Sub
 
-		''' <summary>
-		''' Returns the number of key-value mappings in this map.  If the
-		''' map contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-		''' <tt>Integer.MAX_VALUE</tt>.
-		''' </summary>
-		''' <returns> the number of key-value mappings in this map </returns>
-		Public Overridable Function size() As Integer
-			Return backedMap.Count
-		End Function
+        Public Sub New()
+            Me.New(New Dictionary(Of Pair(Of K, T), V)())
+        End Sub
 
-		''' <summary>
-		''' Returns <tt>true</tt> if this map contains no key-value mappings.
-		''' </summary>
-		''' <returns> <tt>true</tt> if this map contains no key-value mappings </returns>
-		Public Overridable ReadOnly Property Empty As Boolean
-			Get
-				Return backedMap.Count = 0
-			End Get
-		End Property
+        ' ---- Java-style API ----
 
-		''' <summary>
-		''' Returns <tt>true</tt> if this map contains a mapping for the specified
-		''' key.  More formally, returns <tt>true</tt> if and only if
-		''' this map contains a mapping for a key <tt>k</tt> such that
-		''' <tt>(key==null ? k==null : key.equals(k))</tt>.  (There can be
-		''' at most one such mapping.)
-		''' </summary>
-		''' <param name="key"> key whose presence in this map is to be tested </param>
-		''' <returns> <tt>true</tt> if this map contains a mapping for the specified
-		''' key </returns>
-		''' <exception cref="ClassCastException">   if the key is of an inappropriate type for
-		'''                              this map
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
-		''' <exception cref="NullPointerException"> if the specified key is null and this map
-		'''                              does not permit null keys
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
+        Public Overridable Function size() As Integer
+            Return backedMap.Count
+        End Function
 
-		Public Overridable Function containsKey(ByVal key As Object) As Boolean
-			Return backedMap.ContainsKey(key)
-		End Function
+        Public Overridable ReadOnly Property Empty As Boolean
+            Get
+                Return backedMap.Count = 0
+            End Get
+        End Property
 
-		''' <summary>
-		''' Returns <tt>true</tt> if this map maps one or more keys to the
-		''' specified value.  More formally, returns <tt>true</tt> if and only if
-		''' this map contains at least one mapping to a value <tt>v</tt> such that
-		''' <tt>(value==null ? v==null : value.equals(v))</tt>.  This operation
-		''' will probably require time linear in the map size for most
-		''' implementations of the <tt>Map</tt> interface.
-		''' </summary>
-		''' <param name="value"> value whose presence in this map is to be tested </param>
-		''' <returns> <tt>true</tt> if this map maps one or more keys to the
-		''' specified value </returns>
-		''' <exception cref="ClassCastException">   if the value is of an inappropriate type for
-		'''                              this map
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
-		''' <exception cref="NullPointerException"> if the specified value is null and this
-		'''                              map does not permit null values
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
+        Public Function isEmpty() As Boolean
+            Return Empty
+        End Function
 
-		Public Overridable Function containsValue(ByVal value As Object) As Boolean
-			Return backedMap.ContainsValue(value)
-		End Function
+        Public Overridable Function containsValue(ByVal value As V) As Boolean
+            Dim cmp = EqualityComparer(Of V).Default
+            For Each v In backedMap.Values
+                If cmp.Equals(v, value) Then Return True
+            Next
+            Return False
+        End Function
 
-		''' <summary>
-		''' Returns the value to which the specified key is mapped,
-		''' or {@code null} if this map contains no mapping for the key.
-		''' <p/>
-		''' <para>More formally, if this map contains a mapping from a key
-		''' {@code k} to a value {@code v} such that {@code (key==null ? k==null :
-		''' key.equals(k))}, then this method returns {@code v}; otherwise
-		''' it returns {@code null}.  (There can be at most one such mapping.)
-		''' <p/>
-		''' </para>
-		''' <para>If this map permits null values, then a return value of
-		''' {@code null} does not <i>necessarily</i> indicate that the map
-		''' contains no mapping for the key; it's also possible that the map
-		''' explicitly maps the key to {@code null}.  The {@link #containsKey
-		''' containsKey} operation may be used to distinguish these two cases.
-		''' 
-		''' </para>
-		''' </summary>
-		''' <param name="key"> the key whose associated value is to be returned </param>
-		''' <returns> the value to which the specified key is mapped, or
-		''' {@code null} if this map contains no mapping for the key </returns>
-		''' <exception cref="ClassCastException">   if the key is of an inappropriate type for
-		'''                              this map
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
-		''' <exception cref="NullPointerException"> if the specified key is null and this map
-		'''                              does not permit null keys
-		'''                              (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
+        ''' <summary>Returns the value for the key, or the default value if absent.</summary>
+        Public Overridable Function [get](ByVal key As Pair(Of K, T)) As V
+            Dim v As V = Nothing
+            backedMap.TryGetValue(key, v)
+            Return v
+        End Function
 
-		Public Overridable Function [get](ByVal key As Object) As V
-			Return backedMap(key)
-		End Function
+        ''' <summary>Returns the value for the key (k, t), or the default value if absent.</summary>
+        Public Overridable Function [get](ByVal k As K, ByVal t As T) As V
+            Return [get](New Pair(Of K, T)(k, t))
+        End Function
 
-		''' <summary>
-		''' Associates the specified value with the specified key in this map
-		''' (optional operation).  If the map previously contained a mapping for
-		''' the key, the old value is replaced by the specified value.  (A map
-		''' <tt>m</tt> is said to contain a mapping for a key <tt>k</tt> if and only
-		''' if <seealso cref="containsKey(Object) m.containsKey(k)"/> would return
-		''' <tt>true</tt>.)
-		''' </summary>
-		''' <param name="key">   key with which the specified value is to be associated </param>
-		''' <param name="value"> value to be associated with the specified key </param>
-		''' <returns> the previous value associated with <tt>key</tt>, or
-		''' <tt>null</tt> if there was no mapping for <tt>key</tt>.
-		''' (A <tt>null</tt> return can also indicate that the map
-		''' previously associated <tt>null</tt> with <tt>key</tt>,
-		''' if the implementation supports <tt>null</tt> values.) </returns>
-		''' <exception cref="UnsupportedOperationException"> if the <tt>put</tt> operation
-		'''                                       is not supported by this map </exception>
-		''' <exception cref="ClassCastException">            if the class of the specified key or value
-		'''                                       prevents it from being stored in this map </exception>
-		''' <exception cref="NullPointerException">          if the specified key or value is null
-		'''                                       and this map does not permit null keys or values </exception>
-		''' <exception cref="IllegalArgumentException">      if some property of the specified key
-		'''                                       or value prevents it from being stored in this map </exception>
+        ''' <summary>Associates the value with the key and returns the previous value (default if none).</summary>
+        Public Overridable Function put(ByVal key As Pair(Of K, T), ByVal value As V) As V
+            Dim previous As V = Nothing
+            backedMap.TryGetValue(key, previous)
+            backedMap(key) = value
+            Return previous
+        End Function
 
-		Public Overridable Function put(ByVal key As Pair(Of K, T), ByVal value As V) As V
-				backedMap(key) = value
-				Return backedMap(key)
-		End Function
+        Public Overridable Sub put(ByVal k As K, ByVal t As T, ByVal v As V)
+            put(New Pair(Of K, T)(k, t), v)
+        End Sub
 
-		''' <summary>
-		''' Removes the mapping for a key from this map if it is present
-		''' (optional operation).   More formally, if this map contains a mapping
-		''' from key <tt>k</tt> to value <tt>v</tt> such that
-		''' <code>(key==null ?  k==null : key.equals(k))</code>, that mapping
-		''' is removed.  (The map can contain at most one such mapping.)
-		''' <p/>
-		''' <para>Returns the value to which this map previously associated the key,
-		''' or <tt>null</tt> if the map contained no mapping for the key.
-		''' <p/>
-		''' </para>
-		''' <para>If this map permits null values, then a return value of
-		''' <tt>null</tt> does not <i>necessarily</i> indicate that the map
-		''' contained no mapping for the key; it's also possible that the map
-		''' explicitly mapped the key to <tt>null</tt>.
-		''' <p/>
-		''' </para>
-		''' <para>The map will not contain a mapping for the specified key once the
-		''' call returns.
-		''' 
-		''' </para>
-		''' </summary>
-		''' <param name="key"> key whose mapping is to be removed from the map </param>
-		''' <returns> the previous value associated with <tt>key</tt>, or
-		''' <tt>null</tt> if there was no mapping for <tt>key</tt>. </returns>
-		''' <exception cref="UnsupportedOperationException"> if the <tt>remove</tt> operation
-		'''                                       is not supported by this map </exception>
-		''' <exception cref="ClassCastException">            if the key is of an inappropriate type for
-		'''                                       this map
-		'''                                       (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
-		''' <exception cref="NullPointerException">          if the specified key is null and this
-		'''                                       map does not permit null keys
-		'''                                       (<a href="Collection.html#optional-restrictions">optional</a>) </exception>
+        ''' <summary>Removes the key and returns its value (default if it was absent).</summary>
+        Public Overridable Function removeAndGet(ByVal key As Pair(Of K, T)) As V
+            Dim previous As V = Nothing
+            If backedMap.TryGetValue(key, previous) Then
+                backedMap.Remove(key)
+                Return previous
+            End If
+            Return Nothing
+        End Function
 
-		Public Overridable Function remove(ByVal key As Object) As V
-			Return backedMap.Remove(key)
-		End Function
+        Public Overridable Function remove(ByVal k As K, ByVal t As T) As Boolean
+            Return backedMap.Remove(New Pair(Of K, T)(k, t))
+        End Function
 
-		''' <summary>
-		''' Copies all of the mappings from the specified map to this map
-		''' (optional operation).  The effect of this call is equivalent to that
-		''' of calling <seealso cref="System.Collections.IDictionary<>.put(k, v)"/> on this map once
-		''' for each mapping from key <tt>k</tt> to value <tt>v</tt> in the
-		''' specified map.  The behavior of this operation is undefined if the
-		''' specified map is modified while the operation is in progress.
-		''' </summary>
-		''' <param name="m"> mappings to be stored in this map </param>
-		''' <exception cref="UnsupportedOperationException"> if the <tt>putAll</tt> operation
-		'''                                       is not supported by this map </exception>
-		''' <exception cref="ClassCastException">            if the class of a key or value in the
-		'''                                       specified map prevents it from being stored in this map </exception>
-		''' <exception cref="NullPointerException">          if the specified map is null, or if
-		'''                                       this map does not permit null keys or values, and the
-		'''                                       specified map contains null keys or values </exception>
-		''' <exception cref="IllegalArgumentException">      if some property of a key or value in
-		'''                                       the specified map prevents it from being stored in this map </exception>
+        Public Overridable Sub putAll(ByVal m As IDictionary(Of Pair(Of K, T), V))
+            For Each kv In m
+                backedMap(kv.Key) = kv.Value
+            Next
+        End Sub
 
-		Public Overridable Sub putAll(ByVal m As IDictionary(Of Pair(Of K, T), V))
-			backedMap.PutAll(m)
-		End Sub
+        Public Overridable Function keySet() As ISet(Of Pair(Of K, T))
+            Return New LinkedHashSet(Of Pair(Of K, T))(backedMap.Keys)
+        End Function
 
-		''' <summary>
-		''' Removes all of the mappings from this map (optional operation).
-		''' The map will be empty after this call returns.
-		''' </summary>
-		''' <exception cref="UnsupportedOperationException"> if the <tt>clear</tt> operation
-		'''                                       is not supported by this map </exception>
+        Public Overridable Function entrySet() As ISet(Of Entry)
+            Dim ret As New LinkedHashSet(Of Entry)()
+            For Each kv In backedMap
+                ret.Add(New Entry(kv.Key.First, kv.Key.Second, kv.Value))
+            Next
+            Return ret
+        End Function
 
-		Public Overridable Sub clear()
-			backedMap.Clear()
-		End Sub
+        Public Overridable Function contains(ByVal k As K, ByVal t As T) As Boolean
+            Return backedMap.ContainsKey(New Pair(Of K, T)(k, t))
+        End Function
 
-		''' <summary>
-		''' Returns a <seealso cref="Set"/> view of the keys contained in this map.
-		''' The applyTransformToDestination is backed by the map, so changes to the map are
-		''' reflected in the applyTransformToDestination, and vice-versa.  If the map is modified
-		''' while an iteration over the applyTransformToDestination is in progress (except through
-		''' the iterator's own <tt>remove</tt> operation), the results of
-		''' the iteration are undefined.  The applyTransformToDestination supports element removal,
-		''' which removes the corresponding mapping from the map, via the
-		''' <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
-		''' <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-		''' operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
-		''' operations.
-		''' </summary>
-		''' <returns> a applyTransformToDestination view of the keys contained in this map </returns>
+        ' ---- IDictionary(Of Pair(Of K, T), V) ----
 
-		Public Overridable Function keySet() As ISet(Of Pair(Of K, T))
-			Return backedMap.Keys
-		End Function
+        Default Public Property Item(ByVal key As Pair(Of K, T)) As V Implements IDictionary(Of Pair(Of K, T), V).Item
+            Get
+                Return backedMap(key)
+            End Get
+            Set(ByVal value As V)
+                backedMap(key) = value
+            End Set
+        End Property
 
-		''' <summary>
-		''' Returns a <seealso cref="System.Collections.ICollection"/> view of the values contained in this map.
-		''' The collection is backed by the map, so changes to the map are
-		''' reflected in the collection, and vice-versa.  If the map is
-		''' modified while an iteration over the collection is in progress
-		''' (except through the iterator's own <tt>remove</tt> operation),
-		''' the results of the iteration are undefined.  The collection
-		''' supports element removal, which removes the corresponding
-		''' mapping from the map, via the <tt>Iterator.remove</tt>,
-		''' <tt>Collection.remove</tt>, <tt>removeAll</tt>,
-		''' <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
-		''' support the <tt>add</tt> or <tt>addAll</tt> operations.
-		''' </summary>
-		''' <returns> a collection view of the values contained in this map </returns>
+        Public ReadOnly Property Keys As ICollection(Of Pair(Of K, T)) Implements IDictionary(Of Pair(Of K, T), V).Keys
+            Get
+                Return backedMap.Keys
+            End Get
+        End Property
 
-		Public Overridable Function values() As ICollection(Of V)
-			Return backedMap.Values
-		End Function
+        Public ReadOnly Property Values As ICollection(Of V) Implements IDictionary(Of Pair(Of K, T), V).Values
+            Get
+                Return backedMap.Values
+            End Get
+        End Property
 
-		''' <summary>
-		''' Returns a <seealso cref="Set"/> view of the mappings contained in this map.
-		''' The applyTransformToDestination is backed by the map, so changes to the map are
-		''' reflected in the applyTransformToDestination, and vice-versa.  If the map is modified
-		''' while an iteration over the applyTransformToDestination is in progress (except through
-		''' the iterator's own <tt>remove</tt> operation, or through the
-		''' <tt>setValue</tt> operation on a map entry returned by the
-		''' iterator) the results of the iteration are undefined.  The applyTransformToDestination
-		''' supports element removal, which removes the corresponding
-		''' mapping from the map, via the <tt>Iterator.remove</tt>,
-		''' <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt> and
-		''' <tt>clear</tt> operations.  It does not support the
-		''' <tt>add</tt> or <tt>addAll</tt> operations.
-		''' </summary>
-		''' <returns> a applyTransformToDestination view of the mappings contained in this map </returns>
+        Public ReadOnly Property Count As Integer Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).Count
+            Get
+                Return backedMap.Count
+            End Get
+        End Property
 
-		Public Overridable Function entrySet() As ISet(Of Entry(Of K, T, V))
-			Dim ret As ISet(Of Entry(Of K, T, V)) = New HashSet(Of Entry(Of K, T, V))()
-			For Each pair As Pair(Of K, T) In backedMap.Keys
-				ret.Add(New Entry(Of K, T, V)(pair.First, pair.Second, backedMap(pair)))
-			Next pair
-			Return ret
-		End Function
+        Public ReadOnly Property IsReadOnly As Boolean Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).IsReadOnly
+            Get
+                Return backedMap.IsReadOnly
+            End Get
+        End Property
 
-		Public Overridable Function [get](ByVal k As K, ByVal t As T) As V
-			Return [get](New Pair(Of K, T)(k, t))
-		End Function
+        Public Function ContainsKey(ByVal key As Pair(Of K, T)) As Boolean Implements IDictionary(Of Pair(Of K, T), V).ContainsKey
+            Return backedMap.ContainsKey(key)
+        End Function
 
-		Public Overridable Sub put(ByVal k As K, ByVal t As T, ByVal v As V)
-			put(New Pair(Of K, T)(k, t), v)
-		End Sub
+        Public Sub Add(ByVal key As Pair(Of K, T), ByVal value As V) Implements IDictionary(Of Pair(Of K, T), V).Add
+            backedMap.Add(key, value)
+        End Sub
 
+        Public Function Remove(ByVal key As Pair(Of K, T)) As Boolean Implements IDictionary(Of Pair(Of K, T), V).Remove
+            Return backedMap.Remove(key)
+        End Function
 
-		Public Overrides Function Equals(ByVal o As Object) As Boolean
-			If Me Is o Then
-				Return True
-			End If
-			If Not (TypeOf o Is MultiDimensionalMap) Then
-				Return False
-			End If
+        Public Function TryGetValue(ByVal key As Pair(Of K, T), ByRef value As V) As Boolean Implements IDictionary(Of Pair(Of K, T), V).TryGetValue
+            Return backedMap.TryGetValue(key, value)
+        End Function
 
-			Dim that As MultiDimensionalMap = DirectCast(o, MultiDimensionalMap)
+        Private Sub AddPair(ByVal item As KeyValuePair(Of Pair(Of K, T), V)) Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).Add
+            backedMap.Add(item)
+        End Sub
 
-			Return Not (If(backedMap IsNot Nothing, Not backedMap.Equals(that.backedMap), that.backedMap IsNot Nothing))
+        Public Sub Clear() Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).Clear
+            backedMap.Clear()
+        End Sub
 
-		End Function
+        Private Function ContainsPair(ByVal item As KeyValuePair(Of Pair(Of K, T), V)) As Boolean Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).Contains
+            Return backedMap.Contains(item)
+        End Function
 
+        Private Sub CopyTo(ByVal array() As KeyValuePair(Of Pair(Of K, T), V), ByVal arrayIndex As Integer) Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).CopyTo
+            backedMap.CopyTo(array, arrayIndex)
+        End Sub
 
-		Public Overrides Function GetHashCode() As Integer
-			Return If(backedMap IsNot Nothing, backedMap.GetHashCode(), 0)
-		End Function
+        Private Function RemovePair(ByVal item As KeyValuePair(Of Pair(Of K, T), V)) As Boolean Implements ICollection(Of KeyValuePair(Of Pair(Of K, T), V)).Remove
+            Return backedMap.Remove(item)
+        End Function
 
+        Public Function GetEnumerator() As IEnumerator(Of KeyValuePair(Of Pair(Of K, T), V)) Implements IEnumerable(Of KeyValuePair(Of Pair(Of K, T), V)).GetEnumerator
+            Return backedMap.GetEnumerator()
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "MultiDimensionalMap{" & "backedMap=" & backedMap & "}"c
-		End Function
+        Private Function GetEnumeratorNonGeneric() As IEnumerator Implements IEnumerable.GetEnumerator
+            Return backedMap.GetEnumerator()
+        End Function
 
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            If Me Is o Then Return True
+            Dim other = TryCast(o, MultiDimensionalMap(Of K, T, V))
+            If other Is Nothing OrElse other.Count <> Count Then Return False
+            For Each kv In backedMap
+                Dim v As V = Nothing
+                If Not other.backedMap.TryGetValue(kv.Key, v) OrElse Not EqualityComparer(Of V).Default.Equals(v, kv.Value) Then
+                    Return False
+                End If
+            Next
+            Return True
+        End Function
 
-		Public Overridable Function contains(ByVal k As K, ByVal t As T) As Boolean
-			Return containsKey(New Pair(Of K, T)(k, t))
-		End Function
+        Public Overrides Function GetHashCode() As Integer
+            Dim h As Integer = 0
+            For Each kv In backedMap
+                h = h Xor (Objects.hashCode(kv.Key) Xor Objects.hashCode(kv.Value))
+            Next
+            Return h
+        End Function
 
+        Public Overrides Function ToString() As String
+            Dim parts As New List(Of String)(backedMap.Count)
+            For Each kv In backedMap
+                parts.Add(kv.Key.ToString() & "=" & Arrays.FormatElement(kv.Value))
+            Next
+            Return "MultiDimensionalMap{" & String.Join(", ", parts) & "}"
+        End Function
 
-		Public Class Entry(Of K, T, V)
-			Implements KeyValuePair(Of Pair(Of K, T), V)
+        ''' <summary>An entry of a <see cref="MultiDimensionalMap(Of K, T, V)"/>: the two key components and the value.</summary>
+        <Serializable>
+        Public Class Entry
+            Private firstKeyValue As K
+            Private secondKeyValue As T
+            Private entryValue As V
 
-'JAVA TO VB CONVERTER NOTE: The field firstKey was renamed since Visual Basic does not allow fields to have the same name as other class members:
-			Friend firstKey_Conflict As K
-'JAVA TO VB CONVERTER NOTE: The field secondKey was renamed since Visual Basic does not allow fields to have the same name as other class members:
-			Friend secondKey_Conflict As T
-'JAVA TO VB CONVERTER NOTE: The field value was renamed since Visual Basic does not allow fields to have the same name as other class members:
-			Friend value_Conflict As V
+            Public Sub New(ByVal firstKey As K, ByVal secondKey As T, ByVal value As V)
+                firstKeyValue = firstKey
+                secondKeyValue = secondKey
+                entryValue = value
+            End Sub
 
-			Public Sub New(ByVal firstKey As K, ByVal secondKey As T, ByVal value As V)
-				Me.firstKey_Conflict = firstKey
-				Me.secondKey_Conflict = secondKey
-				Me.value_Conflict = value
-			End Sub
+            Public Overridable Property FirstKey As K
+                Get
+                    Return firstKeyValue
+                End Get
+                Set(ByVal value As K)
+                    firstKeyValue = value
+                End Set
+            End Property
 
-			Public Overridable Property FirstKey As K
-				Get
-					Return firstKey_Conflict
-				End Get
-				Set(ByVal firstKey As K)
-					Me.firstKey_Conflict = firstKey
-				End Set
-			End Property
+            Public Overridable Property SecondKey As T
+                Get
+                    Return secondKeyValue
+                End Get
+                Set(ByVal value As T)
+                    secondKeyValue = value
+                End Set
+            End Property
 
+            Public Overridable ReadOnly Property Value As V
+                Get
+                    Return entryValue
+                End Get
+            End Property
 
-			Public Overridable Property SecondKey As T
-				Get
-					Return secondKey_Conflict
-				End Get
-				Set(ByVal secondKey As T)
-					Me.secondKey_Conflict = secondKey
-				End Set
-			End Property
+            Public Overridable ReadOnly Property Key As Pair(Of K, T)
+                Get
+                    Return New Pair(Of K, T)(firstKeyValue, secondKeyValue)
+                End Get
+            End Property
 
+            Public Function getFirstKey() As K
+                Return firstKeyValue
+            End Function
 
-			Public Overridable ReadOnly Property Value As V
-				Get
-					Return value_Conflict
-				End Get
-			End Property
+            Public Function getSecondKey() As T
+                Return secondKeyValue
+            End Function
 
-			''' <summary>
-			''' Replaces the value corresponding to this entry with the specified
-			''' value (optional operation).  (Writes through to the map.)  The
-			''' behavior of this call is undefined if the mapping has already been
-			''' removed from the map (by the iterator's <tt>remove</tt> operation).
-			''' </summary>
-			''' <param name="value"> new value to be stored in this entry </param>
-			''' <returns> old value corresponding to the entry </returns>
-			''' <exception cref="UnsupportedOperationException"> if the <tt>put</tt> operation
-			'''                                       is not supported by the backing map </exception>
-			''' <exception cref="ClassCastException">            if the class of the specified value
-			'''                                       prevents it from being stored in the backing map </exception>
-			''' <exception cref="NullPointerException">          if the backing map does not permit
-			'''                                       null values, and the specified value is null </exception>
-			''' <exception cref="IllegalArgumentException">      if some property of this value
-			'''                                       prevents it from being stored in the backing map </exception>
-			''' <exception cref="IllegalStateException">         implementations may, but are not
-			'''                                       required to, throw this exception if the entry has been
-			'''                                       removed from the backing map. </exception>
+            Public Function getValue() As V
+                Return entryValue
+            End Function
 
-			Public Overridable Function setValue(ByVal value As V) As V
-				Dim old As V = Me.value_Conflict
-				Me.value_Conflict = value
-				Return old
-			End Function
+            Public Function getKey() As Pair(Of K, T)
+                Return Key
+            End Function
 
+            ''' <summary>Replaces the value and returns the old value.</summary>
+            Public Overridable Function setValue(ByVal value As V) As V
+                Dim old As V = entryValue
+                entryValue = value
+                Return old
+            End Function
 
-			''' <summary>
-			''' Returns the key corresponding to this entry.
-			''' </summary>
-			''' <returns> the key corresponding to this entry </returns>
-			''' <exception cref="IllegalStateException"> implementations may, but are not
-			'''                               required to, throw this exception if the entry has been
-			'''                               removed from the backing map. </exception>
+            Public Overrides Function Equals(ByVal o As Object) As Boolean
+                Dim other = TryCast(o, Entry)
+                If other Is Nothing Then Return False
+                Return Object.Equals(firstKeyValue, other.firstKeyValue) AndAlso Object.Equals(secondKeyValue, other.secondKeyValue) AndAlso Object.Equals(entryValue, other.entryValue)
+            End Function
 
-			Public Overridable ReadOnly Property Key As Pair(Of K, T)
-				Get
-					Return New Pair(Of K, T)(firstKey_Conflict, secondKey_Conflict)
-				End Get
-			End Property
-		End Class
+            Public Overrides Function GetHashCode() As Integer
+                Return Objects.hash(firstKeyValue, secondKeyValue, entryValue)
+            End Function
 
+            Public Overrides Function ToString() As String
+                Return "Entry{" & Arrays.FormatElement(firstKeyValue) & ", " & Arrays.FormatElement(secondKeyValue) & " -> " & Arrays.FormatElement(entryValue) & "}"
+            End Function
+        End Class
 
-
-	End Class
+    End Class
 
 End Namespace

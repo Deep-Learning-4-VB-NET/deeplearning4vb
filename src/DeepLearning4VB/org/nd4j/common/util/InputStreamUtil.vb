@@ -1,5 +1,5 @@
-﻿Imports System.IO
-Imports Microsoft.VisualBasic
+Imports System
+Imports System.IO
 
 '
 ' *  ******************************************************************************
@@ -19,62 +19,47 @@ Imports Microsoft.VisualBasic
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
+    Public Class InputStreamUtil
 
-	Public Class InputStreamUtil
-		''' <summary>
-		''' Count number of lines in a file
-		''' </summary>
-		''' <param name="is">
-		''' @return </param>
-		''' <exception cref="IOException"> </exception>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: public static int countLines(java.io.InputStream is) throws java.io.IOException
-		Public Shared Function countLines(ByVal [is] As Stream) As Integer
-			Try
-				Dim c(1023) As SByte
-				Dim count As Integer = 0
-				Dim readChars As Integer = 0
-				Dim empty As Boolean = True
-				readChars = [is].Read(c, 0, c.Length)
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: while ((readChars = is.read(c)) != -1)
-				Do While readChars <> -1
-					empty = False
-					For i As Integer = 0 To readChars - 1
-						If c(i) = ControlChars.Lf Then
-							count += 1
-						End If
-					Next i
-						readChars = [is].Read(c, 0, c.Length)
-				Loop
-				Return If(count = 0 AndAlso Not empty, 1, count)
-			Finally
-				[is].Close()
-			End Try
+        Private Sub New()
+        End Sub
 
+        ''' <summary>
+        ''' Counts the lines in a stream: the number of line-feed characters, or 1 for a non-empty
+        ''' stream without any line feed. The stream is closed afterwards.
+        ''' </summary>
+        Public Shared Function countLines(ByVal [is] As Stream) As Integer
+            If [is] Is Nothing Then Throw New ArgumentNullException(NameOf([is]))
+            Try
+                Dim c(1023) As Byte
+                Dim count As Integer = 0
+                Dim empty As Boolean = True
+                Dim readChars As Integer = [is].Read(c, 0, c.Length)
+                Do While readChars > 0
+                    empty = False
+                    For i As Integer = 0 To readChars - 1
+                        If c(i) = 10 Then
+                            count += 1
+                        End If
+                    Next i
+                    readChars = [is].Read(c, 0, c.Length)
+                Loop
+                Return If(count = 0 AndAlso Not empty, 1, count)
+            Finally
+                [is].Close()
+            End Try
+        End Function
 
-		End Function
-
-		''' <summary>
-		''' Count number of lines in a file
-		''' </summary>
-		''' <param name="filename">
-		''' @return </param>
-		''' <exception cref="IOException"> </exception>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: public static int countLines(String filename) throws java.io.IOException
-		Public Shared Function countLines(ByVal filename As String) As Integer
-			Dim fis As New FileStream(filename, FileMode.Open, FileAccess.Read)
-			Try
-				Return countLines(New BufferedInputStream(fis))
-			Finally
-				fis.Close()
-			End Try
-		End Function
-	End Class
+        ''' <summary>Counts the lines in a file (see <see cref="countLines(Stream)"/>).</summary>
+        Public Shared Function countLines(ByVal filename As String) As Integer
+            Using fis As New FileStream(filename, FileMode.Open, FileAccess.Read)
+                Return countLines(New BufferedStream(fis))
+            End Using
+        End Function
+    End Class
 
 End Namespace

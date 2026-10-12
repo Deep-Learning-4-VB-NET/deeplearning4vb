@@ -1,4 +1,5 @@
-﻿Imports System
+Imports System
+Imports System.Globalization
 Imports System.Numerics
 
 '
@@ -19,577 +20,389 @@ Imports System.Numerics
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
-	Friend Class Rational
-		Implements ICloneable
+    ''' <summary>
+    ''' An arbitrary-precision rational number a/b, always kept in lowest terms with a positive denominator.
+    ''' </summary>
+    Public Class Rational
+        Implements ICloneable, IComparable(Of Rational)
 
-	'     The maximum and minimum value of a standard Java integer, 2^31.
-	'     
-		Friend Shared MAX_INT As BigInteger = BigInteger.valueOf(Integer.MaxValue)
-		Friend Shared MIN_INT As BigInteger = BigInteger.valueOf(Integer.MinValue)
-		Friend Shared ONE As New Rational(1, 1)
-		Friend Shared ZERO As New Rational()
-		''' <summary>
-		''' numerator
-		''' </summary>
-		Friend a As BigInteger
-		''' <summary>
-		''' denominator
-		''' </summary>
-		Friend b As BigInteger
+        ''' <summary>The maximum and minimum value of a standard 32-bit integer.</summary>
+        Friend Shared ReadOnly MAX_INT As BigInteger = New BigInteger(Integer.MaxValue)
+        Friend Shared ReadOnly MIN_INT As BigInteger = New BigInteger(Integer.MinValue)
+        Public Shared ReadOnly ONE As New Rational(1, 1)
+        Public Shared ReadOnly ZERO As New Rational()
 
-		''' <summary>
-		''' Default ctor, which represents the zero.
-		''' </summary>
-		Public Sub New()
-			a = BigInteger.Zero
-			b = BigInteger.One
-		End Sub
+        ''' <summary>Numerator.</summary>
+        Friend a As BigInteger
+        ''' <summary>Denominator.</summary>
+        Friend b As BigInteger
 
-		''' <summary>
-		''' ctor from a numerator and denominator.
-		''' </summary>
-		''' <param name="a"> the numerator. </param>
-		''' <param name="b"> the denominator. </param>
-		Public Sub New(ByVal a As BigInteger, ByVal b As BigInteger)
-			Me.a = a
-			Me.b = b
-			normalize()
-		End Sub
+        ''' <summary>Creates the value zero.</summary>
+        Public Sub New()
+            a = BigInteger.Zero
+            b = BigInteger.One
+        End Sub
 
-		''' <summary>
-		''' ctor from a numerator.
-		''' </summary>
-		''' <param name="a"> the BigInteger. </param>
-		Public Sub New(ByVal a As BigInteger)
-			Me.a = a
-			b = BigInteger.valueOf(1)
-		End Sub
+        ''' <summary>Creates a/b.</summary>
+        Public Sub New(ByVal a As BigInteger, ByVal b As BigInteger)
+            If b.IsZero Then
+                Throw New DivideByZeroException("Rational denominator must not be zero")
+            End If
+            Me.a = a
+            Me.b = b
+            normalize()
+        End Sub
 
-		''' <summary>
-		''' ctor from a numerator and denominator.
-		''' </summary>
-		''' <param name="a"> the numerator. </param>
-		''' <param name="b"> the denominator. </param>
-		Public Sub New(ByVal a As Integer, ByVal b As Integer)
-			Me.New(BigInteger.valueOf(a), BigInteger.valueOf(b))
-		End Sub
+        ''' <summary>Creates the integer a.</summary>
+        Public Sub New(ByVal a As BigInteger)
+            Me.a = a
+            b = BigInteger.One
+        End Sub
 
-		''' <summary>
-		''' ctor from a string representation.
-		''' </summary>
-		''' <param name="str"> the string.
-		'''            This either has a slash in it, separating two integers, or, if there is no slash,
-		'''            is representing the numerator with implicit denominator equal to 1.
-		''' @warning this does not yet test for a denominator equal to zero </param>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: public Rational(String str) throws NumberFormatException
-		Public Sub New(ByVal str As String)
-			Me.New(str, 10)
-		End Sub
+        ''' <summary>Creates a/b.</summary>
+        Public Sub New(ByVal a As Integer, ByVal b As Integer)
+            Me.New(New BigInteger(a), New BigInteger(b))
+        End Sub
 
-		''' <summary>
-		''' ctor from a string representation in a specified base.
-		''' </summary>
-		''' <param name="str">   the string.
-		'''              This either has a slash in it, separating two integers, or, if there is no slash,
-		'''              is just representing the numerator. </param>
-		''' <param name="radix"> the number base for numerator and denominator
-		''' @warning this does not yet test for a denominator equal to zero
-		''' 5 </param>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: public Rational(String str, int radix) throws NumberFormatException
-		Public Sub New(ByVal str As String, ByVal radix As Integer)
-			Dim hasslah As Integer = str.IndexOf("/", StringComparison.Ordinal)
-			If hasslah = -1 Then
-				a = New BigInteger(str, radix)
-				b = New BigInteger("1", radix)
-				' no normalization necessary here 
-			Else
-	'             create numerator and denominator separately
-	'             
-				a = New BigInteger(str.Substring(0, hasslah), radix)
-				b = New BigInteger(str.Substring(hasslah + 1), radix)
-				normalize()
-			End If
-		End Sub
+        ''' <summary>
+        ''' Parses a string: either "numerator/denominator" or a plain integer.
+        ''' </summary>
+        Public Sub New(ByVal str As String)
+            Me.New(str, 10)
+        End Sub
 
-		''' <summary>
-		''' binomial (n choose m).
-		''' </summary>
-		''' <param name="n"> the numerator. Equals the size of the set to choose from. </param>
-		''' <param name="m"> the denominator. Equals the number of elements to select. </param>
-		''' <returns> the binomial coefficient. </returns>
-		Public Shared Function binomial(ByVal n As Rational, ByVal m As BigInteger) As Rational
-			If m.compareTo(BigInteger.Zero) = 0 Then
-				Return Rational.ONE
-			End If
-			Dim bin As Rational = n
-			Dim i As BigInteger = BigInteger.valueOf(2)
-			Do While i.compareTo(m) <> 1
-				bin = bin.multiply(n.subtract(i - BigInteger.One)).divide(i)
-				i = i + System.Numerics.BigInteger.One
-			Loop
-			Return bin
-		End Function ' Rational.binomial
+        ''' <summary>
+        ''' Parses a string in the given radix: either "numerator/denominator" or a plain integer.
+        ''' </summary>
+        Public Sub New(ByVal str As String, ByVal radix As Integer)
+            Dim hasslah As Integer = str.IndexOf("/", StringComparison.Ordinal)
+            If hasslah = -1 Then
+                a = ParseBigInteger(str, radix)
+                b = BigInteger.One
+            Else
+                a = ParseBigInteger(str.Substring(0, hasslah), radix)
+                b = ParseBigInteger(str.Substring(hasslah + 1), radix)
+                If b.IsZero Then
+                    Throw New DivideByZeroException("Rational denominator must not be zero")
+                End If
+                normalize()
+            End If
+        End Sub
 
-		''' <summary>
-		''' binomial (n choose m).
-		''' </summary>
-		''' <param name="n"> the numerator. Equals the size of the set to choose from. </param>
-		''' <param name="m"> the denominator. Equals the number of elements to select. </param>
-		''' <returns> the binomial coefficient. </returns>
-		Public Shared Function binomial(ByVal n As Rational, ByVal m As Integer) As Rational
-			If m = 0 Then
-				Return Rational.ONE
-			End If
-			Dim bin As Rational = n
-			For i As Integer = 2 To m
-				bin = bin.multiply(n.subtract(i - 1)).divide(i)
-			Next i
-			Return bin
-		End Function ' Rational.binomial
+        ''' <summary>Parses an integer in any radix from 2 to 36 (java.math.BigInteger(String, int)).</summary>
+        Friend Shared Function ParseBigInteger(ByVal str As String, ByVal radix As Integer) As BigInteger
+            If str Is Nothing Then Throw New ArgumentNullException(NameOf(str))
+            If radix < 2 OrElse radix > 36 Then Throw New ArgumentOutOfRangeException(NameOf(radix))
+            Dim s As String = str.Trim()
+            If s.Length = 0 Then Throw New FormatException("Zero length BigInteger")
+            If radix = 10 Then
+                Return BigInteger.Parse(s, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture)
+            End If
+            Dim negative As Boolean = False
+            Dim start As Integer = 0
+            If s(0) = "-"c Then
+                negative = True
+                start = 1
+            ElseIf s(0) = "+"c Then
+                start = 1
+            End If
+            If start >= s.Length Then Throw New FormatException("Invalid number: " & str)
+            Dim result As BigInteger = BigInteger.Zero
+            Dim bigRadix As New BigInteger(radix)
+            For i As Integer = start To s.Length - 1
+                Dim c As Char = Char.ToLowerInvariant(s(i))
+                Dim digit As Integer
+                If c >= "0"c AndAlso c <= "9"c Then
+                    digit = AscW(c) - AscW("0"c)
+                ElseIf c >= "a"c AndAlso c <= "z"c Then
+                    digit = AscW(c) - AscW("a"c) + 10
+                Else
+                    Throw New FormatException("Invalid digit '" & s(i) & "' for radix " & radix)
+                End If
+                If digit >= radix Then Throw New FormatException("Invalid digit '" & s(i) & "' for radix " & radix)
+                result = result * bigRadix + digit
+            Next i
+            Return If(negative, -result, result)
+        End Function
 
-		''' <summary>
-		''' Create a copy.
-		''' </summary>
-		Public Overrides Function clone() As Rational
-	'         protected access means this does not work
-	'         * return new Rational(a.clone(), b.clone()) ;
-	'         
-			Dim aclon As New BigInteger("" & a)
-			Dim bclon As New BigInteger("" & b)
-			Return New Rational(aclon, bclon)
-		End Function ' Rational.clone
+        ''' <summary>Binomial coefficient (n choose m).</summary>
+        Public Shared Function binomial(ByVal n As Rational, ByVal m As BigInteger) As Rational
+            If m.CompareTo(BigInteger.Zero) = 0 Then
+                Return Rational.ONE
+            End If
+            Dim bin As Rational = n
+            Dim i As BigInteger = New BigInteger(2)
+            Do While i.CompareTo(m) <> 1
+                bin = bin.multiply(n.subtract(i - BigInteger.One)).divide(i)
+                i = i + BigInteger.One
+            Loop
+            Return bin
+        End Function
 
-		''' <summary>
-		''' Multiply by another fraction.
-		''' </summary>
-		''' <param name="val"> a second rational number. </param>
-		''' <returns> the product of this with the val. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational multiply(final Rational val)
-		Public Overridable Function multiply(ByVal val As Rational) As Rational
-			Dim num As BigInteger = a * val.a
-			Dim deno As BigInteger = b * val.b
-	'         Normalization to an coprime format will be done inside
-	'         * the ctor() and is not duplicated here.
-	'         
-			Return (New Rational(num, deno))
-		End Function ' Rational.multiply
+        ''' <summary>Binomial coefficient (n choose m).</summary>
+        Public Shared Function binomial(ByVal n As Rational, ByVal m As Integer) As Rational
+            If m = 0 Then
+                Return Rational.ONE
+            End If
+            Dim bin As Rational = n
+            For i As Integer = 2 To m
+                bin = bin.multiply(n.subtract(i - 1)).divide(i)
+            Next i
+            Return bin
+        End Function
 
-		''' <summary>
-		''' Multiply by a BigInteger.
-		''' </summary>
-		''' <param name="val"> a second number. </param>
-		''' <returns> the product of this with the value. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational multiply(final java.math.BigInteger val)
-		Public Overridable Function multiply(ByVal val As BigInteger) As Rational
-			Dim val2 As New Rational(val, BigInteger.One)
-			Return (multiply(val2))
-		End Function ' Rational.multiply
+        ''' <summary>Creates a copy.</summary>
+        Public Function clone() As Rational
+            Return New Rational(a, b)
+        End Function
 
-		''' <summary>
-		''' Multiply by an integer.
-		''' </summary>
-		''' <param name="val"> a second number. </param>
-		''' <returns> the product of this with the value. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational multiply(final int val)
-		Public Overridable Function multiply(ByVal val As Integer) As Rational
-			Dim tmp As BigInteger = BigInteger.valueOf(val)
-			Return multiply(tmp)
-		End Function ' Rational.multiply
+        Private Function CloneObject() As Object Implements ICloneable.Clone
+            Return clone()
+        End Function
 
-		''' <summary>
-		''' Power to an integer.
-		''' </summary>
-		''' <param name="exponent"> the exponent. </param>
-		''' <returns> this value raised to the power given by the exponent.
-		''' If the exponent is 0, the value 1 is returned. </returns>
-		Public Overridable Function pow(ByVal exponent As Integer) As Rational
-			If exponent = 0 Then
-				Return New Rational(1, 1)
-			End If
-			Dim num As BigInteger = a.pow(Math.Abs(exponent))
-			Dim deno As BigInteger = b.pow(Math.Abs(exponent))
-			If exponent > 0 Then
-				Return (New Rational(num, deno))
-			Else
-				Return (New Rational(deno, num))
-			End If
-		End Function ' Rational.pow
+        Public Overridable Function multiply(ByVal val As Rational) As Rational
+            Return New Rational(a * val.a, b * val.b)
+        End Function
 
-		''' <summary>
-		''' Power to an integer.
-		''' </summary>
-		''' <param name="exponent"> the exponent. </param>
-		''' <returns> this value raised to the power given by the exponent.
-		''' If the exponent is 0, the value 1 is returned. </returns>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: public Rational pow(java.math.BigInteger exponent) throws NumberFormatException
-		Public Overridable Function pow(ByVal exponent As BigInteger) As Rational
-			' test for overflow 
-			If exponent.compareTo(MAX_INT) = 1 Then
-				Throw New System.FormatException("Exponent " & exponent.ToString() & " too large.")
-			End If
-			If exponent.compareTo(MIN_INT) = -1 Then
-				Throw New System.FormatException("Exponent " & exponent.ToString() & " too small.")
-			End If
-			' promote to the simpler interface above 
-			Return pow(CInt(CUInt(exponent And UInteger.MaxValue)))
-		End Function ' Rational.pow
+        Public Overridable Function multiply(ByVal val As BigInteger) As Rational
+            Return multiply(New Rational(val, BigInteger.One))
+        End Function
 
-		''' <summary>
-		''' Divide by another fraction.
-		''' </summary>
-		''' <param name="val"> A second rational number. </param>
-		''' <returns> The value of this/val </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational divide(final Rational val)
-		Public Overridable Function divide(ByVal val As Rational) As Rational
-			Dim num As BigInteger = a * val.b
-			Dim deno As BigInteger = b * val.a
-	'         Reduction to a coprime format is done inside the ctor,
-	'         * and not repeated here.
-	'         
-			Return (New Rational(num, deno))
-		End Function ' Rational.divide
+        Public Overridable Function multiply(ByVal val As Integer) As Rational
+            Return multiply(New BigInteger(val))
+        End Function
 
-		''' <summary>
-		''' Divide by an integer.
-		''' </summary>
-		''' <param name="val"> a second number. </param>
-		''' <returns> the value of this/val </returns>
-		Public Overridable Function divide(ByVal val As BigInteger) As Rational
-			Dim val2 As New Rational(val, BigInteger.One)
-			Return (divide(val2))
-		End Function ' Rational.divide
+        ''' <summary>This value raised to an integer power (1 for exponent 0; negative exponents invert).</summary>
+        Public Overridable Function pow(ByVal exponent As Integer) As Rational
+            If exponent = 0 Then
+                Return New Rational(1, 1)
+            End If
+            Dim num As BigInteger = BigInteger.Pow(a, Math.Abs(exponent))
+            Dim deno As BigInteger = BigInteger.Pow(b, Math.Abs(exponent))
+            If exponent > 0 Then
+                Return New Rational(num, deno)
+            Else
+                Return New Rational(deno, num)
+            End If
+        End Function
 
-		''' <summary>
-		''' Divide by an integer.
-		''' </summary>
-		''' <param name="val"> A second number. </param>
-		''' <returns> The value of this/val </returns>
-		Public Overridable Function divide(ByVal val As Integer) As Rational
-			Dim val2 As New Rational(val, 1)
-			Return (divide(val2))
-		End Function ' Rational.divide
+        ''' <summary>This value raised to an integer power.</summary>
+        Public Overridable Function pow(ByVal exponent As BigInteger) As Rational
+            If exponent.CompareTo(MAX_INT) = 1 Then
+                Throw New FormatException("Exponent " & exponent.ToString() & " too large.")
+            End If
+            If exponent.CompareTo(MIN_INT) = -1 Then
+                Throw New FormatException("Exponent " & exponent.ToString() & " too small.")
+            End If
+            Return pow(CInt(exponent))
+        End Function
 
-		''' <summary>
-		''' Add another fraction.
-		''' </summary>
-		''' <param name="val"> The number to be added </param>
-		''' <returns> this+val. </returns>
-		Public Overridable Function add(ByVal val As Rational) As Rational
-			Dim num As BigInteger = a * val.b + b * val.a
-			Dim deno As BigInteger = b * val.b
-			Return (New Rational(num, deno))
-		End Function ' Rational.add
+        Public Overridable Function divide(ByVal val As Rational) As Rational
+            Return New Rational(a * val.b, b * val.a)
+        End Function
 
-		''' <summary>
-		''' Add another integer.
-		''' </summary>
-		''' <param name="val"> The number to be added </param>
-		''' <returns> this+val. </returns>
-		Public Overridable Function add(ByVal val As BigInteger) As Rational
-			Dim val2 As New Rational(val, BigInteger.One)
-			Return (add(val2))
-		End Function ' Rational.add
+        Public Overridable Function divide(ByVal val As BigInteger) As Rational
+            Return divide(New Rational(val, BigInteger.One))
+        End Function
 
-		''' <summary>
-		''' Compute the negative.
-		''' </summary>
-		''' <returns> -this. </returns>
-		Public Overridable Function negate() As Rational
-			Return (New Rational(-a, b))
-		End Function ' Rational.negate
+        Public Overridable Function divide(ByVal val As Integer) As Rational
+            Return divide(New Rational(val, 1))
+        End Function
 
-		''' <summary>
-		''' Subtract another fraction.
-		''' 7
-		''' </summary>
-		''' <param name="val"> the number to be subtracted from this </param>
-		''' <returns> this - val. </returns>
-		Public Overridable Function subtract(ByVal val As Rational) As Rational
-			Dim val2 As Rational = val.negate()
-			Return (add(val2))
-		End Function ' Rational.subtract
+        Public Overridable Function add(ByVal val As Rational) As Rational
+            Return New Rational(a * val.b + b * val.a, b * val.b)
+        End Function
 
-		''' <summary>
-		''' Subtract an integer.
-		''' </summary>
-		''' <param name="val"> the number to be subtracted from this </param>
-		''' <returns> this - val. </returns>
-		Public Overridable Function subtract(ByVal val As BigInteger) As Rational
-			Dim val2 As New Rational(val, BigInteger.One)
-			Return (subtract(val2))
-		End Function ' Rational.subtract
+        Public Overridable Function add(ByVal val As BigInteger) As Rational
+            Return add(New Rational(val, BigInteger.One))
+        End Function
 
-		''' <summary>
-		''' Subtract an integer.
-		''' </summary>
-		''' <param name="val"> the number to be subtracted from this </param>
-		''' <returns> this - val. </returns>
-		Public Overridable Function subtract(ByVal val As Integer) As Rational
-			Dim val2 As New Rational(val, 1)
-			Return (subtract(val2))
-		End Function ' Rational.subtract
+        Public Overridable Function add(ByVal val As Integer) As Rational
+            Return add(New Rational(val, 1))
+        End Function
 
-		''' <summary>
-		''' Get the numerator.
-		''' </summary>
-		''' <returns> The numerator of the reduced fraction. </returns>
-		Public Overridable Function numer() As BigInteger
-			Return a
-		End Function
+        Public Overridable Function negate() As Rational
+            Return New Rational(-a, b)
+        End Function
 
-		''' <summary>
-		''' Get the denominator.
-		''' </summary>
-		''' <returns> The denominator of the reduced fraction. </returns>
-		Public Overridable Function denom() As BigInteger
-			Return b
-		End Function
+        Public Overridable Function subtract(ByVal val As Rational) As Rational
+            Return add(val.negate())
+        End Function
 
-		''' <summary>
-		''' Absolute value.
-		''' </summary>
-		''' <returns> The absolute (non-negative) value of this. </returns>
-		Public Overridable Function abs() As Rational
-			Return (New Rational(a.abs(), b.abs()))
-		End Function
+        Public Overridable Function subtract(ByVal val As BigInteger) As Rational
+            Return subtract(New Rational(val, BigInteger.One))
+        End Function
 
-		''' <summary>
-		''' floor(): the nearest integer not greater than this.
-		''' </summary>
-		''' <returns> The integer rounded towards negative infinity. </returns>
-		Public Overridable Function floor() As BigInteger
-	'         is already integer: return the numerator
-	'         
-			If b.compareTo(BigInteger.One) = 0 Then
-				Return a
-			ElseIf a.compareTo(BigInteger.Zero) > 0 Then
-				Return a / b
-			Else
-				Return a / b - BigInteger.One
-			End If
-		End Function ' Rational.floor
+        Public Overridable Function subtract(ByVal val As Integer) As Rational
+            Return subtract(New Rational(val, 1))
+        End Function
 
+        ''' <summary>The numerator of the reduced fraction.</summary>
+        Public Overridable Function numer() As BigInteger
+            Return a
+        End Function
 
-		''' <summary>
-		''' Remove the fractional part.
-		''' </summary>
-		''' <returns> The integer rounded towards zero. </returns>
-		Public Overridable Function trunc() As BigInteger
-	'         is already integer: return the numerator
-	'         
-			If b.compareTo(BigInteger.One) = 0 Then
-				Return a
-			Else
-				Return a / b
-			End If
-		End Function ' Rational.trunc
+        ''' <summary>The denominator of the reduced fraction.</summary>
+        Public Overridable Function denom() As BigInteger
+            Return b
+        End Function
 
+        Public Overridable Function abs() As Rational
+            Return New Rational(BigInteger.Abs(a), BigInteger.Abs(b))
+        End Function
 
-		''' <summary>
-		''' Compares the value of this with another constant.
-		''' </summary>
-		''' <param name="val"> the other constant to compare with </param>
-		''' <returns> -1, 0 or 1 if this number is numerically less than, equal to,
-		''' or greater than val. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public int compareTo(final Rational val)
-		Public Overridable Function compareTo(ByVal val As Rational) As Integer
-	'         Since we have always kept the denominators positive,
-	'         * simple cross-multiplying works without changing the sign.
-	'         
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final java.math.BigInteger left = a.multiply(val.b);
-			Dim left As BigInteger = a * val.b
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final java.math.BigInteger right = val.a.multiply(b);
-			Dim right As BigInteger = val.a * b
-			Return left.compareTo(right)
-		End Function ' Rational.compareTo
+        ''' <summary>The nearest integer not greater than this value.</summary>
+        Public Overridable Function floor() As BigInteger
+            If b.CompareTo(BigInteger.One) = 0 Then
+                Return a
+            ElseIf a.CompareTo(BigInteger.Zero) > 0 Then
+                Return BigInteger.Divide(a, b)
+            Else
+                Return BigInteger.Divide(a, b) - BigInteger.One
+            End If
+        End Function
 
+        ''' <summary>The integer part, rounded towards zero.</summary>
+        Public Overridable Function trunc() As BigInteger
+            If b.CompareTo(BigInteger.One) = 0 Then
+                Return a
+            Else
+                Return BigInteger.Divide(a, b)
+            End If
+        End Function
 
-		''' <summary>
-		''' Compares the value of this with another constant.
-		''' </summary>
-		''' <param name="val"> the other constant to compare with </param>
-		''' <returns> -1, 0 or 1 if this number is numerically less than, equal to,
-		''' or greater than val. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public int compareTo(final java.math.BigInteger val)
-		Public Overridable Function compareTo(ByVal val As BigInteger) As Integer
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final Rational val2 = new Rational(val, java.math.BigInteger.ONE);
-			Dim val2 As New Rational(val, BigInteger.One)
-			Return (compareTo(val2))
-		End Function ' Rational.compareTo
+        ''' <summary>-1, 0 or 1 if this number is numerically less than, equal to, or greater than val.</summary>
+        Public Overridable Function compareTo(ByVal val As Rational) As Integer Implements IComparable(Of Rational).CompareTo
+            ' Denominators are always positive, so cross-multiplication preserves the order.
+            Dim left As BigInteger = a * val.b
+            Dim right As BigInteger = val.a * b
+            Return left.CompareTo(right)
+        End Function
 
+        Public Overridable Function compareTo(ByVal val As BigInteger) As Integer
+            Return compareTo(New Rational(val, BigInteger.One))
+        End Function
 
-		''' <summary>
-		''' Return a string in the format number/denom.
-		''' If the denominator equals 1, print just the numerator without a slash.
-		''' </summary>
-		''' <returns> the human-readable version in base 10 </returns>
-		Public Overrides Function ToString() As String
-			If b.compareTo(BigInteger.One) <> 0 Then
-				Return (a.ToString() & "/" & b.ToString())
-			Else
-				Return a.ToString()
-			End If
-		End Function ' Rational.toString
+        ''' <summary>"numerator/denominator", or just the numerator when the denominator is 1.</summary>
+        Public Overrides Function ToString() As String
+            If b.CompareTo(BigInteger.One) <> 0 Then
+                Return a.ToString() & "/" & b.ToString()
+            Else
+                Return a.ToString()
+            End If
+        End Function
 
+        ''' <summary>The value with double precision.</summary>
+        Public Overridable Function doubleValue() As Double
+            If b.IsOne Then
+                Return CDbl(a)
+            End If
+            ' Scale so that both parts fit comfortably in a double before dividing, which avoids
+            ' intermediate overflow for very large numerators or denominators.
+            Dim shift As Integer = Math.Max(0, CInt(Math.Max(BigInteger.Log(BigInteger.Abs(a), 2), BigInteger.Log(b, 2))) - 1000)
+            If shift > 0 Then
+                Return CDbl(a >> shift) / CDbl(b >> shift)
+            End If
+            Return CDbl(a) / CDbl(b)
+        End Function
 
-		''' <summary>
-		''' Return a double value representation.
-		''' </summary>
-		''' <returns> The value with double precision. </returns>
-		Public Overridable Function doubleValue() As Double
-	'         To meet the risk of individual overflows of the exponents of
-	'         * a separate invocation a.doubleValue() or b.doubleValue(), we divide first
-	'         * in a BigDecimal environment and converst the result.
-	'         
-			Dim adivb As Decimal = (New Decimal(a)).divide(New Decimal(b), MathContext.DECIMAL128)
-			Return adivb.doubleValue()
-		End Function ' Rational.doubleValue
+        ''' <summary>The value with single precision.</summary>
+        Public Overridable Function floatValue() As Single
+            Return CSng(doubleValue())
+        End Function
 
+        ''' <summary>The value as a decimal (28-29 significant digits).</summary>
+        Public Overridable Function BigDecimalValue() As Decimal
+            Return CDec(a) / CDec(b)
+        End Function
 
-		''' <summary>
-		''' Return a float value representation.
-		''' </summary>
-		''' <returns> The value with single precision. </returns>
-		Public Overridable Function floatValue() As Single
-			Dim adivb As Decimal = (New Decimal(a)).divide(New Decimal(b), MathContext.DECIMAL128)
-			Return adivb.floatValue()
-		End Function ' Rational.floatValue
+        ''' <summary>The value in floating point format with the given number of significant digits, truncated.</summary>
+        Public Overridable Function toFString(ByVal digits As Integer) As String
+            If b.CompareTo(BigInteger.One) <> 0 Then
+                Return RoundDown(digits).ToString(CultureInfo.InvariantCulture)
+            Else
+                Return a.ToString()
+            End If
+        End Function
 
+        Private Function RoundDown(ByVal digits As Integer) As Decimal
+            Dim value As Decimal = BigDecimalValue()
+            If value = 0D OrElse digits <= 0 Then Return value
+            Dim magnitude As Integer = CInt(Math.Floor(Math.Log10(CDbl(Math.Abs(value))))) + 1
+            Dim decimals As Integer = digits - magnitude
+            If decimals <= 0 Then
+                Dim factor As Decimal = CDec(Math.Pow(10, -decimals))
+                Return Math.Truncate(value / factor) * factor
+            End If
+            If decimals > 28 Then decimals = 28
+            Dim scale As Decimal = CDec(Math.Pow(10, decimals))
+            Return Math.Truncate(value * scale) / scale
+        End Function
 
-		''' <summary>
-		''' Return a representation as BigDecimal.
-		''' </summary>
-		''' <param name="mc"> the mathematical context which determines precision, rounding mode etc </param>
-		''' <returns> A representation as a BigDecimal floating point number. </returns>
-		Public Overridable Function BigDecimalValue(ByVal mc As MathContext) As Decimal
-	'         numerator and denominator individually rephrased
-	'         
-			Dim n As New Decimal(a)
-			Dim d As New Decimal(b)
-			Return n.divide(d, mc)
-		End Function ' Rational.BigDecimnalValue
+        Public Overridable Function max(ByVal val As Rational) As Rational
+            If compareTo(val) > 0 Then
+                Return Me
+            Else
+                Return val
+            End If
+        End Function
 
+        Public Overridable Function min(ByVal val As Rational) As Rational
+            If compareTo(val) < 0 Then
+                Return Me
+            Else
+                Return val
+            End If
+        End Function
 
-		''' <summary>
-		''' Return a string in floating point format.
-		''' </summary>
-		''' <param name="digits"> The precision (number of digits) </param>
-		''' <returns> The human-readable version in base 10. </returns>
-		Public Overridable Function toFString(ByVal digits As Integer) As String
-			If b.compareTo(BigInteger.One) <> 0 Then
-				Dim mc As New MathContext(digits, RoundingMode.DOWN)
-				Dim f As Decimal = (New Decimal(a)).divide(New Decimal(b), mc)
-				Return (f.ToString())
-			Else
-				Return a.ToString()
-			End If
-		End Function ' Rational.toFString
+        ''' <summary>Pochhammer's symbol (this)_n = this*(this+1)*...*(this+n-1); Nothing for negative n.</summary>
+        Public Overridable Function Pochhammer(ByVal n As BigInteger) As Rational
+            If n.CompareTo(BigInteger.Zero) < 0 Then
+                Return Nothing
+            ElseIf n.CompareTo(BigInteger.Zero) = 0 Then
+                Return Rational.ONE
+            Else
+                Dim res As New Rational(a, b)
+                Dim i As BigInteger = BigInteger.One
+                Do While i.CompareTo(n) < 0
+                    res = res.multiply(add(i))
+                    i = i + BigInteger.One
+                Loop
+                Return res
+            End If
+        End Function
 
+        Public Overridable Function Pochhammer(ByVal n As Integer) As Rational
+            Return Pochhammer(New BigInteger(n))
+        End Function
 
-		''' <summary>
-		''' Compares the value of this with another constant.
-		''' </summary>
-		''' <param name="val"> The other constant to compare with </param>
-		''' <returns> The arithmetic maximum of this and val. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational max(final Rational val)
-		Public Overridable Function max(ByVal val As Rational) As Rational
-			If compareTo(val) > 0 Then
-				Return Me
-			Else
-				Return val
-			End If
-		End Function ' Rational.max
+        ''' <summary>Reduces to lowest terms and moves any negative sign to the numerator.</summary>
+        Protected Friend Overridable Sub normalize()
+            Dim g As BigInteger = BigInteger.GreatestCommonDivisor(a, b)
+            If g.CompareTo(BigInteger.One) > 0 Then
+                a = BigInteger.Divide(a, g)
+                b = BigInteger.Divide(b, g)
+            End If
+            If b.CompareTo(BigInteger.Zero) = -1 Then
+                a = -a
+                b = -b
+            End If
+        End Sub
 
+        Public Overrides Function Equals(ByVal o As Object) As Boolean
+            Dim other = TryCast(o, Rational)
+            If other Is Nothing Then Return False
+            Return a.Equals(other.a) AndAlso b.Equals(other.b)
+        End Function
 
-		''' <summary>
-		''' Compares the value of this with another constant.
-		''' </summary>
-		''' <param name="val"> The other constant to compare with </param>
-		''' <returns> The arithmetic minimum of this and val. </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational min(final Rational val)
-		Public Overridable Function min(ByVal val As Rational) As Rational
-			If compareTo(val) < 0 Then
-				Return Me
-			Else
-				Return val
-			End If
-		End Function ' Rational.min
+        Public Overrides Function GetHashCode() As Integer
+            Return a.GetHashCode() Xor (b.GetHashCode() * 31)
+        End Function
 
-
-		''' <summary>
-		''' Compute Pochhammer's symbol (this)_n.
-		''' </summary>
-		''' <param name="n"> The number of product terms in the evaluation. </param>
-		''' <returns> Gamma(this+n)/Gamma(this) = this*(this+1)*...*(this+n-1). </returns>
-'JAVA TO VB CONVERTER WARNING: 'final' parameters are not available in VB:
-'ORIGINAL LINE: public Rational Pochhammer(final java.math.BigInteger n)
-		Public Overridable Function Pochhammer(ByVal n As BigInteger) As Rational
-			If n.compareTo(BigInteger.Zero) < 0 Then
-				Return Nothing
-			ElseIf n.compareTo(BigInteger.Zero) = 0 Then
-				Return Rational.ONE
-			Else
-	'             initialize results with the current value
-	'             
-				Dim res As New Rational(a, b)
-				Dim i As BigInteger = BigInteger.One
-				Do While i.compareTo(n) < 0
-					res = res.multiply(add(i))
-					i = i + System.Numerics.BigInteger.One
-				Loop
-				Return res
-			End If
-		End Function ' Rational.pochhammer
-
-
-		''' <summary>
-		''' Compute pochhammer's symbol (this)_n.
-		''' </summary>
-		''' <param name="n"> The number of product terms in the evaluation. </param>
-		''' <returns> Gamma(this+n)/GAMMA(this). </returns>
-		Public Overridable Function Pochhammer(ByVal n As Integer) As Rational
-			Return Pochhammer(BigInteger.valueOf(n))
-		End Function ' Rational.pochhammer
-
-
-		''' <summary>
-		''' Normalize to coprime numerator and denominator.
-		''' Also copy a negative sign of the denominator to the numerator.
-		''' </summary>
-		Protected Friend Overridable Sub normalize()
-	'         compute greatest common divisor of numerator and denominator
-	'         
-'JAVA TO VB CONVERTER WARNING: The original Java variable was marked 'final':
-'ORIGINAL LINE: final java.math.BigInteger g = a.gcd(b);
-			Dim g As BigInteger = a.gcd(b)
-			If g.compareTo(BigInteger.One) > 0 Then
-				a = a / g
-				b = b / g
-			End If
-			If b.compareTo(BigInteger.Zero) = -1 Then
-				a = -a
-				b = -b
-			End If
-		End Sub ' Rational.normalize
-
-	End Class ' Rational
+    End Class
 
 End Namespace

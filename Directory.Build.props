@@ -7,6 +7,8 @@
     <OptionCompare>Binary</OptionCompare>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Java integer arithmetic wraps on overflow; the ported numeric code relies on that. -->
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 </Project>

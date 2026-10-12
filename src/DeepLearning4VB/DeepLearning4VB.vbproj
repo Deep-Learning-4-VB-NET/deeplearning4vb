@@ -10,15 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Import Include="System" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Linq" />
     <Import Include="Microsoft.VisualBasic" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- TEMP: ArrayUtil.vb is being converted separately -->
-    <Compile Remove="org/nd4j/common/util/ArrayUtil.vb" />
   </ItemGroup>
 
   <ItemGroup>

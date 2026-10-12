@@ -30,7 +30,7 @@ Namespace org.nd4j.common.util
 		Public Shared Sub uncheckedSleep(ByVal sleepTimeMs As Long)
 			Try
 				Thread.Sleep(sleepTimeMs)
-			Catch e As InterruptedException
+			Catch e As Threading.ThreadInterruptedException
 			End Try
 		End Sub
 

@@ -1,5 +1,5 @@
-﻿Imports System
-Imports System.Collections.Generic
+Imports System
+Imports System.IO
 
 '
 ' *  ******************************************************************************
@@ -19,55 +19,49 @@ Imports System.Collections.Generic
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.nd4j.common.util
 
+    ''' <summary>Path utilities.</summary>
+    Public Class Paths
 
-	''' <summary>
-	''' Path Utilities
-	''' 
-	''' @author Adam Gibson
-	''' </summary>
-	Public Class Paths
+        Public Const PATH_ENV_VARIABLE As String = "PATH"
 
-		Public Const PATH_ENV_VARIABLE As String = "PATH"
+        Private Sub New()
+        End Sub
 
-		Private Sub New()
-		End Sub
+        ''' <summary>Checks whether a file with the given name exists in one of the PATH directories.</summary>
+        ''' <param name="name">The file name (with extension) to look for.</param>
+        Public Shared Function nameExistsInPath(ByVal name As String) As Boolean
+            If String.IsNullOrEmpty(name) Then
+                Return False
+            End If
+            Dim pathVariable As String = Environment.GetEnvironmentVariable(PATH_ENV_VARIABLE)
+            If String.IsNullOrEmpty(pathVariable) Then
+                Return False
+            End If
+            For Each dir As String In pathVariable.Split(Path.PathSeparator)
+                If dir.Length = 0 Then
+                    Continue For
+                End If
+                Try
+                    If File.Exists(dir) Then
+                        If String.Equals(Path.GetFileName(dir), name, StringComparison.OrdinalIgnoreCase) Then
+                            Return True
+                        End If
+                    ElseIf Directory.Exists(dir) Then
+                        If File.Exists(Path.Combine(dir, name)) Then
+                            Return True
+                        End If
+                    End If
+                Catch ex As Exception When TypeOf ex Is ArgumentException OrElse TypeOf ex Is IOException OrElse TypeOf ex Is UnauthorizedAccessException
+                    ' Malformed or inaccessible PATH entries are skipped, as in the Java original.
+                End Try
+            Next dir
+            Return False
+        End Function
 
-		''' <summary>
-		''' Check if a file exists in the path </summary>
-		''' <param name="name"> the name of the file </param>
-		''' <returns> true if the name exists
-		''' false otherwise </returns>
-		Public Shared Function nameExistsInPath(ByVal name As String) As Boolean
-			Dim path As String = Environment.GetEnvironmentVariable(PATH_ENV_VARIABLE)
-			Dim dirs() As String = path.Split(File.pathSeparator, True)
-			For Each dir As String In dirs
-				Dim dirFile As New File(dir)
-				If Not dirFile.exists() Then
-					Continue For
-				End If
-
-				If dirFile.isFile() AndAlso dirFile.getName().Equals(name) Then
-					Return True
-				Else
-					Dim files As IEnumerator(Of File) = FileUtils.iterateFiles(dirFile, Nothing, False)
-					Do While files.MoveNext()
-						Dim curr As File = files.Current
-						If curr.getName().Equals(name) Then
-							Return True
-						End If
-					Loop
-
-				End If
-			Next dir
-
-			Return False
-		End Function
-
-
-	End Class
+    End Class
 
 End Namespace
