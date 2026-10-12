@@ -1,10 +1,6 @@
 ﻿Imports System
 Imports System.Collections.Generic
-Imports Ints = org.nd4j.shade.guava.primitives.Ints
-Imports Longs = org.nd4j.shade.guava.primitives.Longs
-Imports val = lombok.val
-Imports RandomUtils = org.apache.commons.lang3.RandomUtils
-Imports Preconditions = org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 '
 ' *  ******************************************************************************
@@ -3417,7 +3413,7 @@ Namespace org.nd4j.common.util
 				indexes.Add(i)
 			Next i
 
-			Collections.shuffle(indexes, rng)
+			JavaCollections.shuffle(indexes, rng)
 
 			For i As Integer = 0 To result.Length - 1
 				If i < result.Length \ 2 Then
@@ -3444,7 +3440,7 @@ Namespace org.nd4j.common.util
 				odds.Add(i - 1)
 			Next i
 
-			Collections.shuffle(indexes, rng)
+			JavaCollections.shuffle(indexes, rng)
 
 			' now all even elements will be interleaved with odd elements
 			For i As Integer = 0 To result.Length - 1
@@ -3485,7 +3481,7 @@ Namespace org.nd4j.common.util
 				odds.Add(i - 1)
 			Next i
 
-			Collections.shuffle(indexes, rng)
+			JavaCollections.shuffle(indexes, rng)
 
 			' now all even elements will be interleaved with odd elements
 			For i As Integer = 0 To result.length - 1

@@ -1,9 +1,6 @@
 ﻿Imports System
-Imports JsonDeserializerAtomicDouble = org.nd4j.common.primitives.serde.JsonDeserializerAtomicDouble
-Imports JsonSerializerAtomicDouble = org.nd4j.common.primitives.serde.JsonSerializerAtomicDouble
-Imports JsonProperty = org.nd4j.shade.jackson.annotation.JsonProperty
-Imports JsonDeserialize = org.nd4j.shade.jackson.databind.annotation.JsonDeserialize
-Imports JsonSerialize = org.nd4j.shade.jackson.databind.annotation.JsonSerialize
+Imports JsonDeserializerAtomicDouble = DeepLearning4VB.org.nd4j.common.primitives.serde.JsonDeserializerAtomicDouble
+Imports JsonSerializerAtomicDouble = DeepLearning4VB.org.nd4j.common.primitives.serde.JsonSerializerAtomicDouble
 
 '
 ' *  ******************************************************************************

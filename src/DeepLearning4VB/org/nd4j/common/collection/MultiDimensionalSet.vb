@@ -1,5 +1,5 @@
 ﻿Imports System.Collections.Generic
-Imports org.nd4j.common.primitives
+Imports DeepLearning4VB.org.nd4j.common.primitives
 
 '
 ' *  ******************************************************************************

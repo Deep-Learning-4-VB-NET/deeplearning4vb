@@ -1,7 +1,5 @@
-﻿Imports Test = org.junit.jupiter.api.Test
-Imports InfoLine = org.nd4j.common.tools.InfoLine
-Imports InfoValues = org.nd4j.common.tools.InfoValues
-Imports org.junit.jupiter.api.Assertions
+﻿Imports InfoLine = DeepLearning4VB.org.nd4j.common.tools.InfoLine
+Imports InfoValues = DeepLearning4VB.org.nd4j.common.tools.InfoValues
 
 '
 ' *  ******************************************************************************

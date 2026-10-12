@@ -1,8 +1,4 @@
-﻿Imports AfterEach = org.junit.jupiter.api.AfterEach
-Imports Test = org.junit.jupiter.api.Test
-Imports TempDir = org.junit.jupiter.api.io.TempDir
-Imports SIS = org.nd4j.common.tools.SIS
-Imports org.junit.jupiter.api.Assertions
+﻿Imports SIS = DeepLearning4VB.org.nd4j.common.tools.SIS
 
 '
 ' *  ******************************************************************************

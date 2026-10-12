@@ -1,10 +1,7 @@
 ﻿Imports System.Collections.Generic
 Imports System.IO
 Imports System.Text
-Imports FileUtils = org.apache.commons.io.FileUtils
-Imports Test = org.junit.jupiter.api.Test
-Imports TempDir = org.junit.jupiter.api.io.TempDir
-Imports FileBatch = org.nd4j.common.loader.FileBatch
+Imports FileBatch = DeepLearning4VB.org.nd4j.common.loader.FileBatch
 import static org.junit.jupiter.api.Assertions.assertArrayEquals
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue

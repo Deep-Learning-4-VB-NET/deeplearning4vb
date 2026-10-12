@@ -1,6 +1,4 @@
 ﻿Imports System.Collections.Generic
-Imports Slf4j = lombok.extern.slf4j.Slf4j
-Imports Logger = org.slf4j.Logger
 
 '
 ' *  ******************************************************************************

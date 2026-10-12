@@ -1,8 +1,6 @@
 ﻿Imports System.Collections.Generic
-Imports Test = org.junit.jupiter.api.Test
-Imports org.nd4j.common.primitives
-Imports org.nd4j.common.primitives
-Imports org.junit.jupiter.api.Assertions
+Imports DeepLearning4VB.org.nd4j.common.primitives
+Imports DeepLearning4VB.org.nd4j.common.primitives
 
 '
 ' *  ******************************************************************************

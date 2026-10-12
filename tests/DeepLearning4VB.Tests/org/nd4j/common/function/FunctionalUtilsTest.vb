@@ -1,8 +1,7 @@
 ﻿Imports System.Collections.Generic
 Imports System.Linq
-Imports Test = org.junit.jupiter.api.Test
-Imports FunctionalUtils = org.nd4j.common.function.FunctionalUtils
-Imports org.nd4j.common.primitives
+Imports FunctionalUtils = DeepLearning4VB.org.nd4j.common.function.FunctionalUtils
+Imports DeepLearning4VB.org.nd4j.common.primitives
 import static org.junit.jupiter.api.Assertions.assertEquals
 
 '
@@ -46,9 +45,9 @@ Namespace org.nd4j.common.function
 
 			'[(fish,([],[alex])), (dog,([adam],[steve])), (cat,([adam],[alice]))]
 			Dim assertion As IDictionary(Of String, Pair(Of IList(Of String), IList(Of String))) = New Dictionary(Of String, Pair(Of IList(Of String), IList(Of String)))()
-			assertion("cat") = Pair.of(java.util.Arrays.asList("adam"),java.util.Arrays.asList("alice"))
-			assertion("dog") = Pair.of(java.util.Arrays.asList("adam"),java.util.Arrays.asList("steve"))
-			assertion("fish") = Pair.of(Enumerable.Empty(Of String)(),java.util.Arrays.asList("alex"))
+			assertion("cat") = Pair.of(Arrays.asList("adam"),Arrays.asList("alice"))
+			assertion("dog") = Pair.of(Arrays.asList("adam"),Arrays.asList("steve"))
+			assertion("fish") = Pair.of(Enumerable.Empty(Of String)(),Arrays.asList("alex"))
 
 			Dim cogroup As IDictionary(Of String, Pair(Of IList(Of String), IList(Of String))) = FunctionalUtils.cogroup(leftMap, rightMap)
 			assertEquals(assertion,cogroup)

@@ -1,9 +1,6 @@
 ﻿Imports System.IO
-Imports val = lombok.val
-Imports Test = org.junit.jupiter.api.Test
-Imports org.nd4j.common.primitives
-Imports SerializationUtils = org.nd4j.common.util.SerializationUtils
-Imports org.junit.jupiter.api.Assertions
+Imports DeepLearning4VB.org.nd4j.common.primitives
+Imports SerializationUtils = DeepLearning4VB.org.nd4j.common.util.SerializationUtils
 
 '
 ' *  ******************************************************************************

@@ -1,7 +1,6 @@
 ﻿Imports System
 Imports System.Collections.Generic
 Imports System.Text
-Imports ND4JClassLoading = org.nd4j.common.config.ND4JClassLoading
 
 '
 ' *  ******************************************************************************
@@ -28,14 +27,21 @@ Namespace org.nd4j.common.base
 
 	Public NotInheritable Class Preconditions
 		Private Shared ReadOnly FORMATTERS As IDictionary(Of String, PreconditionsFormat) = New Dictionary(Of String, PreconditionsFormat)()
-		Shared Sub New()
-			Dim sl As ServiceLoader(Of PreconditionsFormat) = ND4JClassLoading.loadService(GetType(PreconditionsFormat))
-			For Each pf As PreconditionsFormat In sl
-				Dim formatTags As IList(Of String) = pf.formatTags()
-				For Each s As String In formatTags
+
+		''' <summary>
+		''' Registers a custom message formatter. In the Java original formatters were discovered
+		''' through java.util.ServiceLoader; in .NET they must be registered explicitly (for example
+		''' by an ND4J backend when it initialises).
+		''' </summary>
+		Public Shared Sub registerFormat(ByVal pf As PreconditionsFormat)
+			If pf Is Nothing Then
+				Throw New ArgumentNullException(NameOf(pf))
+			End If
+			SyncLock FORMATTERS
+				For Each s As String In pf.formatTags()
 					FORMATTERS(s) = pf
 				Next s
-			Next pf
+			End SyncLock
 		End Sub
 
 		Private Sub New()
@@ -656,7 +662,7 @@ Namespace org.nd4j.common.base
 				Dim nextCustomTag As String = Nothing
 				For Each s As String In FORMATTERS.Keys
 					Dim idxThis As Integer = message.IndexOf(s, indexOfStart, StringComparison.Ordinal)
-					If idxThis > 0 AndAlso (nextCustom < 0 OrElse idxThis < nextCustom) Then
+					If idxThis >= 0 AndAlso (nextCustom < 0 OrElse idxThis < nextCustom) Then
 						nextCustom = idxThis
 						nextCustomTag = s
 					End If
@@ -678,7 +684,7 @@ Namespace org.nd4j.common.base
 						sb.Append("]")
 					End If
 				Else
-					If nextCustom < 0 OrElse (nextIdx > 0 AndAlso nextIdx < nextCustom) Then
+					If nextCustom < 0 OrElse (nextIdx >= 0 AndAlso nextIdx < nextCustom) Then
 						'%s tag
 						sb.Append(message.Substring(indexOfStart, nextIdx - indexOfStart)).Append(formatArg(args(i)))
 						indexOfStart = nextIdx + 2
@@ -712,32 +718,7 @@ Namespace org.nd4j.common.base
 			If o Is Nothing Then
 				Return "null"
 			End If
-
-			If o.GetType().GetElementType().isPrimitive() Then
-				If TypeOf o Is SByte() Then
-					Return java.util.Arrays.toString(DirectCast(o, SByte()))
-				ElseIf TypeOf o Is Integer() Then
-					Return java.util.Arrays.toString(DirectCast(o, Integer()))
-				ElseIf TypeOf o Is Long() Then
-					Return java.util.Arrays.toString(DirectCast(o, Long()))
-				ElseIf TypeOf o Is Single() Then
-					Return java.util.Arrays.toString(DirectCast(o, Single()))
-				ElseIf TypeOf o Is Double() Then
-					Return java.util.Arrays.toString(DirectCast(o, Double()))
-				ElseIf TypeOf o Is Char() Then
-					Return java.util.Arrays.toString(DirectCast(o, Char()))
-				ElseIf TypeOf o Is Boolean() Then
-					Return java.util.Arrays.toString(DirectCast(o, Boolean()))
-				ElseIf TypeOf o Is Short() Then
-					Return java.util.Arrays.toString(DirectCast(o, Short()))
-				Else
-					'Should never happen
-					Return o.ToString()
-				End If
-			Else
-				Dim arr() As Object = DirectCast(o, Object())
-				Return java.util.Arrays.toString(arr)
-			End If
+			Return Arrays.toString(o)
 		End Function
 
 	End Class

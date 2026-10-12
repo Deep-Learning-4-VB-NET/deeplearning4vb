@@ -1,6 +1,4 @@
-﻿Imports deeplearning4vb.org.nd4j.linalg.api.ndarray
-
-Friend Module RectangularArrays
+﻿Friend Module RectangularArrays
     Public Function RectangularStringArray(ByVal size1 As Integer, ByVal size2 As Integer) As String()()
         Dim newArray As String()() = New String(size1 - 1)() {}
         For array1 As Integer = 0 To size1 - 1
@@ -78,14 +76,6 @@ Friend Module RectangularArrays
         Return newArray
     End Function
 
-    Public Function RectangularINDArrayArray(ByVal size1 As Integer, ByVal size2 As Integer) As INDArray()()
-        Dim newArray As INDArray()() = New INDArray(size1 - 1)() {}
-        For array1 As Integer = 0 To size1 - 1
-            newArray(array1) = New INDArray(size2 - 1) {}
-        Next array1
-
-        Return newArray
-    End Function
 
     Public Function RectangularSByteArray(ByVal size1 As Integer, ByVal size2 As Integer, ByVal size3 As Integer) As SByte()()()
         Dim newArray As SByte()()() = New SByte(size1 - 1)()() {}

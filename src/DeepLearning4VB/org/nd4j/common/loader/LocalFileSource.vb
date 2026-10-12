@@ -1,6 +1,4 @@
 ﻿Imports System.IO
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Getter = lombok.Getter
 
 '
 ' *  ******************************************************************************

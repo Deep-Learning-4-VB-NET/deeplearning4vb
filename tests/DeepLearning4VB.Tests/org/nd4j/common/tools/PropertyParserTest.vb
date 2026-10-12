@@ -1,13 +1,7 @@
 ﻿Imports System
-Imports AfterEach = org.junit.jupiter.api.AfterEach
-Imports AfterClass = org.junit.AfterClass
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.fail
-Imports BeforeAll = org.junit.jupiter.api.BeforeAll
-Imports BeforeEach = org.junit.jupiter.api.BeforeEach
-Imports BeforeClass = org.junit.BeforeClass
-Imports Test = org.junit.jupiter.api.Test
-Imports PropertyParser = org.nd4j.common.tools.PropertyParser
+Imports PropertyParser = DeepLearning4VB.org.nd4j.common.tools.PropertyParser
 
 '
 ' *  ******************************************************************************

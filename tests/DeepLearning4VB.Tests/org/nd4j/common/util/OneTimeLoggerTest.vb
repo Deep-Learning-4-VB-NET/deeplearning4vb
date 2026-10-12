@@ -1,6 +1,4 @@
-﻿Imports Slf4j = lombok.extern.slf4j.Slf4j
-Imports Test = org.junit.jupiter.api.Test
-Imports OneTimeLogger = org.nd4j.common.util.OneTimeLogger
+﻿Imports OneTimeLogger = DeepLearning4VB.org.nd4j.common.util.OneTimeLogger
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertTrue
 

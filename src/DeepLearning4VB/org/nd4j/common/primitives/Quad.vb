@@ -1,8 +1,4 @@
 ﻿Imports System
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Builder = lombok.Builder
-Imports Data = lombok.Data
-Imports NoArgsConstructor = lombok.NoArgsConstructor
 
 '
 ' *  ******************************************************************************

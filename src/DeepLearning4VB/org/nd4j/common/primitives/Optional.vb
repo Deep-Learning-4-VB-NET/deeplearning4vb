@@ -1,6 +1,4 @@
-﻿Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-Imports NonNull = lombok.NonNull
-
+﻿
 '
 ' *  ******************************************************************************
 ' *  *

@@ -1,6 +1,4 @@
-﻿Imports Test = org.junit.jupiter.api.Test
-Imports BTools = org.nd4j.common.tools.BTools
-Imports org.junit.jupiter.api.Assertions
+﻿Imports BTools = DeepLearning4VB.org.nd4j.common.tools.BTools
 
 '
 ' *  ******************************************************************************

@@ -3,12 +3,6 @@ Imports System.Collections.Generic
 Imports System.IO
 Imports System.Text
 Imports Microsoft.VisualBasic
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-Imports FileUtils = org.apache.commons.io.FileUtils
-Imports FilenameUtils = org.apache.commons.io.FilenameUtils
-Imports IOUtils = org.apache.commons.io.IOUtils
-Imports StringUtils = org.apache.commons.lang3.StringUtils
 
 '
 ' *  ******************************************************************************
@@ -110,7 +104,7 @@ Namespace org.nd4j.common.loader
 'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
 'ORIGINAL LINE: public static FileBatch forFiles(File... files) throws IOException
 		Public Shared Function forFiles(ParamArray ByVal files() As File) As FileBatch
-			Return forFiles(java.util.Arrays.asList(files))
+			Return forFiles(Arrays.asList(files))
 		End Function
 
 		''' <summary>

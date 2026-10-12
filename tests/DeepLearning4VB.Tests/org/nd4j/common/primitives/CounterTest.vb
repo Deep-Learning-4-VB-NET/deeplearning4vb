@@ -1,8 +1,5 @@
 ﻿Imports System.Collections.Generic
-Imports Slf4j = lombok.extern.slf4j.Slf4j
-Imports Test = org.junit.jupiter.api.Test
-Imports org.nd4j.common.primitives
-Imports org.junit.jupiter.api.Assertions
+Imports DeepLearning4VB.org.nd4j.common.primitives
 
 '
 ' *  ******************************************************************************

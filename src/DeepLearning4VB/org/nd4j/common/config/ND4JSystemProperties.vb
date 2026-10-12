@@ -1,7 +1,4 @@
-﻿Imports Resources = org.nd4j.common.resources.Resources
-Imports ResourceFile = org.nd4j.common.resources.strumpf.ResourceFile
-Imports StrumpfResolver = org.nd4j.common.resources.strumpf.StrumpfResolver
-
+﻿
 '
 ' *  ******************************************************************************
 ' *  *

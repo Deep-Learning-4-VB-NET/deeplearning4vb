@@ -1,6 +1,5 @@
 ﻿import static org.junit.jupiter.api.Assertions.assertArrayEquals
-Imports Test = org.junit.jupiter.api.Test
-Imports ArrayUtil = org.nd4j.common.util.ArrayUtil
+Imports ArrayUtil = DeepLearning4VB.org.nd4j.common.util.ArrayUtil
 
 '
 ' *  ******************************************************************************

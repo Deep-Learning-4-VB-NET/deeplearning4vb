@@ -1,9 +1,7 @@
 ﻿Imports System
 Imports System.Collections.Generic
 Imports System.Text
-Imports RandomGenerator = org.apache.commons.math3.random.RandomGenerator
-Imports FastMath = org.apache.commons.math3.util.FastMath
-Imports org.nd4j.common.primitives
+Imports DeepLearning4VB.org.nd4j.common.primitives
 
 '
 ' *  ******************************************************************************

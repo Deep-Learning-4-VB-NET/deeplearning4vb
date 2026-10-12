@@ -1,5 +1,5 @@
 ﻿Imports System
-Imports ND4JSystemProperties = org.nd4j.common.config.ND4JSystemProperties
+Imports ND4JSystemProperties = DeepLearning4VB.org.nd4j.common.config.ND4JSystemProperties
 
 '
 ' *  ******************************************************************************

@@ -1,9 +1,7 @@
 ﻿Imports System
 Imports System.Collections.Generic
 Imports System.Linq
-Imports Ints = org.nd4j.shade.guava.primitives.Ints
-Imports Getter = lombok.Getter
-Imports Preconditions = org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 '
 ' *  ******************************************************************************
@@ -154,7 +152,7 @@ Namespace org.nd4j.common.collection
 			End Function
 
 			Public Overrides Function GetHashCode() As Integer
-				Return java.util.Arrays.hashCode(backingArray)
+				Return Arrays.hashCode(backingArray)
 			End Function
 
 			Public Overridable Function CompareTo(ByVal intArray As IntArray) As Integer Implements IComparable(Of IntArray).CompareTo
