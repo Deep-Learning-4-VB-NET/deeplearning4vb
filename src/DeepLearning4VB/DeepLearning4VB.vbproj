@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DeepLearning4VB</RootNamespace>
+    <AssemblyName>DeepLearning4VB</AssemblyName>
+    <OptionStrict>Off</OptionStrict>
+    <NoWarn>$(NoWarn);42016;41999;42017;42018;42019;42032;42036;42020;42021;42022</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Import Include="System" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Linq" />
+    <Import Include="Microsoft.VisualBasic" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TEMP: ArrayUtil.vb is being converted separately -->
+    <Compile Remove="org/nd4j/common/util/ArrayUtil.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DeepLearning4VB.Tests" />
+  </ItemGroup>
+
+</Project>

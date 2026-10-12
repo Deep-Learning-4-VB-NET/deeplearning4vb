@@ -1,0 +1,28 @@
+# Build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.binlog
+
+# Visual Studio / IDE
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vsidx
+*.lock.json
+.idea/
+*.swp
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+
+# OS
+Thumbs.db
+.DS_Store
