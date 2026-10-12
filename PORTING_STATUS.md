@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-12.
+Last updated: 2026-10-12 (step 1: common modules complete).
 
 ## Where the code came from
 
@@ -23,9 +23,9 @@ compiled:
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting `net481`, `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`, `.gitignore`/`.gitattributes`; the committed `.vs`, `obj` and `packages` folders were removed. |
-| `nd4j-common` (library) | 73 source files, about 15,500 lines, compile with zero errors and zero warnings. |
-| Tests | 20 test files, 120 tests, all passing: the 13 DL4J JUnit test classes for `nd4j-common` ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers and the logging facade. |
-| Everything else | Moved unchanged to `unported/`, 4,881 files, excluded from the build. |
+| `nd4j-common` and `deeplearning4j-common` (library) | 103 source files, about 21,600 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). |
+| Tests | 35 test files, 185 tests, all passing: the DL4J JUnit test classes for `nd4j-common` and `deeplearning4j-common` ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation and class loading. |
+| Everything else | Moved unchanged to `unported/`, 4,840 files, excluded from the build. |
 
 ## Module table
 
@@ -36,7 +36,7 @@ API, which in turn needs a tensor backend.
 
 | Module | Files | Needs | Status |
 | --- | ---: | --- | --- |
-| nd4j/nd4j-common | 34 remaining | Jackson (7) | **Ported** except the files listed below |
+| nd4j/nd4j-common | 4 remaining | none | **Ported** except the four URL/VFS files listed below |
 | nd4j/nd4j-common-tests | 9 | JavaCPP (1) | Not started |
 | nd4j/nd4j-backends | 1,812 | JavaCPP native backend (116), INDArray (1,044), TensorFlow import (152), ONNX (52), Jackson (74) | Not started. This is the tensor API and the native backend: the core of ND4J. |
 | nd4j/nd4j-parameter-server-parent | 168 | Netty/Aeron (23), INDArray (43) | Not started |
@@ -48,7 +48,7 @@ API, which in turn needs a tensor backend.
 | datavec/datavec-local | 61 | INDArray (6), Arrow (1) | Not started |
 | datavec/datavec-spark | 96 | Spark (72) | Not started; Spark has no .NET equivalent here |
 | datavec/datavec-arrow, datavec-excel, datavec-jdbc | 22 | Arrow (5) | Not started |
-| deeplearning4j/deeplearning4j-common | 11 | none | Not started; small and portable |
+| deeplearning4j/deeplearning4j-common | 0 | none | **Ported** (class loading, resources, system properties, temp files) |
 | deeplearning4j/deeplearning4j-nn | 495 | INDArray (343), Jackson (104) | Not started. Needs the tensor API. |
 | deeplearning4j/deeplearning4j-core | 267 | INDArray (174), Jackson (13) | Not started |
 | deeplearning4j/deeplearning4j-data | 80 | INDArray (13) | Not started |
@@ -62,8 +62,8 @@ API, which in turn needs a tensor backend.
 | python4j | 26 | JavaCPP/CPython (8) | Not started |
 | contrib | 30 | Jackson, INDArray | Not started; build tooling for the Java project, probably not needed |
 
-Suggested order for the next steps: `deeplearning4j-common`, the Jackson-free parts of
-`datavec-api`, then a managed implementation of the ND4J tensor API (`INDArray`, `DataBuffer`,
+Suggested order for the next steps: the core of `datavec-api` (writables, record readers, the
+transform pipeline), then a managed implementation of the ND4J tensor API (`INDArray`, `DataBuffer`,
 `Shape`, the op executioner) which unblocks `nd4j-backends`, `deeplearning4j-nn` and everything
 above them.
 
@@ -71,17 +71,14 @@ above them.
 
 | File(s) | Why it was deferred |
 | --- | --- |
-| `primitives/serde/*` (4), `holder/ObjectMapperHolder`, `validation/*` (2) | Jackson JSON serializers; need a .NET JSON library decision first. |
-| `resources/*`, `resources/strumpf/*` (5) | The "Strumpf" test-resource downloader: HTTP downloads, Jackson, commons-compress. |
-| `io/ClassPathResource`, `io/Resource`, `io/AbstractResource`, `io/AbstractFileResolvingResource`, `io/ResourceUtils`, `io/VfsUtils`, `io/VfsResource`, `io/InputStreamSource` | Spring's classpath/VFS resource abstraction; .NET uses embedded resources instead. |
-| `io/StringUtils`, `io/ObjectUtils`, `io/CollectionUtils`, `io/ReflectionUtils`, `io/Assert` | Copies of Spring utilities built on Java reflection; nothing in the module uses them. |
-| `util/ArchiveUtils` | commons-compress (tar, tar.gz, zip extraction). |
-| `util/SerializationUtils` | Java object serialization. |
-| `util/NioUtil` | `java.nio` buffer copies. |
-| `util/SynchronizedTable` | Guava `Table`. |
-| `collections/WeakIdentityHashMap` | `java.lang.ref.ReferenceQueue`; would need a redesign on `ConditionalWeakTable`. |
-| `config/ND4JClassLoading` | Java class loader / `ServiceLoader` lookups. |
-| tests `ClassPathResourceTest`, `TestArchiveUtils`, `TestStrumpf` | Tests of the deferred classes. |
+| `io/AbstractFileResolvingResource`, `io/ResourceUtils` | Resolve `jar:`/`file:` URLs and `URLConnection`s; `ClassPathResource` was re-implemented on search directories and embedded resources instead, so nothing needs them. |
+| `io/VfsUtils`, `io/VfsResource` | JBoss VFS reflection hooks; no .NET counterpart. |
+
+The Jackson serializer/deserializer pair for `AtomicDouble`/`AtomicBoolean` (`primitives/serde`) was
+dropped rather than deferred: System.Text.Json converters are subclasses of `JsonConverter(Of T)`
+whose `Read` method takes the ref struct `Utf8JsonReader`, and the VB.NET compiler cannot declare
+such a parameter. Those two types therefore serialize through their public `Value` property
+(`{"Value": 1.5}` instead of `1.5`).
 
 ## Deliberate differences from the Java original
 
@@ -119,6 +116,35 @@ These are the intentional exceptions:
   `System.Diagnostics.Trace`; applications can replace it through `LoggerFactory.Provider`.
 - **Integer arithmetic wraps on overflow** (`RemoveIntegerChecks` in `Directory.Build.props`),
   matching Java, because hash and shape calculations rely on it.
+
+- **Class loading**: `ND4JClassLoading`/`DL4JClassLoading` search a configurable set of assemblies
+  (default: every assembly loaded in the AppDomain) instead of a class loader, and
+  `loadService(Of S)` returns explicitly registered instances (`registerService`) plus one instance of
+  every concrete implementation with a public parameterless constructor that it can find.
+- **`ClassPathResource`** resolves a path first as a file under `ClassPathResource.SearchDirectories`
+  (application base directory, current directory and their `resources` sub-folders, plus anything
+  added with `addSearchDirectory`) and then as an embedded manifest resource. Embedded resources are
+  extracted to a temporary file by `File`/`getTempFileFromArchive`, like jar entries were in Java.
+- **`StrumpfResolver`** passes the reference file (not its directory) to `ResourceFile.fromFile`,
+  which the Java code got wrong; `ResourceFile` parses the reference JSON with System.Text.Json.
+- **`Downloader`** retries inside one lock-file acquisition; the Java code recursed into the lock
+  while still holding it, which can never succeed. `file:` URLs are copied locally; everything else
+  is fetched with `HttpClient` (TLS 1.2 is enabled for .NET Framework).
+- **`ArchiveUtils`** uses a small built-in tar reader (ustar, GNU long names, pax paths); zip entries
+  that escape the destination directory are rejected. Like Java, `unzipFileTo` deletes the archive.
+- **`SerializationUtils`** uses the `BinaryFormatter` for `[Serializable]` types and `Byte()` arrays.
+- **`SynchronizedTable.get`** delegates to the wrapped table (the Java method called itself);
+  `JavaCompat.HashBasedTable` is the Guava table implementation it wraps.
+- **`WeakIdentityHashMap`** sweeps collected keys on every operation instead of using a reference queue.
+- **Spring utilities (`io/StringUtils`, `ObjectUtils`, `CollectionUtils`, `Assert`, `ReflectionUtils`)**:
+  `Locale` is `CultureInfo` (variants dropped), `Properties` is `JavaCompat.Properties`,
+  `byte[]` is `Byte()`, identity hash codes come from `RuntimeHelpers.GetHashCode`, checked-exception
+  helpers are constant (`isCheckedException` false, `declaresException` false), `makeAccessible` is a
+  no-op, `isEqualsMethod`/`isHashCodeMethod`/`isToStringMethod` match the .NET names, and generic
+  overloads replace raw collections. Details are in each class's XML comments.
+- **`ValidationResult`** keeps Lombok's builder as `ValidationResult.builder()` returning a
+  `ValidationResultBuilder`; `Nd4jCommonValidator` validates JSON with `JsonDocument` and accepts
+  only a JSON object as the root, as the Java `Map` deserialization did.
 
 ## Porting rules
 

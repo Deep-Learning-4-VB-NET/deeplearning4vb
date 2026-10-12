@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- test resources: copied next to the test assembly (found through ClassPathResource's search directories) -->
+    <None Include="resources\**" Exclude="resources\embedded\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- one resource is also embedded, to exercise the manifest-resource lookup -->
+    <EmbeddedResource Include="resources\embedded\hello.txt" LogicalName="embedded/hello.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DeepLearning4VB\DeepLearning4VB.vbproj" />
   </ItemGroup>
 

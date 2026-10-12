@@ -13,7 +13,7 @@ A Visual Basic .NET port of [Eclipse Deeplearning4j](https://github.com/deeplear
 
 - Visual Studio 2026 with the ".NET desktop development" workload (Visual Studio 2022 17.14 or
   newer also works). The solution uses the `.slnx` format.
-- .NET SDK 9.0.200 or newer for command-line builds (`dotnet build`, `dotnet test`).
+- .NET SDK 9.0.200 or newer for command-line builds (`dotnet build`, `dotnet test`). The first build restores the `System.Text.Json` NuGet package.
 - .NET Framework 4.8.1 Developer Pack (installed with the Visual Studio workload).
 
 ## Build and test
@@ -54,7 +54,15 @@ The `nd4j-common` module, the dependency-free utilities every other DL4J module 
 - `org.nd4j.common.function`: the functional interfaces and `FunctionalUtils`.
 - `org.nd4j.common.loader`: `Source`, `Loader`, `FileBatch` (zip based, on `System.IO.Compression`).
 - `org.nd4j.common.tools`: `BTools`, `InfoLine`, `InfoValues`, `PropertyParser`, `SIS`.
-- `org.nd4j.common.config`: the ND4J system-property and environment-variable names.
+- `org.nd4j.common.io`: `ClassPathResource` (files under configurable search directories or embedded resources), plus the Spring-derived `StringUtils`, `ObjectUtils`, `CollectionUtils`, `Assert`, `ReflectionUtils`.
+- `org.nd4j.common.resources`: `Resources`, `Downloader` (MD5-verified downloads with retries) and the Strumpf resource-reference resolver with its local cache.
+- `org.nd4j.common.validation`: `Nd4jCommonValidator`, `ValidationResult`.
+- `org.nd4j.common.util`: also `ArchiveUtils` (zip, jar, tar, tar.gz, gz), `SerializationUtils`, `NioUtil`, `SynchronizedTable`.
+- `org.nd4j.common.collections`: `WeakIdentityHashMap`.
+- `org.nd4j.common.config`: the ND4J system-property and environment-variable names, and `ND4JClassLoading` (type lookup and service discovery over the loaded assemblies).
+
+The `deeplearning4j-common` module: `DL4JClassLoading` (reflective instantiation), `DL4JResources`
+(download URL and local resource directories), `DL4JFileUtils`, and the DL4J system-property names.
 
 A small taste:
 

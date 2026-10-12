@@ -44,7 +44,11 @@ Namespace org.nd4j.common.util
         ''' <param name="suffix">Suffix for the file name; ".tmp" is used when Nothing.</param>
         ''' <returns>The full path of the created file.</returns>
         Public Shared Function createTempFile(ByVal prefix As String, ByVal suffix As String) As String
-            Dim dir As String = TempDir
+            Return CreateUniqueTempFile(TempDir, prefix, suffix)
+        End Function
+
+        ''' <summary>Creates a new, empty, uniquely named file in <paramref name="dir"/> (shared with DL4JFileUtils).</summary>
+        Friend Shared Function CreateUniqueTempFile(ByVal dir As String, ByVal prefix As String, ByVal suffix As String) As String
             Directory.CreateDirectory(dir)
             If suffix Is Nothing Then
                 suffix = ".tmp"
