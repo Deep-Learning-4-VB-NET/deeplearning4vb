@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-12 (step 1: common modules complete).
+Last updated: 2026-10-13 (step 2 in progress: datavec-api wave A, the writables, I/O, configuration, splits and record metadata, is complete).
 
 ## Where the code came from
 
@@ -23,9 +23,9 @@ compiled:
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting `net481`, `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`, `.gitignore`/`.gitattributes`; the committed `.vs`, `obj` and `packages` folders were removed. |
-| `nd4j-common` and `deeplearning4j-common` (library) | 103 source files, about 21,600 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). |
-| Tests | 35 test files, 185 tests, all passing: the DL4J JUnit test classes for `nd4j-common` and `deeplearning4j-common` ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation and class loading. |
-| Everything else | Moved unchanged to `unported/`, 4,840 files, excluded from the build. |
+| `nd4j-common`, `deeplearning4j-common` and the first part of `datavec-api` (library) | 194 source files, about 34,400 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). Includes managed stand-ins for the external libraries DataVec uses: a Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`) and `java.util.concurrent.TimeUnit`. |
+| Tests | 56 test files, 395 tests, all passing: the DL4J JUnit test classes for `nd4j-common`, `deeplearning4j-common` and the ported `datavec-api` packages ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation, class loading, writables, splits, configuration, record metadata and the Joda/t-digest/TimeUnit stand-ins. |
+| Everything else | Moved unchanged to `unported/`, 4,750 files, excluded from the build. |
 
 ## Module table
 
@@ -43,7 +43,7 @@ API, which in turn needs a tensor backend.
 | nd4j/nd4j-serde | 32 | Netty/Aeron (17), INDArray (14), Arrow, Spark | Not started |
 | nd4j/samediff-import | 21 | INDArray (16), TensorFlow (2) | Not started |
 | nd4j/nd4j-onnxruntime, nd4j-tensorflow, nd4j-tensorflow-lite, nd4j-tvm | 16 | JavaCPP bindings, INDArray | Not started |
-| datavec/datavec-api | 459 | Jackson (143), INDArray (21) | Not started. Mostly pure Java; a good candidate once Jackson is replaced by a .NET JSON serializer. |
+| datavec/datavec-api | 315 remaining | INDArray (9 files) | **In progress.** Ported: `writable` (+comparator, batch), `io` (+converters, filters, labels, serializers), `exceptions`, `util` (+files), `conf`, `split` (+partition, streams), `records/metadata`. Next: the transform core (schema, metadata, conditions, filters, quality), record readers/writers/formats, then the transform implementations, analysis, sequences and the JSON serde (`TransformProcess`). |
 | datavec/datavec-data | 55 | JavaCPP (24), Jackson (14), INDArray (18) | Not started |
 | datavec/datavec-local | 61 | INDArray (6), Arrow (1) | Not started |
 | datavec/datavec-spark | 96 | Spark (72) | Not started; Spark has no .NET equivalent here |
@@ -62,8 +62,8 @@ API, which in turn needs a tensor backend.
 | python4j | 26 | JavaCPP/CPython (8) | Not started |
 | contrib | 30 | Jackson, INDArray | Not started; build tooling for the Java project, probably not needed |
 
-Suggested order for the next steps: the core of `datavec-api` (writables, record readers, the
-transform pipeline), then a managed implementation of the ND4J tensor API (`INDArray`, `DataBuffer`,
+Suggested order for the next steps: the rest of `datavec-api` (record readers, the transform
+pipeline), then a managed implementation of the ND4J tensor API (`INDArray`, `DataBuffer`,
 `Shape`, the op executioner) which unblocks `nd4j-backends`, `deeplearning4j-nn` and everything
 above them.
 
@@ -79,6 +79,14 @@ dropped rather than deferred: System.Text.Json converters are subclasses of `Jso
 whose `Read` method takes the ref struct `Utf8JsonReader`, and the VB.NET compiler cannot declare
 such a parameter. Those two types therefore serialize through their public `Value` property
 (`{"Value": 1.5}` instead of `1.5`).
+
+## datavec-api: files left in `unported/` so far
+
+| File(s) | Why it was deferred |
+| --- | --- |
+| `writable/NDArrayWritable`, `writable/batch/NDArrayRecordBatch`, `util/ndarray/*`, `timeseries/util/*`, `transform/ndarray/*`, `transform/analysis/counter/NDArrayAnalysisCounter`, `transform/analysis/histogram/NDArrayHistogramCounter`, `transform/metadata/NDArrayMetaData`, `transform/transform/string/StringListTo*NDArrayTransform` | Need `INDArray`; wait for the managed tensor engine (step 3). |
+| `vector/*` | Vectorizer interfaces over `INDArray`; same reason. |
+| `transform/ui/*` | FreeMarker HTML templates; the templates are not in the dump. |
 
 ## Deliberate differences from the Java original
 
@@ -145,6 +153,28 @@ These are the intentional exceptions:
 - **`ValidationResult`** keeps Lombok's builder as `ValidationResult.builder()` returning a
   `ValidationResultBuilder`; `Nd4jCommonValidator` validates JSON with `JsonDocument` and accepts
   only a JSON object as the root, as the Java `Map` deserialization did.
+
+- **Joda-Time stand-in (`org.joda.time`)**: `DateTimeZone` wraps `TimeZoneInfo`; ids are UTC and its aliases,
+  fixed offsets (`+05:30`), Windows zone ids and a built-in IANA-to-Windows table (extend it with
+  `DateTimeZone.addIanaMapping`). `DateTimeFormat.forPattern` supports the Joda pattern letters
+  (G C Y x w e E y D M d a K h H k m s S z Z and quoted literals); zone names (`z`) print but do not parse,
+  numeric fields not followed by another numeric field accept 1 to 9 digits, and the default culture is the
+  invariant one. With System.Text.Json a `DateTimeZone` serializes as `{"ID":"UTC"}` and a
+  `DateTimeFieldType` as `{"Name":"hourOfDay"}` (Jackson wrote bare strings).
+- **t-digest stand-in (`com.tdunning.math.stats.TDigest`)**: a managed merging digest with the k1 scale
+  function; it keeps roughly half as many centroids as the Java `MergingDigest` for the same compression
+  but meets the same accuracy in the tests. It serializes with System.Text.Json as compression, min, max
+  and the centroid means/weights (Jackson used Java serialization in base64), omitting min/max while empty.
+- **`JavaCompat.TimeUnit`** is an enum; `toMillis`, `convert`, `sleep` and friends are extension methods
+  (import `DeepLearning4VB.JavaCompat`). `TimeUnitValueOf` replaces `TimeUnit.valueOf`.
+- **datavec-api wave A**: Java `byte` is `SByte` (`ByteWritable`, `DataInput.readByte`), `byte[]` is `Byte()`;
+  `java.io.File` arguments are path strings and `URI`s are `System.Uri` (see `FileSplit`, `URIUtil`);
+  `URIUtil.getPath` keeps Java's leading slash for Windows drive paths (`/C:/dir/file`);
+  `TransformSplit.length()` returns the source split's length (Java's `length` field);
+  `Configuration` resources are loaded from files, URIs or streams (XML) and a stream resource is
+  consumed on first load, as in Java; the `SerializationFactory` looks serializations up by assembly-qualified
+  or simple type name through `ND4JClassLoading`. `DataInputStream` reads big-endian with proper widening
+  (a `Byte << 8` stays a `Byte` in VB, which was the one real bug the tests caught).
 
 ## Porting rules
 

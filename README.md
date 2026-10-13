@@ -64,6 +64,15 @@ The `nd4j-common` module, the dependency-free utilities every other DL4J module 
 The `deeplearning4j-common` module: `DL4JClassLoading` (reflective instantiation), `DL4JResources`
 (download URL and local resource directories), `DL4JFileUtils`, and the DL4J system-property names.
 
+The first part of the `datavec-api` module (the data pipeline): `org.datavec.api.writable` (the
+`Writable` value types, comparators, record batches), `io` (Hadoop-style binary I/O, converters,
+path filters, label generators, serializations), `conf` (`Configuration`), `split` (file, string,
+collection, stream and numbered-file input splits with partitioners), `util` and `records.metadata`.
+
+Managed stand-ins for the external libraries DataVec uses, so no further NuGet packages are needed:
+a Joda-Time subset (`org.joda.time.DateTimeZone`, `DateTime`, `DateTimeFieldType`,
+`format.DateTimeFormat`), a t-digest (`com.tdunning.math.stats.TDigest`) and `JavaCompat.TimeUnit`.
+
 A small taste:
 
 ```vb
