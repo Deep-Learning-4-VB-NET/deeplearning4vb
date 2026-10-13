@@ -128,12 +128,13 @@ Namespace JavaCompat
 
         Public Function readShort() As Short Implements DataInput.readShort
             readFully(scratch, 0, 2)
-            Return CShort((scratch(0) << 8) Or scratch(1))
+            ' widen before shifting: a Byte << 8 stays a Byte in VB (the shift count is masked to 3 bits)
+            Return CShort((CInt(scratch(0)) << 8) Or CInt(scratch(1)))
         End Function
 
         Public Function readUnsignedShort() As Integer Implements DataInput.readUnsignedShort
             readFully(scratch, 0, 2)
-            Return (scratch(0) << 8) Or scratch(1)
+            Return (CInt(scratch(0)) << 8) Or CInt(scratch(1))
         End Function
 
         Public Function readChar() As Char Implements DataInput.readChar
@@ -142,7 +143,7 @@ Namespace JavaCompat
 
         Public Function readInt() As Integer Implements DataInput.readInt
             readFully(scratch, 0, 4)
-            Return (scratch(0) << 24) Or (scratch(1) << 16) Or (scratch(2) << 8) Or scratch(3)
+            Return (CInt(scratch(0)) << 24) Or (CInt(scratch(1)) << 16) Or (CInt(scratch(2)) << 8) Or CInt(scratch(3))
         End Function
 
         Public Function readLong() As Long Implements DataInput.readLong
