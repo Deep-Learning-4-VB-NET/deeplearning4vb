@@ -29,7 +29,6 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports RecordMetaDataLineInterval = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaDataLineInterval
 Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.csv
 
@@ -47,7 +46,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         Private maxLinesPerSequence As Integer
         Private delimiter As String
         Private stride As Integer
-        Private queue As LinkedList(Of IList(Of Writable))
+        Private queue As LinkedList(Of IList(Of writable.Writable))
         Private exhausted As Boolean
 
         ''' <summary>
@@ -87,7 +86,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Me.delimiter = delimiter
             Me.maxLinesPerSequence = maxLinesPerSequence
             Me.stride = stride
-            Me.queue = New LinkedList(Of IList(Of Writable))()
+            Me.queue = New LinkedList(Of IList(Of writable.Writable))()
             Me.exhausted = False
         End Sub
 
@@ -102,7 +101,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return moreInCsv OrElse moreInQueue
         End Function
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             ' try polling next(), otherwise empty the queue
             ' loop according to stride size
             For i As Integer = 0 To stride - 1
@@ -121,7 +120,7 @@ Namespace org.datavec.api.records.reader.impl.csv
                 End If
             Next i
 
-            Dim sequence As List(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
+            Dim sequence As List(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
             sequence.AddRange(queue)
 
             If exhausted AndAlso queue.Count = 1 Then
@@ -131,13 +130,13 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return sequence
         End Function
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Throw New NotSupportedException("Reading CSV data from DataInputStream not yet implemented")
         End Function
 
         Public Overridable Function nextSequence() As SequenceRecord Implements SequenceRecordReader.nextSequence
             Dim lineBefore As Integer = lineIndex
-            Dim record As IList(Of IList(Of Writable)) = sequenceRecord()
+            Dim record As IList(Of IList(Of writable.Writable)) = sequenceRecord()
             Dim lineAfter As Integer = lineIndex + queue.Count
             Dim uri As Uri = (If(locations Is Nothing OrElse locations.Length < 1, Nothing, locations(splitIndex)))
             Dim meta As RecordMetaData = New RecordMetaDataLineInterval(lineBefore, lineAfter - 1, uri, GetType(CSVVariableSlidingWindowRecordReader))
@@ -162,7 +161,7 @@ Namespace org.datavec.api.records.reader.impl.csv
 
         Public Overrides Sub reset()
             MyBase.reset()
-            queue = New LinkedList(Of IList(Of Writable))()
+            queue = New LinkedList(Of IList(Of writable.Writable))()
             exhausted = False
         End Sub
     End Class

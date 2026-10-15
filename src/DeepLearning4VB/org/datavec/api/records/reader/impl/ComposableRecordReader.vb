@@ -28,7 +28,6 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports BaseRecordReader = DeepLearning4VB.org.datavec.api.records.reader.BaseRecordReader
 Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl
 
@@ -55,8 +54,8 @@ Namespace org.datavec.api.records.reader.impl
 
         End Sub
 
-        Public Overrides Function [next]() As IList(Of Writable)
-            Dim ret As List(Of Writable) = New List(Of Writable)()
+        Public Overrides Function [next]() As IList(Of writable.Writable)
+            Dim ret As List(Of writable.Writable) = New List(Of writable.Writable)()
             If Me.hasNext() Then
                 For Each reader As RecordReader In readers
                     ret.AddRange(reader.next())
@@ -116,7 +115,7 @@ Namespace org.datavec.api.records.reader.impl
             Return True
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             Throw New NotSupportedException("Generating records from DataInputStream not supported for ComposableRecordReader")
         End Function
 

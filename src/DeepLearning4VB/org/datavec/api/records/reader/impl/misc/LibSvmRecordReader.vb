@@ -1,6 +1,4 @@
-﻿Imports System
-Imports Slf4j = lombok.extern.slf4j.Slf4j
-Imports Configuration = org.datavec.api.conf.Configuration
+Imports System
 
 '
 ' *  ******************************************************************************
@@ -20,25 +18,19 @@ Imports Configuration = org.datavec.api.conf.Configuration
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.reader.impl.misc
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class LibSvmRecordReader extends SVMLightRecordReader
-	<Serializable>
-	Public Class LibSvmRecordReader
-		Inherits SVMLightRecordReader
+    ''' <summary>LibSVM is the same format as SVMLight; this reader only exists for the name.</summary>
+    <Serializable>
+    Public Class LibSvmRecordReader
+        Inherits SVMLightRecordReader
 
-		Public Sub New()
-			MyBase.New()
-		End Sub
+        Public Sub New()
+            MyBase.New()
+        End Sub
 
-		Public Overrides WriteOnly Property Conf As Configuration
-			Set(ByVal conf As Configuration)
-				MyBase.Conf = conf
-			End Set
-		End Property
-	End Class
+    End Class
 
 End Namespace

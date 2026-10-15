@@ -1,8 +1,8 @@
-﻿Imports Configuration = org.datavec.api.conf.Configuration
-Imports DataVecException = org.datavec.api.exceptions.DataVecException
-Imports OutputFormat = org.datavec.api.formats.output.OutputFormat
-Imports RecordWriter = org.datavec.api.records.writer.RecordWriter
-Imports CSVRecordWriter = org.datavec.api.records.writer.impl.csv.CSVRecordWriter
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports OutputFormat = DeepLearning4VB.org.datavec.api.formats.output.OutputFormat
+Imports OutputFormatConstants = DeepLearning4VB.org.datavec.api.formats.output.OutputFormatConstants
+Imports RecordWriter = DeepLearning4VB.org.datavec.api.records.writer.RecordWriter
+Imports CSVRecordWriter = DeepLearning4VB.org.datavec.api.records.writer.impl.csv.CSVRecordWriter
 
 '
 ' *  ******************************************************************************
@@ -22,20 +22,19 @@ Imports CSVRecordWriter = org.datavec.api.records.writer.impl.csv.CSVRecordWrite
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.output.impl
 
+    ''' <summary>Output format creating a <see cref="CSVRecordWriter"/>.</summary>
+    Public Class CSVOutputFormat
+        Implements OutputFormat
 
-	Public Class CSVOutputFormat
-		Implements OutputFormat
+        Public Overridable Function createWriter(ByVal conf As Configuration) As RecordWriter Implements OutputFormat.createWriter
+            Dim outputPath As String = conf.get(OutputFormatConstants.OUTPUT_PATH, ".")
+            Return New CSVRecordWriter()
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.writer.RecordWriter createWriter(org.datavec.api.conf.Configuration conf) throws org.datavec.api.exceptions.DataVecException
-		Public Overridable Function createWriter(ByVal conf As Configuration) As RecordWriter Implements OutputFormat.createWriter
-			Dim outputPath As String = conf.get(OutputFormat.OUTPUT_PATH, ".")
-			Return New CSVRecordWriter()
-		End Function
-	End Class
+    End Class
 
 End Namespace

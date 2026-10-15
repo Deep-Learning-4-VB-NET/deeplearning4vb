@@ -30,13 +30,12 @@ Imports RecordMetaDataIndex = DeepLearning4VB.org.datavec.api.records.metadata.R
 Imports BaseRecordReader = DeepLearning4VB.org.datavec.api.records.reader.BaseRecordReader
 Imports RecordIterator = DeepLearning4VB.org.datavec.api.records.reader.JavaIterator(Of System.Collections.Generic.IEnumerable(Of DeepLearning4VB.org.datavec.api.writable.Writable))
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.collection
 
     ''' <summary>
     ''' A record reader over an in-memory collection of records. Java's
-    ''' <c>Collection&lt;? extends Collection&lt;Writable&gt;&gt;</c> is <c>IEnumerable(Of IEnumerable(Of Writable))</c>
+    ''' <c>Collection&lt;? extends Collection&lt;writable.Writable&gt;&gt;</c> is <c>IEnumerable(Of IEnumerable(Of writable.Writable))</c>
     ''' (the only covariant collection interface in .NET), so any list of lists of writables can be passed.
     ''' </summary>
     <Serializable>
@@ -45,10 +44,10 @@ Namespace org.datavec.api.records.reader.impl.collection
 
         <NonSerialized>
         Private records As RecordIterator
-        Private ReadOnly original As IEnumerable(Of IEnumerable(Of Writable))
+        Private ReadOnly original As IEnumerable(Of IEnumerable(Of writable.Writable))
         Private count As Integer = 0
 
-        Public Sub New(ByVal records As IEnumerable(Of IEnumerable(Of Writable)))
+        Public Sub New(ByVal records As IEnumerable(Of IEnumerable(Of writable.Writable)))
             Me.records = New RecordIterator(records.GetEnumerator())
             Me.original = records
         End Sub
@@ -61,9 +60,9 @@ Namespace org.datavec.api.records.reader.impl.collection
             initialize(split)
         End Sub
 
-        Public Overrides Function [next]() As IList(Of Writable)
-            Dim nextRecord As IEnumerable(Of Writable) = records.next()
-            Dim record As IList(Of Writable) = If(TypeOf nextRecord Is IList(Of Writable), DirectCast(nextRecord, IList(Of Writable)), New List(Of Writable)(nextRecord))
+        Public Overrides Function [next]() As IList(Of writable.Writable)
+            Dim nextRecord As IEnumerable(Of writable.Writable) = records.next()
+            Dim record As IList(Of writable.Writable) = If(TypeOf nextRecord Is IList(Of writable.Writable), DirectCast(nextRecord, IList(Of writable.Writable)), New List(Of writable.Writable)(nextRecord))
             invokeListeners(record)
             count += 1
             Return record
@@ -101,7 +100,7 @@ Namespace org.datavec.api.records.reader.impl.collection
             Return True
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             Throw New NotSupportedException("Generating records from DataInputStream not supported for CollectionRecordReader")
         End Function
 
@@ -131,20 +130,20 @@ Namespace org.datavec.api.records.reader.impl.collection
             If TypeOf original Is System.Collections.IList Then
                 Dim asList As System.Collections.IList = DirectCast(original, System.Collections.IList)
                 For Each i As Integer In toLoad
-                    Dim l As IList(Of Writable) = New List(Of Writable)(DirectCast(asList(i), IEnumerable(Of Writable)))
+                    Dim l As IList(Of writable.Writable) = New List(Of writable.Writable)(DirectCast(asList(i), IEnumerable(Of writable.Writable)))
                     Dim r As Record = New RecordImpl(l, New RecordMetaDataIndex(i, Nothing, GetType(CollectionRecordReader)))
                     [out].Add(r)
                 Next i
             Else
                 Dim i As Integer = 0
-                For Each c As IEnumerable(Of Writable) In original
+                For Each c As IEnumerable(Of writable.Writable) In original
                     If Not toLoad.Contains(i) Then
                         i += 1
                         Continue For
                     Else
                         i += 1
                     End If
-                    Dim l As IList(Of Writable) = If(TypeOf c Is IList(Of Writable), DirectCast(c, IList(Of Writable)), New List(Of Writable)(c))
+                    Dim l As IList(Of writable.Writable) = If(TypeOf c Is IList(Of writable.Writable), DirectCast(c, IList(Of writable.Writable)), New List(Of writable.Writable)(c))
                     Dim r As Record = New RecordImpl(l, New RecordMetaDataIndex(i - 1, Nothing, GetType(CollectionRecordReader)))
                     [out].Add(r)
                 Next c

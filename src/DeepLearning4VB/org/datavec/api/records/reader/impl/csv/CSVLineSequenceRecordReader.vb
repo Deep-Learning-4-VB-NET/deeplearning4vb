@@ -26,7 +26,6 @@ Imports SequenceRecord = DeepLearning4VB.org.datavec.api.records.SequenceRecord
 Imports SequenceRecordImpl = DeepLearning4VB.org.datavec.api.records.impl.SequenceRecord
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
 Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.csv
 
@@ -63,14 +62,14 @@ Namespace org.datavec.api.records.reader.impl.csv
             MyBase.New(skipNumLines, delimiter, quote)
         End Sub
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Return nextSequence().getSequenceRecord()
         End Function
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
-            Dim l As IList(Of Writable) = record(uri, dataInputStream)
-            Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
-            For Each w As Writable In l
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
+            Dim l As IList(Of writable.Writable) = record(uri, dataInputStream)
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
+            For Each w As writable.Writable In l
                 [out].Add(JavaCollections.singletonList(w))
             Next w
             Return [out]
@@ -94,9 +93,9 @@ Namespace org.datavec.api.records.reader.impl.csv
         End Function
 
         Protected Friend Overridable Function convert(ByVal r As Record) As SequenceRecord
-            Dim line As IList(Of Writable) = r.getRecord()
-            Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
-            For Each w As Writable In line
+            Dim line As IList(Of writable.Writable) = r.getRecord()
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
+            For Each w As writable.Writable In line
                 [out].Add(JavaCollections.singletonList(w))
             Next w
             Return New SequenceRecordImpl([out], r.MetaData)

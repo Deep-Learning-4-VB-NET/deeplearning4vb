@@ -1,8 +1,7 @@
-﻿Imports System.Collections.Generic
-Imports NotImplementedException = org.apache.commons.lang3.NotImplementedException
-Imports PartitionMetaData = org.datavec.api.split.partition.PartitionMetaData
-Imports Text = org.datavec.api.writable.Text
-Imports Writable = org.datavec.api.writable.Writable
+Imports System
+Imports System.Collections.Generic
+Imports PartitionMetaData = DeepLearning4VB.org.datavec.api.split.partition.PartitionMetaData
+Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
 '
 ' *  ******************************************************************************
@@ -22,42 +21,38 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.writer.impl
 
+    ''' <summary>
+    ''' Writes the first <see cref="Text"/> of each record as a line. Like the Java version, the text is written
+    ''' with <see cref="Text.write"/> (length prefixed), followed by a new line.
+    ''' </summary>
+    Public Class LineRecordWriter
+        Inherits FileRecordWriter
 
+        Public Sub New()
+        End Sub
 
-	Public Class LineRecordWriter
-		Inherits FileRecordWriter
+        Public Overrides Function supportsBatch() As Boolean
+            Return False
+        End Function
 
-		Public Sub New()
-		End Sub
+        Public Overrides Function write(ByVal record As IList(Of writable.Writable)) As PartitionMetaData
+            If record.Count > 0 Then
+                Dim t As Text = CType(record(0), Text)
+                t.write([out])
+                [out].write(encoding.GetBytes(NEW_LINE))
+            End If
 
+            Return PartitionMetaData.builder().numRecordsUpdated(1).build()
+        End Function
 
-		Public Overrides Function supportsBatch() As Boolean
-			Return False
-		End Function
+        Public Overrides Function writeBatch(ByVal batch As IList(Of IList(Of writable.Writable))) As PartitionMetaData
+            Throw New NotImplementedException("writeBatch is not supported on " & Me.GetType().Name)
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.split.partition.PartitionMetaData write(java.util.List<org.datavec.api.writable.Writable> record) throws java.io.IOException
-		Public Overridable Overloads Function write(ByVal record As IList(Of Writable)) As PartitionMetaData
-			If record.Count > 0 Then
-				Dim t As Text = CType(record.GetEnumerator().next(), Text)
-				t.write([out])
-				[out].write(NEW_LINE.GetBytes())
-			End If
-
-
-			Return org.datavec.api.Split.partition.PartitionMetaData.builder().numRecordsUpdated(1).build()
-
-		End Function
-
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.split.partition.PartitionMetaData writeBatch(java.util.List<java.util.List<org.datavec.api.writable.Writable>> batch) throws java.io.IOException
-		Public Overridable Overloads Function writeBatch(ByVal batch As IList(Of IList(Of Writable))) As PartitionMetaData
-			Throw New NotImplementedException("writeBatch is not supported on " & Me.GetType().Name)
-		End Function
-	End Class
+    End Class
 
 End Namespace

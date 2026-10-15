@@ -32,7 +32,6 @@ Imports FileRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.F
 Imports LineIterator = DeepLearning4VB.org.datavec.api.records.reader.impl.LineIterator
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.csv
 
@@ -58,12 +57,12 @@ Namespace org.datavec.api.records.reader.impl.csv
             Me.delimiter = delimiter
         End Sub
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             invokeListeners(uri)
             Return loadAndClose(dataInputStream.BaseStream)
         End Function
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Return nextSequence().getSequenceRecord()
         End Function
 
@@ -76,11 +75,11 @@ Namespace org.datavec.api.records.reader.impl.csv
             currentUri = [next]
             invokeListeners([next])
 
-            Dim [out] As IList(Of IList(Of Writable)) = loadAndClose(streamCreatorFn.apply([next]))
+            Dim [out] As IList(Of IList(Of writable.Writable)) = loadAndClose(streamCreatorFn.apply([next]))
             Return New SequenceRecordImpl([out], New RecordMetaDataURI([next]))
         End Function
 
-        Private Function loadAndClose(ByVal inputStream As Stream) As IList(Of IList(Of Writable))
+        Private Function loadAndClose(ByVal inputStream As Stream) As IList(Of IList(Of writable.Writable))
             Dim lineIter As LineIterator = Nothing
             Try
                 lineIter = New LineIterator(inputStream, charsetEncoding())
@@ -97,7 +96,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             End Try
         End Function
 
-        Private Function load(ByVal lineIter As StringIterator) As IList(Of IList(Of Writable))
+        Private Function load(ByVal lineIter As StringIterator) As IList(Of IList(Of writable.Writable))
             If skipNumLines > 0 Then
                 Dim count As Integer = 0
                 Do While count < skipNumLines AndAlso lineIter.hasNext()
@@ -106,11 +105,11 @@ Namespace org.datavec.api.records.reader.impl.csv
                 Loop
             End If
 
-            Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
             Do While lineIter.hasNext()
                 Dim line As String = lineIter.next()
                 Dim split() As String = StringHelper.Split(line, delimiter, True)
-                Dim list As New List(Of Writable)()
+                Dim list As New List(Of writable.Writable)()
                 For Each s As String In split
                     list.Add(New Text(s))
                 Next s
@@ -127,7 +126,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Dim [out] As IList(Of SequenceRecord) = New List(Of SequenceRecord)()
             For Each meta As RecordMetaData In recordMetaDatas
                 Dim [next] As String = URIUtil.toFilePath(meta.URI)
-                Dim sequence As IList(Of IList(Of Writable)) = loadAndClose(New FileStream([next], FileMode.Open, FileAccess.Read))
+                Dim sequence As IList(Of IList(Of writable.Writable)) = loadAndClose(New FileStream([next], FileMode.Open, FileAccess.Read))
                 [out].Add(New SequenceRecordImpl(sequence, meta))
             Next meta
             Return [out]

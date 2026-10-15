@@ -27,14 +27,13 @@ Imports Record = DeepLearning4VB.org.datavec.api.records.Record
 Imports RecordListener = DeepLearning4VB.org.datavec.api.records.listener.RecordListener
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader
 
     ''' <summary>
     ''' A record reader: reads records (lists of writables) from an <see cref="InputSplit"/>.
     ''' Java's <c>Closeable</c> is <see cref="IDisposable"/>. The constants the Java interface declared
-    ''' (<c>NAME_SPACE</c>, <c>APPEND_LABEL</c>, <c>LABELS</c>) live on <see cref="BaseRecordReader"/>,
+    ''' (<c>NAME_SPACE</c>, <c>APPEND_LABEL</c>, <c>LABELS</c>, the last one as <c>LABELS_KEY</c>) live on <see cref="BaseRecordReader"/>,
     ''' since VB interfaces cannot hold fields.
     ''' </summary>
     Public Interface RecordReader
@@ -61,12 +60,12 @@ Namespace org.datavec.api.records.reader
         ''' <summary>
         ''' This method will be used, if batchesSupported() returns true.
         ''' </summary>
-        Function [next](ByVal num As Integer) As IList(Of IList(Of Writable))
+        Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable))
 
         ''' <summary>
         ''' Get the next record
         ''' </summary>
-        Function [next]() As IList(Of Writable)
+        Function [next]() As IList(Of writable.Writable)
 
         ''' <summary>
         ''' Whether there are anymore records
@@ -93,7 +92,7 @@ Namespace org.datavec.api.records.reader
         ''' Implementations of this method should not close the DataInputStream
         ''' </summary>
         ''' <exception cref="System.IO.IOException"> if error occurs during reading from the input stream </exception>
-        Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
 
         ''' <summary>
         ''' Similar to <see cref="next()"/>, but returns a <see cref="Record"/> object, that may include metadata such as the source

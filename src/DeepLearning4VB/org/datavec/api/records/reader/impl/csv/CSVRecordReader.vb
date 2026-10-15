@@ -30,7 +30,7 @@ Imports RecordMetaDataLine = DeepLearning4VB.org.datavec.api.records.metadata.Re
 Imports LineRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.LineRecordReader
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
+
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.csv
@@ -137,8 +137,8 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return skipLines() AndAlso MyBase.hasNext()
         End Function
 
-        Public Overrides Function [next](ByVal num As Integer) As IList(Of IList(Of Writable))
-            Dim ret As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))(Math.Min(num, 10000))
+        Public Overrides Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable))
+            Dim ret As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))(Math.Min(num, 10000))
             Dim recordsRead As Integer = 0
             Do While hasNext() AndAlso recordsRead < num
                 recordsRead += 1
@@ -148,7 +148,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return ret
         End Function
 
-        Public Overrides Function [next]() As IList(Of Writable)
+        Public Overrides Function [next]() As IList(Of writable.Writable)
             If Not skipLines() Then
                 Throw New InvalidOperationException("No next element found!")
             End If
@@ -156,14 +156,14 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return parseLine(val)
         End Function
 
-        Protected Friend Overridable Function parseLine(ByVal line As String) As IList(Of Writable)
+        Protected Friend Overridable Function parseLine(ByVal line As String) As IList(Of writable.Writable)
             Dim split() As String
             Try
                 split = csvParser.parseLine(line)
             Catch e As IOException
                 Throw New Exception(e.Message, e)
             End Try
-            Dim ret As IList(Of Writable) = New List(Of Writable)()
+            Dim ret As IList(Of writable.Writable) = New List(Of writable.Writable)()
             For Each s As String In split
                 ret.Add(New Text(s))
             Next s
@@ -177,7 +177,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         End Function
 
         Public Overrides Function nextRecord() As Record
-            Dim [next] As IList(Of Writable) = Me.next()
+            Dim [next] As IList(Of writable.Writable) = Me.next()
             Dim uri As Uri = (If(locations Is Nothing OrElse locations.Length < 1, Nothing, locations(splitIndex)))
             Dim meta As RecordMetaData = New RecordMetaDataLine(Me.lineIndex - 1, uri, GetType(CSVRecordReader)) '-1 as line number has been incremented already...
             Return New RecordImpl([next], meta)
@@ -198,7 +198,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return list
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             Dim br As New StreamReader(dataInputStream.BaseStream, charsetEncoding(), True, 4096, True)
             For i As Integer = 0 To skipNumLines - 1
                 br.ReadLine()

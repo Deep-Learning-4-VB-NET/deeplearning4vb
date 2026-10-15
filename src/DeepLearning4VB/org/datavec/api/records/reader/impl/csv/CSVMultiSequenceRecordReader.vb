@@ -30,7 +30,7 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports RecordMetaDataInterval = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaDataInterval
 Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
+
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.csv
@@ -59,7 +59,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         <NonSerialized>
         Private separatorPattern As Regex
         Private modeValue As Mode
-        Private padValue As Writable
+        Private padValue As writable.Writable
 
         ''' <summary>
         ''' Create a sequence reader using the default value for skip lines (0), the default delimiter (',') and the default
@@ -80,7 +80,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         ''' <param name="mode">                   Mode: see <see cref="CSVMultiSequenceRecordReader"/> javadoc </param>
         ''' <param name="padValue">               Padding value for padding short sequences. Only used/allowable with <see cref="Mode.PAD"/>,
         '''                               should be null otherwise </param>
-        Public Sub New(ByVal sequenceSeparatorRegex As String, ByVal mode As Mode, ByVal padValue As Writable)
+        Public Sub New(ByVal sequenceSeparatorRegex As String, ByVal mode As Mode, ByVal padValue As writable.Writable)
             Me.New(0, DEFAULT_DELIMITER, DEFAULT_QUOTE, sequenceSeparatorRegex, mode, padValue)
         End Sub
 
@@ -94,7 +94,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         ''' <param name="mode">                   Mode: see <see cref="CSVMultiSequenceRecordReader"/> javadoc </param>
         ''' <param name="padValue">               Padding value for padding short sequences. Only used/allowable with <see cref="Mode.PAD"/>,
         '''                               should be null otherwise </param>
-        Public Sub New(ByVal skipNumLines As Integer, ByVal elementDelimiter As Char, ByVal quote As Char, ByVal sequenceSeparatorRegex As String, ByVal mode As Mode, ByVal padValue As Writable)
+        Public Sub New(ByVal skipNumLines As Integer, ByVal elementDelimiter As Char, ByVal quote As Char, ByVal sequenceSeparatorRegex As String, ByVal mode As Mode, ByVal padValue As writable.Writable)
             MyBase.New(skipNumLines, elementDelimiter, quote)
             Preconditions.checkState(mode <> Mode.PAD OrElse padValue IsNot Nothing, "Cannot use Mode.PAD with a null padding value. " & "Padding value must be passed to constructor ")
             Me.sequenceSeparatorRegex = sequenceSeparatorRegex
@@ -110,7 +110,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return separatorPattern.IsMatch(line)
         End Function
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Return nextSequence().getSequenceRecord()
         End Function
 
@@ -133,29 +133,28 @@ Namespace org.datavec.api.records.reader.impl.csv
 
             'Process lines
             Dim uri As Uri = (If(locations Is Nothing OrElse locations.Length < 1, Nothing, locations(splitIndex)))
-            Dim [out] As IList(Of IList(Of Writable)) = parseLines(lines, uri, firstLine, lastLine)
-
+            Dim [out] As IList(Of IList(Of writable.Writable)) = parseLines(lines, uri, firstLine, lastLine)
 
             Return New SequenceRecordImpl([out], New RecordMetaDataInterval(firstLine, lastLine, uri))
         End Function
 
-        Private Function parseLines(ByVal lines As IList(Of String), ByVal uri As Uri, ByVal firstLine As Integer, ByVal lastLine As Integer) As IList(Of IList(Of Writable))
-            Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
+        Private Function parseLines(ByVal lines As IList(Of String), ByVal uri As Uri, ByVal firstLine As Integer, ByVal lastLine As Integer) As IList(Of IList(Of writable.Writable))
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
             Select Case modeValue
                 Case Mode.CONCAT
                     'Output is univariate sequence - concat all lines
                     For Each s As String In lines
-                        Dim parsed As IList(Of Writable) = MyBase.parseLine(s)
-                        For Each w As Writable In parsed
+                        Dim parsed As IList(Of writable.Writable) = MyBase.parseLine(s)
+                        For Each w As writable.Writable In parsed
                             [out].Add(JavaCollections.singletonList(w))
                         Next w
                     Next s
                 Case Mode.EQUAL_LENGTH, Mode.PAD
-                    Dim columnWise As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
+                    Dim columnWise As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
                     Dim length As Integer = -1
                     Dim lineNum As Integer = 0
                     For Each s As String In lines
-                        Dim parsed As IList(Of Writable) = MyBase.parseLine(s) 'This is one COLUMN
+                        Dim parsed As IList(Of writable.Writable) = MyBase.parseLine(s) 'This is one COLUMN
                         columnWise.Add(parsed)
                         lineNum += 1
                         If modeValue = Mode.PAD Then
@@ -168,7 +167,7 @@ Namespace org.datavec.api.records.reader.impl.csv
                     Next s
 
                     If modeValue = Mode.PAD Then
-                        For Each w As IList(Of Writable) In columnWise
+                        For Each w As IList(Of writable.Writable) In columnWise
                             Do While w.Count < length
                                 w.Add(padValue)
                             Loop
@@ -177,7 +176,7 @@ Namespace org.datavec.api.records.reader.impl.csv
 
                     'Transpose: from column-wise to row-wise
                     For i As Integer = 0 To length - 1
-                        Dim [step] As IList(Of Writable) = New List(Of Writable)()
+                        Dim [step] As IList(Of writable.Writable) = New List(Of writable.Writable)()
                         For j As Integer = 0 To columnWise.Count - 1
                             [step].Add(columnWise(j)(i))
                         Next j
@@ -187,7 +186,7 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return [out]
         End Function
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Dim lines As IList(Of String) = New List(Of String)()
             Using br As New StreamReader(dataInputStream.BaseStream, charsetEncoding(), True, 4096, True)
                 Dim line As String

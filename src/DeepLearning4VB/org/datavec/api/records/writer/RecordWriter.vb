@@ -25,7 +25,6 @@ Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports PartitionMetaData = DeepLearning4VB.org.datavec.api.split.partition.PartitionMetaData
 Imports Partitioner = DeepLearning4VB.org.datavec.api.split.partition.Partitioner
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.writer
 
@@ -40,7 +39,7 @@ Namespace org.datavec.api.records.writer
 
         ''' <summary>
         ''' Returns true if this record writer
-        ''' supports efficient batch writing using <see cref="writeBatch(IList(Of IList(Of Writable)))"/>
+        ''' supports efficient batch writing using <see cref="writeBatch(IList(Of IList(Of writable.Writable)))"/>
         ''' </summary>
         Function supportsBatch() As Boolean
 
@@ -61,12 +60,12 @@ Namespace org.datavec.api.records.writer
         ''' <summary>
         ''' Write a record </summary>
         ''' <param name="record"> the record to write </param>
-        Function write(ByVal record As IList(Of Writable)) As PartitionMetaData
+        Function write(ByVal record As IList(Of writable.Writable)) As PartitionMetaData
 
         ''' <summary>
         ''' Write a batch of records </summary>
         ''' <param name="batch"> the batch to write </param>
-        Function writeBatch(ByVal batch As IList(Of IList(Of Writable))) As PartitionMetaData
+        Function writeBatch(ByVal batch As IList(Of IList(Of writable.Writable))) As PartitionMetaData
 
         ''' <summary>
         ''' Close the recod reader

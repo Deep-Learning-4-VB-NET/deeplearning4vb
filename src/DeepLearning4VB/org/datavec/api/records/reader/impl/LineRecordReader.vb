@@ -38,7 +38,7 @@ Imports InputStreamInputSplit = DeepLearning4VB.org.datavec.api.split.InputStrea
 Imports StringSplit = DeepLearning4VB.org.datavec.api.split.StringSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
+
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl
@@ -87,9 +87,9 @@ Namespace org.datavec.api.records.reader.impl
             initialize(split)
         End Sub
 
-        Public Overrides Function [next]() As IList(Of Writable)
+        Public Overrides Function [next]() As IList(Of writable.Writable)
             Preconditions.checkState(initialized, "Record reader has not been initialized")
-            Dim ret As IList(Of Writable) = New List(Of Writable)()
+            Dim ret As IList(Of writable.Writable) = New List(Of writable.Writable)()
 
             If iter.hasNext() Then
                 Dim record As String = iter.next()
@@ -196,12 +196,12 @@ Namespace org.datavec.api.records.reader.impl
             Return True
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             invokeListeners(uri)
             'Here: we are reading a single line from the DataInputStream
             Dim br As New StreamReader(dataInputStream.BaseStream, charsetEncoding(), True, 4096, True)
             Dim line As String = br.ReadLine()
-            Return JavaCollections.singletonList(Of Writable)(New Text(line))
+            Return JavaCollections.singletonList(Of writable.Writable)(New Text(line))
         End Function
 
         ''' <summary>The <see cref="Encoding"/> for the <see cref="charset"/> name.</summary>
@@ -239,7 +239,7 @@ Namespace org.datavec.api.records.reader.impl
         End Sub
 
         Public Overrides Function nextRecord() As Record
-            Dim [next] As IList(Of Writable) = Me.next()
+            Dim [next] As IList(Of writable.Writable) = Me.next()
             Dim uri As Uri = (If(locations Is Nothing OrElse locations.Length < 1, Nothing, locations(splitIndex)))
             Dim meta As RecordMetaData = New RecordMetaDataLine(Me.lineIndex - 1, uri, GetType(LineRecordReader)) '-1 as line number has been incremented already...
             Return New RecordImpl([next], meta)
@@ -256,14 +256,14 @@ Namespace org.datavec.api.records.reader.impl
 
         Public Overrides Function loadFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of Record)
             'First: create a sorted list of the RecordMetaData
-            Dim list As List(Of Triple(Of Integer, RecordMetaDataLine, IList(Of Writable))) = New List(Of Triple(Of Integer, RecordMetaDataLine, IList(Of Writable)))()
+            Dim list As List(Of Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable))) = New List(Of Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable)))()
             Dim uris As ISet(Of Uri) = New HashSet(Of Uri)()
             Dim count As Integer = 0
             For Each rmd As RecordMetaData In recordMetaDatas
                 If Not (TypeOf rmd Is RecordMetaDataLine) Then
                     Throw New ArgumentException("Invalid metadata; expected RecordMetaDataLine instance; got: " & Objects.toString(rmd))
                 End If
-                list.Add(New Triple(Of Integer, RecordMetaDataLine, IList(Of Writable))(count, DirectCast(rmd, RecordMetaDataLine), Nothing))
+                list.Add(New Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable))(count, DirectCast(rmd, RecordMetaDataLine), Nothing))
                 count += 1
                 If rmd.URI IsNot Nothing Then
                     uris.Add(rmd.URI)
@@ -277,7 +277,7 @@ Namespace org.datavec.api.records.reader.impl
 
             'Sort by URI first (if possible - don't always have URIs though, for String split etc), then sort by line number:
             ' (a stable sort, like Java's Collections.sort)
-            list = list.OrderBy(Function(t) t, Comparer(Of Triple(Of Integer, RecordMetaDataLine, IList(Of Writable))).Create(
+            list = list.OrderBy(Function(t) t, Comparer(Of Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable))).Create(
                 Function(o1, o2)
                     If o1.getSecond().getURI() IsNot Nothing Then
                         If Not o1.getSecond().getURI().Equals(o2.getSecond().getURI()) Then
@@ -295,7 +295,7 @@ Namespace org.datavec.api.records.reader.impl
                 Dim currentURIIdx As Integer = 0 'Index of URI
                 Dim currentLineIdx As Integer = 0 'Index of the line for the current URI
                 Dim line As String = currentUriIter.next()
-                For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of Writable)) In list
+                For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable)) In list
                     Dim thisURI As Uri = t.getSecond().getURI()
                     Dim nextLineIdx As Integer = t.getSecond().getLineNumber()
 
@@ -325,7 +325,7 @@ Namespace org.datavec.api.records.reader.impl
                     If currentLineIdx < nextLineIdx AndAlso Not currentUriIter.hasNext() Then
                         Throw New InvalidOperationException("Could not get line " & nextLineIdx & " from URI " & URIUtil.toUriString(currentURI) & ": has only " & currentLineIdx & " lines")
                     End If
-                    t.setThird(JavaCollections.singletonList(Of Writable)(New Text(line)))
+                    t.setThird(JavaCollections.singletonList(Of writable.Writable)(New Text(line)))
                 Next t
                 closeIfRequired(currentUriIter)
             Else
@@ -333,13 +333,13 @@ Namespace org.datavec.api.records.reader.impl
                 Dim iterator As StringIterator = getIterator(0)
                 Dim currentLineIdx As Integer = 0
                 Dim line As String = iterator.next()
-                For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of Writable)) In list
+                For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable)) In list
                     Dim nextLineIdx As Integer = t.getSecond().getLineNumber()
                     Do While currentLineIdx < nextLineIdx AndAlso iterator.hasNext()
                         line = iterator.next()
                         currentLineIdx += 1
                     Loop
-                    t.setThird(JavaCollections.singletonList(Of Writable)(New Text(line)))
+                    t.setThird(JavaCollections.singletonList(Of writable.Writable)(New Text(line)))
                 Next t
                 closeIfRequired(iterator)
             End If
@@ -349,7 +349,7 @@ Namespace org.datavec.api.records.reader.impl
 
             'And return...
             Dim [out] As IList(Of Record) = New List(Of Record)()
-            For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of Writable)) In list
+            For Each t As Triple(Of Integer, RecordMetaDataLine, IList(Of writable.Writable)) In list
                 [out].Add(New RecordImpl(t.getThird(), t.getSecond()))
             Next t
             Return [out]

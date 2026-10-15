@@ -1,6 +1,5 @@
-﻿Imports Configuration = org.datavec.api.conf.Configuration
-Imports DataVecException = org.datavec.api.exceptions.DataVecException
-Imports RecordWriter = org.datavec.api.records.writer.RecordWriter
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports RecordWriter = DeepLearning4VB.org.datavec.api.records.writer.RecordWriter
 
 '
 ' *  ******************************************************************************
@@ -20,23 +19,30 @@ Imports RecordWriter = org.datavec.api.records.writer.RecordWriter
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.output
 
+    ''' <summary>
+    ''' An output format creates record writers. The <c>OUTPUT_PATH</c> constant the Java interface
+    ''' declared lives in <see cref="OutputFormatConstants"/> (VB interfaces cannot hold fields).
+    ''' </summary>
+    Public Interface OutputFormat
 
-	Public Interface OutputFormat
+        ''' <summary>
+        ''' Create a record writer </summary>
+        ''' <returns> the created writer </returns>
+        ''' <exception cref="org.datavec.api.exceptions.DataVecException"> </exception>
+        Function createWriter(ByVal conf As Configuration) As RecordWriter
 
-'JAVA TO VB CONVERTER TODO TASK: Interfaces cannot contain fields in VB:
-'		public static final String OUTPUT_PATH = "org.nd4j.outputpath";
+    End Interface
 
-		''' <summary>
-		''' Create a record writer </summary>
-		''' <returns> the created writer </returns>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: org.datavec.api.records.writer.RecordWriter createWriter(org.datavec.api.conf.Configuration conf) throws org.datavec.api.exceptions.DataVecException;
-		Function createWriter(ByVal conf As Configuration) As RecordWriter
+    ''' <summary>The constant the Java <c>OutputFormat</c> interface declared.</summary>
+    Public Module OutputFormatConstants
 
-	End Interface
+        ''' <summary>Configuration key of the output path (<c>OutputFormat.OUTPUT_PATH</c> in Java).</summary>
+        Public Const OUTPUT_PATH As String = "org.nd4j.outputpath"
+
+    End Module
 
 End Namespace

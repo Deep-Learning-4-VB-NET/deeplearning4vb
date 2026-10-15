@@ -1,9 +1,3 @@
-﻿Imports System
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-Imports Getter = lombok.Getter
-Imports Writable = org.datavec.api.writable.Writable
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -22,36 +16,57 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.nd4j.common.function
 
 Namespace org.datavec.api.transform.ops
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data public class StringWritableOp<T> implements IAggregableReduceOp<org.datavec.api.writable.Writable, T>
-	<Serializable>
-	Public Class StringWritableOp(Of T)
-		Implements IAggregableReduceOp(Of Writable, T)
+    ''' <summary>Adapts an aggregation over strings to writables (<c>writable.Writable.toString()</c>).</summary>
+    <Serializable>
+    Public Class StringWritableOp(Of T)
+        Implements IAggregableReduceOp(Of writable.Writable, T)
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter private IAggregableReduceOp<String, T> operation;
-		Private operation As IAggregableReduceOp(Of String, T)
+        Private ReadOnly operation As IAggregableReduceOp(Of String, T)
 
-		Public Overridable Sub combine(Of W As IAggregableReduceOp(Of Writable, T))(ByVal accu As W) Implements IAggregableReduceOp(Of Writable, T).combine
-			If TypeOf accu Is StringWritableOp Then
-				operation.combine(CType(accu, StringWritableOp).getOperation())
-			Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-				Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
-			End If
-		End Sub
+        Public Sub New(ByVal operation As IAggregableReduceOp(Of String, T))
+            Me.operation = operation
+        End Sub
 
-		Public Overridable Sub accept(ByVal writable As Writable)
-			operation.accept(writable.ToString())
-		End Sub
+        Public Function getOperation() As IAggregableReduceOp(Of String, T)
+            Return operation
+        End Function
 
-		Public Overridable Function get() As T
-			Return operation.get()
-		End Function
-	End Class
+        Public Overridable Sub combine(ByVal accu As IAggregableReduceOp(Of writable.Writable, T)) Implements IAggregableReduceOp(Of writable.Writable, T).combine
+            If TypeOf accu Is StringWritableOp(Of T) Then
+                operation.combine(DirectCast(accu, StringWritableOp(Of T)).getOperation())
+            Else
+                Throw New NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
+            End If
+        End Sub
+
+        Public Overridable Sub accept(ByVal writable As writable.Writable) Implements Consumer(Of writable.Writable).accept
+            operation.accept(writable.ToString())
+        End Sub
+
+        Public Overridable Function [get]() As T Implements Supplier(Of T).[get]
+            Return operation.get()
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Dim other = TryCast(obj, StringWritableOp(Of T))
+            Return other IsNot Nothing AndAlso Objects.equals(operation, other.operation)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hashCode(operation)
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "StringWritableOp(operation=" & Objects.toString(operation) & ")"
+        End Function
+    End Class
 
 End Namespace

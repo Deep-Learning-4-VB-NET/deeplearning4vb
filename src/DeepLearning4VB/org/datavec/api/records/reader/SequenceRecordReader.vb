@@ -23,7 +23,6 @@ Imports System.Collections.Generic
 Imports DeepLearning4VB.JavaCompat
 Imports SequenceRecord = DeepLearning4VB.org.datavec.api.records.SequenceRecord
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader
 
@@ -35,7 +34,7 @@ Namespace org.datavec.api.records.reader
         ''' Returns a sequence record.
         ''' </summary>
         ''' <returns> a sequence of records </returns>
-        Function sequenceRecord() As IList(Of IList(Of Writable))
+        Function sequenceRecord() As IList(Of IList(Of writable.Writable))
 
         ''' <summary>
         ''' Load a sequence record from the given DataInputStream
@@ -43,7 +42,7 @@ Namespace org.datavec.api.records.reader
         ''' Implementations of this method should not close the DataInputStream
         ''' </summary>
         ''' <exception cref="System.IO.IOException"> if error occurs during reading from the input stream </exception>
-        Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable))
+        Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable))
 
         ''' <summary>
         ''' Similar to <see cref="sequenceRecord()"/>, but returns a <see cref="SequenceRecord"/> object, that may include metadata such as the source

@@ -31,7 +31,6 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
 Imports RecordIterator = DeepLearning4VB.org.datavec.api.records.reader.JavaIterator(Of System.Collections.Generic.IList(Of DeepLearning4VB.org.datavec.api.writable.Writable))
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.inmemory
 
@@ -43,7 +42,7 @@ Namespace org.datavec.api.records.reader.impl.inmemory
     Public Class InMemoryRecordReader
         Implements RecordReader
 
-        Private recordList As IList(Of IList(Of Writable))
+        Private recordList As IList(Of IList(Of writable.Writable))
         <NonSerialized>
         Private iter As RecordIterator
         Private labelList As IList(Of String)
@@ -51,27 +50,27 @@ Namespace org.datavec.api.records.reader.impl.inmemory
         <NonSerialized>
         Private configuration As Configuration
 
-        Public Sub New(ByVal records As IList(Of IList(Of Writable)))
+        Public Sub New(ByVal records As IList(Of IList(Of writable.Writable)))
             Me.recordList = records
             Me.iter = New RecordIterator(records.GetEnumerator())
         End Sub
 
         ''' <summary>The records (Lombok <c>getRecords()</c>/<c>setRecords()</c>); setting them restarts the iteration.</summary>
-        Public Overridable Property Records As IList(Of IList(Of Writable))
+        Public Overridable Property Records As IList(Of IList(Of writable.Writable))
             Get
                 Return recordList
             End Get
-            Set(ByVal value As IList(Of IList(Of Writable)))
+            Set(ByVal value As IList(Of IList(Of writable.Writable)))
                 recordList = value
                 iter = If(value Is Nothing, Nothing, New RecordIterator(value.GetEnumerator()))
             End Set
         End Property
 
-        Public Function getRecords() As IList(Of IList(Of Writable))
+        Public Function getRecords() As IList(Of IList(Of writable.Writable))
             Return recordList
         End Function
 
-        Public Sub setRecords(ByVal records As IList(Of IList(Of Writable)))
+        Public Sub setRecords(ByVal records As IList(Of IList(Of writable.Writable)))
             Me.Records = records
         End Sub
 
@@ -108,14 +107,14 @@ Namespace org.datavec.api.records.reader.impl.inmemory
             Return False
         End Function
 
-        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of Writable)) Implements RecordReader.next
+        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable)) Implements RecordReader.next
             Throw New NotSupportedException()
         End Function
 
         ''' <summary>
         ''' Get the next record
         ''' </summary>
-        Public Overridable Function [next]() As IList(Of Writable) Implements RecordReader.next
+        Public Overridable Function [next]() As IList(Of writable.Writable) Implements RecordReader.next
             Return iter.next()
         End Function
 
@@ -151,7 +150,7 @@ Namespace org.datavec.api.records.reader.impl.inmemory
         ''' Unlike <see cref="next()"/> the internal state of the RecordReader is not modified
         ''' Implementations of this method should not close the DataInputStream
         ''' </summary>
-        Public Overridable Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable) Implements RecordReader.record
+        Public Overridable Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable) Implements RecordReader.record
             Throw New NotSupportedException()
         End Function
 

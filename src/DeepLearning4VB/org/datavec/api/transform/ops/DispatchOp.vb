@@ -1,9 +1,3 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Getter = lombok.Getter
-Imports NonNull = lombok.NonNull
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -22,54 +16,63 @@ Imports NonNull = lombok.NonNull
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Collections.Generic
+Imports DeepLearning4VB.org.nd4j.common.function
 
 Namespace org.datavec.api.transform.ops
 
+    ''' <summary>
+    ''' Dispatches the i-th element of each record to the i-th aggregation; the result is the concatenation of
+    ''' the aggregations' (list) results.
+    ''' </summary>
+    <Serializable>
+    Public Class DispatchOp(Of T, U)
+        Implements IAggregableReduceOp(Of IList(Of T), IList(Of U))
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor public class DispatchOp<T, U> implements IAggregableReduceOp<java.util.List<T>, java.util.List<U>>
-	<Serializable>
-	Public Class DispatchOp(Of T, U)
-		Implements IAggregableReduceOp(Of IList(Of T), IList(Of U))
+        Private ReadOnly operations As IList(Of IAggregableReduceOp(Of T, IList(Of U)))
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter @NonNull private java.util.List<IAggregableReduceOp<T, java.util.List<U>>> operations;
-		Private operations As IList(Of IAggregableReduceOp(Of T, IList(Of U)))
+        Public Sub New(ByVal operations As IList(Of IAggregableReduceOp(Of T, IList(Of U))))
+            If operations Is Nothing Then
+                Throw New ArgumentNullException("operations", "operations is marked non-null but is null")
+            End If
+            Me.operations = operations
+        End Sub
 
-		Public Overridable Sub combine(Of W As IAggregableReduceOp(Of IList(Of T), IList(Of U)))(ByVal accu As W) Implements IAggregableReduceOp(Of IList(Of T), IList(Of U)).combine
-			If TypeOf accu Is DispatchOp Then
-				Dim otherOps As IList(Of IAggregableReduceOp(Of T, IList(Of U))) = CType(accu, DispatchOp(Of T, U)).getOperations()
-				If operations.Count <> otherOps.Count Then
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-					Throw New System.ArgumentException("Tried to combine() incompatible " & Me.GetType().FullName & " operators: received " & otherOps.Count & " operations, expected " & operations.Count)
-				End If
-				Dim i As Integer = 0
-				Do While i < Math.Min(operations.Count, otherOps.Count)
-					operations(i).combine(otherOps(i))
-					i += 1
-				Loop
-			Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-				Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
-			End If
-		End Sub
+        Public Function getOperations() As IList(Of IAggregableReduceOp(Of T, IList(Of U)))
+            Return operations
+        End Function
 
-		Public Overridable Sub accept(ByVal ts As IList(Of T))
-			Dim i As Integer = 0
-			Do While i < Math.Min(operations.Count, ts.Count)
-				operations(i).accept(ts(i))
-				i += 1
-			Loop
-		End Sub
+        Public Overridable Sub combine(ByVal accu As IAggregableReduceOp(Of IList(Of T), IList(Of U))) Implements IAggregableReduceOp(Of IList(Of T), IList(Of U)).combine
+            Dim other = TryCast(accu, DispatchOp(Of T, U))
+            If other IsNot Nothing Then
+                Dim otherOps As IList(Of IAggregableReduceOp(Of T, IList(Of U))) = other.getOperations()
+                If operations.Count <> otherOps.Count Then
+                    Throw New ArgumentException("Tried to combine() incompatible " & Me.GetType().FullName & " operators: received " & otherOps.Count & " operations, expected " & operations.Count)
+                End If
+                For i As Integer = 0 To Math.Min(operations.Count, otherOps.Count) - 1
+                    operations(i).combine(otherOps(i))
+                Next i
+            Else
+                Throw New NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
+            End If
+        End Sub
 
-		Public Overridable Function get() As IList(Of U)
-			Dim res As IList(Of U) = New List(Of U)()
-			For i As Integer = 0 To operations.Count - 1
-				CType(res, List(Of U)).AddRange(operations(i).get())
-			Next i
-			Return res
-		End Function
-	End Class
+        Public Overridable Sub accept(ByVal ts As IList(Of T)) Implements Consumer(Of IList(Of T)).accept
+            For i As Integer = 0 To Math.Min(operations.Count, ts.Count) - 1
+                operations(i).accept(ts(i))
+            Next i
+        End Sub
+
+        Public Overridable Function [get]() As IList(Of U) Implements Supplier(Of IList(Of U)).[get]
+            Dim res As New List(Of U)()
+            For i As Integer = 0 To operations.Count - 1
+                res.AddRange(operations(i).get())
+            Next i
+            Return res
+        End Function
+    End Class
 
 End Namespace

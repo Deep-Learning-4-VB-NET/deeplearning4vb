@@ -22,7 +22,6 @@ Imports System
 Imports System.Collections.Generic
 Imports DeepLearning4VB.JavaCompat
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.impl
 
@@ -34,19 +33,19 @@ Namespace org.datavec.api.records.impl
     Public Class SequenceRecord
         Implements org.datavec.api.records.SequenceRecord
 
-        Private sequenceRecordValue As IList(Of IList(Of Writable))
+        Private sequenceRecordValue As IList(Of IList(Of writable.Writable))
         Private metaDataValue As RecordMetaData
 
-        Public Sub New(ByVal sequenceRecord As IList(Of IList(Of Writable)), ByVal metaData As RecordMetaData)
+        Public Sub New(ByVal sequenceRecord As IList(Of IList(Of writable.Writable)), ByVal metaData As RecordMetaData)
             Me.sequenceRecordValue = sequenceRecord
             Me.metaDataValue = metaData
         End Sub
 
-        Public Overridable Function getSequenceRecord() As IList(Of IList(Of Writable)) Implements org.datavec.api.records.SequenceRecord.getSequenceRecord
+        Public Overridable Function getSequenceRecord() As IList(Of IList(Of writable.Writable)) Implements org.datavec.api.records.SequenceRecord.getSequenceRecord
             Return sequenceRecordValue
         End Function
 
-        Public Overridable Sub setSequenceRecord(ByVal sequenceRecord As IList(Of IList(Of Writable))) Implements org.datavec.api.records.SequenceRecord.setSequenceRecord
+        Public Overridable Sub setSequenceRecord(ByVal sequenceRecord As IList(Of IList(Of writable.Writable))) Implements org.datavec.api.records.SequenceRecord.setSequenceRecord
             Me.sequenceRecordValue = sequenceRecord
         End Sub
 
@@ -58,11 +57,11 @@ Namespace org.datavec.api.records.impl
             Me.metaDataValue = metaData
         End Sub
 
-        Public Overridable Property SequenceRecord As IList(Of IList(Of Writable)) Implements org.datavec.api.records.SequenceRecord.SequenceRecord
+        Public Overridable Property SequenceRecord As IList(Of IList(Of writable.Writable)) Implements org.datavec.api.records.SequenceRecord.SequenceRecord
             Get
                 Return sequenceRecordValue
             End Get
-            Set(ByVal value As IList(Of IList(Of Writable)))
+            Set(ByVal value As IList(Of IList(Of writable.Writable)))
                 sequenceRecordValue = value
             End Set
         End Property
@@ -89,7 +88,7 @@ Namespace org.datavec.api.records.impl
             End Get
         End Property
 
-        Public Overridable Function getTimeStep(ByVal timeStep As Integer) As IList(Of Writable) Implements org.datavec.api.records.SequenceRecord.getTimeStep
+        Public Overridable Function getTimeStep(ByVal timeStep As Integer) As IList(Of writable.Writable) Implements org.datavec.api.records.SequenceRecord.getTimeStep
             If timeStep < 0 OrElse timeStep > sequenceRecordValue.Count Then
                 Throw New ArgumentException("Invalid input: " & sequenceRecordValue.Count & " time steps available; cannot get " & timeStep)
             End If

@@ -1,23 +1,18 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
 Imports System.IO
 Imports System.Text
-Imports Microsoft.VisualBasic
-Imports Getter = lombok.Getter
-Imports Setter = lombok.Setter
-Imports FileUtils = org.apache.commons.io.FileUtils
-Imports IOUtils = org.apache.commons.io.IOUtils
-Imports Configuration = org.datavec.api.conf.Configuration
-Imports PathLabelGenerator = org.datavec.api.io.labels.PathLabelGenerator
-Imports Record = org.datavec.api.records.Record
-Imports RecordMetaData = org.datavec.api.records.metadata.RecordMetaData
-Imports RecordMetaDataURI = org.datavec.api.records.metadata.RecordMetaDataURI
-Imports BaseRecordReader = org.datavec.api.records.reader.BaseRecordReader
-Imports FileSplit = org.datavec.api.split.FileSplit
-Imports InputSplit = org.datavec.api.split.InputSplit
-Imports Writable = org.datavec.api.writable.Writable
-Imports TypeReference = org.nd4j.shade.jackson.core.type.TypeReference
-Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
+Imports DeepLearning4VB.JavaCompat
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports PathLabelGenerator = DeepLearning4VB.org.datavec.api.io.labels.PathLabelGenerator
+Imports Record = DeepLearning4VB.org.datavec.api.records.Record
+Imports RecordImpl = DeepLearning4VB.org.datavec.api.records.impl.Record
+Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
+Imports RecordMetaDataURI = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaDataURI
+Imports BaseRecordReader = DeepLearning4VB.org.datavec.api.records.reader.BaseRecordReader
+Imports FileSplit = DeepLearning4VB.org.datavec.api.split.FileSplit
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
+Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 
 '
 ' *  ******************************************************************************
@@ -37,217 +32,200 @@ Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.reader.impl.jackson
 
+    ''' <summary>
+    ''' Reads each file (URI) of the split as one JSON document and extracts the fields of a
+    ''' <see cref="FieldSelection"/>, optionally appending a label from a <see cref="PathLabelGenerator"/>.
+    ''' The Java constructors also took an <c>ObjectMapper</c> (JSON, YAML or XML); this port reads JSON
+    ''' only with System.Text.Json (see <see cref="JacksonReaderUtils"/>), so that parameter is gone.
+    ''' <c>initialize(InputSplit)</c> passes the split to the base class (the Java code passed the still
+    ''' unset field, so the base class never saw the split).
+    ''' </summary>
+    <Serializable>
+    Public Class JacksonRecordReader
+        Inherits BaseRecordReader
 
-	<Serializable>
-	Public Class JacksonRecordReader
-		Inherits BaseRecordReader
+        Private selection As FieldSelection
+        Private shuffle As Boolean
+        Private rngSeed As Long
+        Private labelGenerator As PathLabelGenerator
+        Private labelPosition As Integer
+        Private r As Random
+        Private charset As String = "UTF-8" 'Using String as StandardCharsets.UTF_8 is not serializable
 
-		Private Shared ReadOnly typeRef As TypeReference(Of IDictionary(Of String, Object)) = New TypeReferenceAnonymousInnerClass()
+        Private uris() As Uri
+        Private cursor As Integer = 0
 
-		Private Class TypeReferenceAnonymousInnerClass
-			Inherits TypeReference(Of IDictionary(Of String, Object))
+        Public Sub New(ByVal selection As FieldSelection)
+            Me.New(selection, False)
+        End Sub
 
-		End Class
+        Public Sub New(ByVal selection As FieldSelection, ByVal shuffle As Boolean)
+            Me.New(selection, shuffle, JavaSystem.currentTimeMillis(), Nothing)
+        End Sub
 
-		Private selection As FieldSelection
-		Private mapper As ObjectMapper
-		Private shuffle As Boolean
-		Private rngSeed As Long
-		Private labelGenerator As PathLabelGenerator
-		Private labelPosition As Integer
-		Private [is] As org.datavec.api.Split.InputSplit
-		Private r As Random
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter @Setter private String charset = java.nio.charset.StandardCharsets.UTF_8.name();
-		Private charset As String = StandardCharsets.UTF_8.name() 'Using String as StandardCharsets.UTF_8 is not serializable
+        Public Sub New(ByVal selection As FieldSelection, ByVal shuffle As Boolean, ByVal rngSeed As Long, ByVal labelGenerator As PathLabelGenerator)
+            Me.New(selection, shuffle, rngSeed, labelGenerator, -1)
+        End Sub
 
-		Private uris() As URI
-		Private cursor As Integer = 0
+        Public Sub New(ByVal selection As FieldSelection, ByVal shuffle As Boolean, ByVal rngSeed As Long, ByVal labelGenerator As PathLabelGenerator, ByVal labelPosition As Integer)
+            Me.selection = selection
+            Me.shuffle = shuffle
+            Me.rngSeed = rngSeed
+            If shuffle Then
+                r = New Random(CInt(rngSeed And &H7FFFFFFFL))
+            End If
+            Me.labelGenerator = labelGenerator
+            Me.labelPosition = labelPosition
+        End Sub
 
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper)
-			Me.New(selection, mapper, False)
-		End Sub
+        Public Overrides Sub initialize(ByVal split As InputSplit)
+            If TypeOf split Is FileSplit Then
+                Throw New NotSupportedException("Cannot use JacksonRecordReader with FileSplit")
+            End If
+            MyBase.initialize(split)
+            Me.uris = split.locations()
+            If shuffle Then
+                Dim list As IList(Of Uri) = New List(Of Uri)(uris)
+                JavaCollections.shuffle(list, r)
+                uris = CType(list, List(Of Uri)).ToArray()
+            End If
+        End Sub
 
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper, ByVal shuffle As Boolean)
-			Me.New(selection, mapper, shuffle, DateTimeHelper.CurrentUnixTimeMillis(), Nothing)
-		End Sub
+        Public Overrides Sub initialize(ByVal conf As Configuration, ByVal split As InputSplit)
+            initialize(split)
+        End Sub
 
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper, ByVal shuffle As Boolean, ByVal rngSeed As Long, ByVal labelGenerator As PathLabelGenerator)
-			Me.New(selection, mapper, shuffle, rngSeed, labelGenerator, -1)
-		End Sub
+        Public Overrides Function [next]() As IList(Of writable.Writable)
+            If uris Is Nothing Then
+                Throw New InvalidOperationException("URIs are null. Not initialized?")
+            End If
+            If Not hasNext() Then
+                Throw New InvalidOperationException("No next element")
+            End If
 
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper, ByVal shuffle As Boolean, ByVal rngSeed As Long, ByVal labelGenerator As PathLabelGenerator, ByVal labelPosition As Integer)
-			Me.selection = selection
-			Me.mapper = mapper
-			Me.shuffle = shuffle
-			Me.rngSeed = rngSeed
-			If shuffle Then
-				r = New Random(CInt(rngSeed))
-			End If
-			Me.labelGenerator = labelGenerator
-			Me.labelPosition = labelPosition
-		End Sub
+            Dim uri As Uri = uris(cursor)
+            cursor += 1
+            invokeListeners(uri)
+            Dim fileAsString As String
+            Try
+                Using s As Stream = streamCreatorFn.apply(uri)
+                    Using reader As New StreamReader(s, charsetEncoding())
+                        fileAsString = reader.ReadToEnd()
+                    End Using
+                End Using
+            Catch e As IOException
+                Throw New Exception("Error reading URI file", e)
+            End Try
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void initialize(org.datavec.api.split.InputSplit split) throws IOException, InterruptedException
-		Public Overrides Sub initialize(ByVal split As InputSplit)
-			If TypeOf split Is org.datavec.api.Split.FileSplit Then
-				Throw New System.NotSupportedException("Cannot use JacksonRecordReader with FileSplit")
-			End If
-			MyBase.initialize(inputSplit)
-			Me.uris = split.locations()
-			If shuffle Then
-				Dim list As IList(Of URI) = New List(Of URI) From {uris}
-				Collections.shuffle(list, r)
-				uris = CType(list, List(Of URI)).ToArray()
-			End If
-		End Sub
+            Return readValues(uri, fileAsString)
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void initialize(org.datavec.api.conf.Configuration conf, org.datavec.api.split.InputSplit split) throws IOException, InterruptedException
-		Public Overrides Sub initialize(ByVal conf As Configuration, ByVal split As InputSplit)
-			initialize(split)
-		End Sub
+        Public Overrides Function hasNext() As Boolean
+            Return cursor < uris.Length
+        End Function
 
-		Public Overrides Function [next]() As IList(Of Writable)
-			If uris Is Nothing Then
-				Throw New System.InvalidOperationException("URIs are null. Not initialized?")
-			End If
-			If Not hasNext() Then
-				Throw New NoSuchElementException("No next element")
-			End If
+        Public Overrides ReadOnly Property Labels As IList(Of String)
+            Get
+                Throw New NotSupportedException()
+            End Get
+        End Property
 
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: java.net.URI uri = uris[cursor++];
-			Dim uri As URI = uris(cursor)
-				cursor += 1
-			invokeListeners(uri)
-			Dim fileAsString As String
-			Try
-					Using s As Stream = streamCreatorFn.apply(uri)
-					fileAsString = IOUtils.toString(s, charset)
-					End Using
-			Catch e As IOException
-				Throw New Exception("Error reading URI file", e)
-			End Try
+        Public Overrides Sub reset()
+            cursor = 0
+            If shuffle Then
+                Dim list As IList(Of Uri) = New List(Of Uri)(uris)
+                JavaCollections.shuffle(list, r)
+                uris = CType(list, List(Of Uri)).ToArray()
+            End If
+        End Sub
 
-			Return readValues(uri, fileAsString)
+        Public Overrides Function resetSupported() As Boolean
+            Return True
+        End Function
 
-		End Function
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
+            Dim br As New StreamReader(dataInputStream.BaseStream, charsetEncoding(), True, 4096, True)
+            Dim sb As New StringBuilder()
+            Dim line As String
+            line = br.ReadLine()
+            Do While line IsNot Nothing
+                sb.Append(line).Append(ControlChars.Lf)
+                line = br.ReadLine()
+            Loop
 
-		Public Overrides Function hasNext() As Boolean
-			Return cursor < uris.Length
-		End Function
+            Return readValues(uri, sb.ToString())
+        End Function
 
-		Public Overrides ReadOnly Property Labels As IList(Of String)
-			Get
-				Throw New System.NotSupportedException()
-			End Get
-		End Property
+        Public Overrides Sub Dispose()
 
-		Public Overrides Sub reset()
-			cursor = 0
-			If shuffle Then
-				Dim list As IList(Of URI) = New List(Of URI) From {uris}
-				Collections.shuffle(list, r)
-				uris = CType(list, List(Of URI)).ToArray()
-			End If
-		End Sub
+        End Sub
 
-		Public Overrides Function resetSupported() As Boolean
-			Return True
-		End Function
+        ''' <summary>Java's <c>setConf</c> ignored the configuration and <c>getConf</c> returned null.</summary>
+        Public Overrides Property Conf As Configuration
+            Set(ByVal value As Configuration)
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public List<org.datavec.api.writable.Writable> record(java.net.URI uri, DataInputStream dataInputStream) throws IOException
-		Public Overrides Function record(ByVal uri As URI, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
-			Dim br As New StreamReader(dataInputStream)
-			Dim sb As New StringBuilder()
-			Dim line As String
-			line = br.ReadLine()
-'JAVA TO VB CONVERTER WARNING: An assignment within expression was extracted from the following statement:
-'ORIGINAL LINE: while ((line = br.readLine()) != null)
-			Do While line IsNot Nothing
-				sb.Append(line).Append(vbLf)
-					line = br.ReadLine()
-			Loop
+            End Set
+            Get
+                Return Nothing
+            End Get
+        End Property
 
-			Return readValues(uri, sb.ToString())
-		End Function
+        ''' <summary>The <see cref="Encoding"/> for the <see cref="charset"/> name.</summary>
+        Private Function charsetEncoding() As Encoding
+            Return If(charset Is Nothing, Encoding.UTF8, Encoding.GetEncoding(charset))
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void close() throws IOException
-		Public Overridable Sub Dispose()
+        Private Function readValues(ByVal uri As Uri, ByVal fileContents As String) As IList(Of writable.Writable)
+            Dim [out] As IList(Of writable.Writable) = JacksonReaderUtils.parseRecord(fileContents, selection)
 
-		End Sub
+            'Add label - if required
+            If labelGenerator IsNot Nothing Then
+                Dim label As writable.Writable = labelGenerator.getLabelForPath(uri)
+                Dim paths As IList(Of String()) = selection.getFieldPaths()
+                If (labelPosition >= paths.Count OrElse labelPosition = -1) Then
+                    'Edge case: might want label as the last value
+                    [out].Add(label)
+                Else
+                    [out].Insert(labelPosition, label) 'Add and shift existing to right
+                End If
+            End If
 
-		Public Overrides Property Conf As Configuration
-			Set(ByVal conf As Configuration)
-    
-			End Set
-			Get
-				Return Nothing
-			End Get
-		End Property
+            Return [out]
+        End Function
 
+        Public Overrides Function nextRecord() As Record
+            Dim currentURI As Uri = uris(cursor)
+            Dim writables As IList(Of writable.Writable) = [next]()
+            Dim meta As RecordMetaData = New RecordMetaDataURI(currentURI, GetType(JacksonRecordReader))
+            Return New RecordImpl(writables, meta)
+        End Function
 
+        Public Overrides Function loadFromMetaData(ByVal recordMetaData As RecordMetaData) As Record
+            Return loadFromMetaData(JavaCollections.singletonList(recordMetaData))(0)
+        End Function
 
-		Private Function readValues(ByVal uri As URI, ByVal fileContents As String) As IList(Of Writable)
-			Dim [out] As IList(Of Writable) = JacksonReaderUtils.parseRecord(fileContents, selection, mapper)
+        Public Overrides Function loadFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of Record)
+            Dim [out] As IList(Of Record) = New List(Of Record)()
+            For Each metaData As RecordMetaData In recordMetaDatas
+                Dim uri As Uri = metaData.URI
+                Dim fileAsString As String
+                Try
+                    fileAsString = File.ReadAllText(URIUtil.toFilePath(uri), charsetEncoding())
+                Catch e As IOException
+                    Throw New Exception("Error reading URI file", e)
+                End Try
 
-			'Add label - if required
-			If labelGenerator IsNot Nothing Then
-				Dim label As Writable = labelGenerator.getLabelForPath(uri)
-				Dim paths As IList(Of String()) = selection.getFieldPaths()
-				If (labelPosition >= paths.Count OrElse labelPosition = -1) Then
-					'Edge case: might want label as the last value
-					[out].Add(label)
-				Else
-					[out].Insert(labelPosition, label) 'Add and shift existing to right
-				End If
-			End If
+                Dim writables As IList(Of writable.Writable) = readValues(uri, fileAsString)
+                [out].Add(New RecordImpl(writables, metaData))
+            Next metaData
 
-			Return [out]
-		End Function
+            Return [out]
+        End Function
 
-		Public Overrides Function nextRecord() As Record
-			Dim currentURI As URI = uris(cursor)
-			Dim writables As IList(Of Writable) = [next]()
-			Dim meta As RecordMetaData = New RecordMetaDataURI(currentURI, GetType(JacksonRecordReader))
-			Return New org.datavec.api.records.impl.Record(writables, meta)
-		End Function
-
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.Record loadFromMetaData(org.datavec.api.records.metadata.RecordMetaData recordMetaData) throws IOException
-		Public Overrides Function loadFromMetaData(ByVal recordMetaData As RecordMetaData) As Record
-			Return loadFromMetaData(Collections.singletonList(recordMetaData)).get(0)
-		End Function
-
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public List<org.datavec.api.records.Record> loadFromMetaData(List<org.datavec.api.records.metadata.RecordMetaData> recordMetaDatas) throws IOException
-		Public Overrides Function loadFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of Record)
-
-			Dim [out] As IList(Of Record) = New List(Of Record)()
-			For Each metaData As RecordMetaData In recordMetaDatas
-				Dim uri As URI = metaData.URI
-
-				Dim fileAsString As String
-				Try
-					fileAsString = FileUtils.readFileToString(New File(uri.toURL().getFile()))
-				Catch e As IOException
-					Throw New Exception("Error reading URI file", e)
-				End Try
-
-				Dim writables As IList(Of Writable) = readValues(uri, fileAsString)
-				[out].Add(New org.datavec.api.records.impl.Record(writables, metaData))
-			Next metaData
-
-			Return [out]
-		End Function
-	End Class
+    End Class
 
 End Namespace

@@ -33,7 +33,6 @@ Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.Se
 Imports StringIterator = DeepLearning4VB.org.datavec.api.records.reader.JavaIterator(Of String)
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.csv
 
@@ -74,12 +73,12 @@ Namespace org.datavec.api.records.reader.impl.csv
             Me.nLinesPerSequence = conf.getInt(LINES_PER_SEQUENCE, nLinesPerSequence)
         End Sub
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             If Not MyBase.hasNext() Then
                 Throw New InvalidOperationException("No next element")
             End If
 
-            Dim sequence As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
+            Dim sequence As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
             Dim count As Integer = 0
             Do While count < nLinesPerSequence AndAlso MyBase.hasNext()
                 count += 1
@@ -89,13 +88,13 @@ Namespace org.datavec.api.records.reader.impl.csv
             Return sequence
         End Function
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Throw New NotSupportedException("Reading CSV data from DataInputStream not yet implemented")
         End Function
 
         Public Overridable Function nextSequence() As SequenceRecord Implements SequenceRecordReader.nextSequence
             Dim lineBefore As Integer = lineIndex
-            Dim record As IList(Of IList(Of Writable)) = sequenceRecord()
+            Dim record As IList(Of IList(Of writable.Writable)) = sequenceRecord()
             Dim lineAfter As Integer = lineIndex
             Dim uri As Uri = (If(locations Is Nothing OrElse locations.Length < 1, Nothing, locations(splitIndex)))
             Dim meta As RecordMetaData = New RecordMetaDataLineInterval(lineBefore, lineAfter - 1, uri, GetType(CSVNLinesSequenceRecordReader))
@@ -108,13 +107,13 @@ Namespace org.datavec.api.records.reader.impl.csv
 
         Public Overridable Function loadSequenceFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of SequenceRecord) Implements SequenceRecordReader.loadSequenceFromMetaData
             'First: create a sorted list of the RecordMetaData
-            Dim list As List(Of Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of Writable)))) = New List(Of Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of Writable))))()
+            Dim list As List(Of Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of writable.Writable)))) = New List(Of Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of writable.Writable))))()
             Dim count As Integer = 0
             For Each rmd As RecordMetaData In recordMetaDatas
                 If Not (TypeOf rmd Is RecordMetaDataLineInterval) Then
                     Throw New ArgumentException("Invalid metadata; expected RecordMetaDataLineInterval instance; got: " & Objects.toString(rmd))
                 End If
-                list.Add(New Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of Writable)))(count, DirectCast(rmd, RecordMetaDataLineInterval), New List(Of IList(Of Writable))()))
+                list.Add(New Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of writable.Writable)))(count, DirectCast(rmd, RecordMetaDataLineInterval), New List(Of IList(Of writable.Writable))()))
                 count += 1
             Next rmd
 
@@ -128,7 +127,7 @@ Namespace org.datavec.api.records.reader.impl.csv
                 line = lineIter.next()
                 currentLineIdx += 1
             Loop
-            For Each [next] As Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of Writable))) In list
+            For Each [next] As Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of writable.Writable))) In list
                 Dim nextStartLine As Integer = [next].getSecond().getLineNumberStart()
                 Dim nextEndLine As Integer = [next].getSecond().getLineNumberEnd()
                 Do While currentLineIdx < nextStartLine AndAlso lineIter.hasNext()
@@ -137,7 +136,7 @@ Namespace org.datavec.api.records.reader.impl.csv
                 Loop
                 Do While currentLineIdx <= nextEndLine AndAlso (lineIter.hasNext() OrElse currentLineIdx = nextEndLine)
                     Dim split() As String = StringHelper.Split(line, Me.delimiter, True)
-                    Dim writables As IList(Of Writable) = New List(Of Writable)()
+                    Dim writables As IList(Of writable.Writable) = New List(Of writable.Writable)()
                     For Each s As String In split
                         writables.Add(New Text(s))
                     Next s
@@ -155,7 +154,7 @@ Namespace org.datavec.api.records.reader.impl.csv
 
             'And return...
             Dim [out] As IList(Of SequenceRecord) = New List(Of SequenceRecord)()
-            For Each t As Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of Writable))) In list
+            For Each t As Triple(Of Integer, RecordMetaDataLineInterval, IList(Of IList(Of writable.Writable))) In list
                 [out].Add(New SequenceRecordImpl(t.getThird(), t.getSecond()))
             Next t
 

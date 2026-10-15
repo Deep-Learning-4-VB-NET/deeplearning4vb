@@ -22,7 +22,6 @@ Imports System
 Imports System.Collections.Generic
 Imports Configurable = DeepLearning4VB.org.datavec.api.conf.Configurable
 Imports PartitionMetaData = DeepLearning4VB.org.datavec.api.split.partition.PartitionMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.writer
 
@@ -37,7 +36,7 @@ Namespace org.datavec.api.records.writer
         ''' <summary>
         ''' Write a record </summary>
         ''' <param name="sequence"> the record to write </param>
-        Function write(ByVal sequence As IList(Of IList(Of Writable))) As PartitionMetaData
+        Function write(ByVal sequence As IList(Of IList(Of writable.Writable))) As PartitionMetaData
 
         ''' <summary>
         ''' Close the sequence record writer

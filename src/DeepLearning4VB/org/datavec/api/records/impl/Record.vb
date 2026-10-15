@@ -23,7 +23,6 @@ Imports System.Collections
 Imports System.Collections.Generic
 Imports DeepLearning4VB.JavaCompat
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.impl
 
@@ -35,19 +34,19 @@ Namespace org.datavec.api.records.impl
     Public Class Record
         Implements org.datavec.api.records.Record
 
-        Private recordValue As IList(Of Writable)
+        Private recordValue As IList(Of writable.Writable)
         Private metaDataValue As RecordMetaData
 
-        Public Sub New(ByVal record As IList(Of Writable), ByVal metaData As RecordMetaData)
+        Public Sub New(ByVal record As IList(Of writable.Writable), ByVal metaData As RecordMetaData)
             Me.recordValue = record
             Me.metaDataValue = metaData
         End Sub
 
-        Public Overridable Function getRecord() As IList(Of Writable) Implements org.datavec.api.records.Record.getRecord
+        Public Overridable Function getRecord() As IList(Of writable.Writable) Implements org.datavec.api.records.Record.getRecord
             Return recordValue
         End Function
 
-        Public Overridable Sub setRecord(ByVal record As IList(Of Writable)) Implements org.datavec.api.records.Record.setRecord
+        Public Overridable Sub setRecord(ByVal record As IList(Of writable.Writable)) Implements org.datavec.api.records.Record.setRecord
             Me.recordValue = record
         End Sub
 
@@ -59,11 +58,11 @@ Namespace org.datavec.api.records.impl
             Me.metaDataValue = metaData
         End Sub
 
-        Public Overridable Property Record As IList(Of Writable) Implements org.datavec.api.records.Record.Record
+        Public Overridable Property Record As IList(Of writable.Writable) Implements org.datavec.api.records.Record.Record
             Get
                 Return recordValue
             End Get
-            Set(ByVal value As IList(Of Writable))
+            Set(ByVal value As IList(Of writable.Writable))
                 recordValue = value
             End Set
         End Property

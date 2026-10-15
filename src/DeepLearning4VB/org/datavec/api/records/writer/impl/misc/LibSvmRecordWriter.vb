@@ -1,5 +1,3 @@
-﻿Imports Slf4j = lombok.extern.slf4j.Slf4j
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -18,16 +16,14 @@
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.writer.impl.misc
 
+    ''' <summary>LibSVM is the same format as SVMLight; this writer only exists for the name.</summary>
+    Public Class LibSvmRecordWriter
+        Inherits SVMLightRecordWriter
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class LibSvmRecordWriter extends SVMLightRecordWriter
-	Public Class LibSvmRecordWriter
-		Inherits SVMLightRecordWriter
-
-	End Class
+    End Class
 
 End Namespace

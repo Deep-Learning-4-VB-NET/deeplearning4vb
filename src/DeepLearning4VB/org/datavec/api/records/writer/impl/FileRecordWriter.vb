@@ -1,9 +1,14 @@
-﻿Imports System.Collections.Generic
-Imports Microsoft.VisualBasic
-Imports Configuration = org.datavec.api.conf.Configuration
-Imports RecordWriter = org.datavec.api.records.writer.RecordWriter
-Imports InputSplit = org.datavec.api.split.InputSplit
-Imports Partitioner = org.datavec.api.split.partition.Partitioner
+Imports System
+Imports System.Collections.Generic
+Imports System.IO
+Imports System.Text
+Imports DeepLearning4VB.JavaCompat
+Imports Configurable = DeepLearning4VB.org.datavec.api.conf.Configurable
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports RecordWriter = DeepLearning4VB.org.datavec.api.records.writer.RecordWriter
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
+Imports PartitionMetaData = DeepLearning4VB.org.datavec.api.split.partition.PartitionMetaData
+Imports Partitioner = DeepLearning4VB.org.datavec.api.split.partition.Partitioner
 
 '
 ' *  ******************************************************************************
@@ -23,72 +28,90 @@ Imports Partitioner = org.datavec.api.split.partition.Partitioner
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.writer.impl
 
+    ''' <summary>
+    ''' Base class for record writers that write text to the output stream of a <see cref="Partitioner"/>.
+    ''' <c>Charset</c> is <see cref="Encoding"/>; the output is a <see cref="DataOutputStream"/> like in Java.
+    ''' The <c>APPEND</c> constant the Java <c>RecordWriter</c> interface declared is kept here (VB interfaces
+    ''' cannot hold fields).
+    ''' </summary>
+    Public MustInherit Class FileRecordWriter
+        Implements RecordWriter
 
+        ''' <summary>Configuration key: whether to append to an existing file (<c>RecordWriter.APPEND</c> in Java).</summary>
+        Public Const APPEND As String = "org.datavec.api.records.writer.RecordWriter.append"
 
-	Public MustInherit Class FileRecordWriter
-		Implements RecordWriter
+        ''' <summary>UTF-8 (<c>StandardCharsets.UTF_8</c> in Java); no byte order mark is written.</summary>
+        Public Shared ReadOnly DEFAULT_CHARSET As Encoding = New UTF8Encoding(False)
 
-		Public MustOverride Function writeBatch(ByVal batch As IList(Of IList(Of org.datavec.api.writable.Writable))) As org.datavec.api.split.partition.PartitionMetaData
-		Public MustOverride Function write(ByVal record As IList(Of org.datavec.api.writable.Writable)) As org.datavec.api.split.partition.PartitionMetaData
-		Public MustOverride Function supportsBatch() As Boolean Implements RecordWriter.supportsBatch
+        Protected Friend [out] As DataOutputStream
+        Public Const NEW_LINE As String = vbLf
 
-		Public Shared ReadOnly DEFAULT_CHARSET As Charset = StandardCharsets.UTF_8
+        Protected Friend encoding As Encoding = DEFAULT_CHARSET
 
-		Protected Friend [out] As DataOutputStream
-		Public Shared ReadOnly NEW_LINE As String = vbLf
+        Protected Friend partitioner As Partitioner
 
-		Protected Friend encoding As Charset = DEFAULT_CHARSET
+        ''' <summary>The configuration (the field is called <c>conf</c> in Java; renamed because of the <c>Conf</c> property).</summary>
+        Protected Friend confValue As Configuration
 
-		Protected Friend partitioner As org.datavec.api.Split.partition.Partitioner
+        Public Sub New()
+        End Sub
 
-'JAVA TO VB CONVERTER NOTE: The field conf was renamed since Visual Basic does not allow fields to have the same name as other class members:
-		Protected Friend conf_Conflict As Configuration
+        Public MustOverride Function supportsBatch() As Boolean Implements RecordWriter.supportsBatch
 
-		Public Sub New()
-		End Sub
+        Public MustOverride Function write(ByVal record As IList(Of writable.Writable)) As PartitionMetaData Implements RecordWriter.write
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void initialize(org.datavec.api.split.InputSplit inputSplit, org.datavec.api.split.partition.Partitioner partitioner) throws Exception
-		Public Overridable Sub initialize(ByVal inputSplit As InputSplit, ByVal partitioner As Partitioner) Implements RecordWriter.initialize
-			partitioner.init(inputSplit)
-			[out] = New DataOutputStream(partitioner.currentOutputStream())
-			Me.partitioner = partitioner
+        Public MustOverride Function writeBatch(ByVal batch As IList(Of IList(Of writable.Writable))) As PartitionMetaData Implements RecordWriter.writeBatch
 
-		End Sub
+        Public Overridable Sub initialize(ByVal inputSplit As InputSplit, ByVal partitioner As Partitioner) Implements RecordWriter.initialize
+            partitioner.init(inputSplit)
+            [out] = New DataOutputStream(partitioner.currentOutputStream())
+            Me.partitioner = partitioner
+        End Sub
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void initialize(org.datavec.api.conf.Configuration configuration, org.datavec.api.split.InputSplit split, org.datavec.api.split.partition.Partitioner partitioner) throws Exception
-		Public Overridable Sub initialize(ByVal configuration As Configuration, ByVal split As InputSplit, ByVal partitioner As Partitioner) Implements RecordWriter.initialize
-			Conf = configuration
-			partitioner.init(configuration, split)
-			initialize(split, partitioner)
-		End Sub
+        Public Overridable Sub initialize(ByVal configuration As Configuration, ByVal split As InputSplit, ByVal partitioner As Partitioner) Implements RecordWriter.initialize
+            Conf = configuration
+            partitioner.init(configuration, split)
+            initialize(split, partitioner)
+        End Sub
 
-		Public Overridable Sub Dispose() Implements RecordWriter.close
-			If [out] IsNot Nothing Then
-				Try
-					[out].flush()
-					[out].close()
-				Catch e As IOException
-					Throw New System.InvalidOperationException(e)
-				End Try
+        ''' <summary>Flushes and closes the output stream (Java <c>close()</c>).</summary>
+        Public Overridable Sub Dispose() Implements IDisposable.Dispose
+            If [out] IsNot Nothing Then
+                Try
+                    [out].flush()
+                    [out].Close()
+                Catch e As IOException
+                    Throw New InvalidOperationException(e.Message, e)
+                End Try
+            End If
+        End Sub
 
-			End If
-		End Sub
+        ''' <summary>Java-style alias of <see cref="Dispose"/>.</summary>
+        Public Sub close() Implements RecordWriter.close
+            Dispose()
+        End Sub
 
-		Public Overridable Property Conf As Configuration
-			Set(ByVal conf As Configuration)
-				Me.conf_Conflict = conf
-			End Set
-			Get
-				Return conf_Conflict
-			End Get
-		End Property
+        Public Overridable Property Conf As Configuration Implements Configurable.Conf
+            Set(ByVal value As Configuration)
+                Me.confValue = value
+            End Set
+            Get
+                Return confValue
+            End Get
+        End Property
 
-	End Class
+        Public Overridable Sub setConf(ByVal conf As Configuration) Implements Configurable.setConf
+            Me.Conf = conf
+        End Sub
+
+        Public Overridable Function getConf() As Configuration Implements Configurable.getConf
+            Return Me.Conf
+        End Function
+
+    End Class
 
 End Namespace

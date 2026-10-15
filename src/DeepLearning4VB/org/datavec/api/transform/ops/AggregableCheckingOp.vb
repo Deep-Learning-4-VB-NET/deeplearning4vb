@@ -1,10 +1,3 @@
-﻿Imports System
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-Imports Getter = lombok.Getter
-Imports ColumnMetaData = org.datavec.api.transform.metadata.ColumnMetaData
-Imports Writable = org.datavec.api.writable.Writable
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -23,46 +16,77 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.nd4j.common.function
+Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 
 Namespace org.datavec.api.transform.ops
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data public class AggregableCheckingOp<T> implements IAggregableReduceOp<org.datavec.api.writable.Writable, T>
-	<Serializable>
-	Public Class AggregableCheckingOp(Of T)
-		Implements IAggregableReduceOp(Of Writable, T)
+    ''' <summary>
+    ''' Wraps an aggregation so that only values that are valid for the column (according to its
+    ''' <see cref="ColumnMetaData"/>) are passed on. Combining passes the wrapped accumulator of the other
+    ''' checking op to this one's accumulator (the Java original passed the checking op itself, which the
+    ''' wrapped accumulators reject as incompatible).
+    ''' </summary>
+    <Serializable>
+    Public Class AggregableCheckingOp(Of T)
+        Implements IAggregableReduceOp(Of writable.Writable, T)
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter private IAggregableReduceOp<org.datavec.api.writable.Writable, T> operation;
-		Private operation As IAggregableReduceOp(Of Writable, T)
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter private org.datavec.api.transform.metadata.ColumnMetaData metaData;
-		Private metaData As ColumnMetaData
+        Private ReadOnly operation As IAggregableReduceOp(Of writable.Writable, T)
+        Private ReadOnly metaData As ColumnMetaData
 
-		Public Overridable Sub combine(Of W As IAggregableReduceOp(Of Writable, T))(ByVal accu As W) Implements IAggregableReduceOp(Of Writable, T).combine
-			If TypeOf accu Is AggregableCheckingOp Then
-				Dim accumulator As AggregableCheckingOp(Of T) = CType(accu, AggregableCheckingOp)
-				If metaData.ColumnType <> accumulator.getMetaData().getColumnType() Then
-					Throw New System.ArgumentException("Invalid merge with operation on " & accumulator.getMetaData().getName() & " of type " & accumulator.getMetaData().getColumnType() & " expected " & metaData.Name & " of type " & metaData.ColumnType)
-				Else
-					operation.combine(accumulator)
-				End If
-			Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-				Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
-			End If
-		End Sub
+        Public Sub New(ByVal operation As IAggregableReduceOp(Of writable.Writable, T), ByVal metaData As ColumnMetaData)
+            Me.operation = operation
+            Me.metaData = metaData
+        End Sub
 
-		Public Overridable Sub accept(ByVal writable As Writable)
-			If metaData.isValid(writable) Then
-				operation.accept(writable)
-			End If
-		End Sub
+        Public Function getOperation() As IAggregableReduceOp(Of writable.Writable, T)
+            Return operation
+        End Function
 
-		Public Overridable Function get() As T
-			Return operation.get()
-		End Function
-	End Class
+        Public Function getMetaData() As ColumnMetaData
+            Return metaData
+        End Function
+
+        Public Overridable Sub combine(ByVal accu As IAggregableReduceOp(Of writable.Writable, T)) Implements IAggregableReduceOp(Of writable.Writable, T).combine
+            Dim accumulator = TryCast(accu, AggregableCheckingOp(Of T))
+            If accumulator IsNot Nothing Then
+                If metaData.ColumnType <> accumulator.getMetaData().getColumnType() Then
+                    Throw New ArgumentException("Invalid merge with operation on " & accumulator.getMetaData().getName() & " of type " & accumulator.getMetaData().getColumnType().ToString() & " expected " & metaData.Name & " of type " & metaData.ColumnType.ToString())
+                Else
+                    operation.combine(accumulator.getOperation())
+                End If
+            Else
+                Throw New NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
+            End If
+        End Sub
+
+        Public Overridable Sub accept(ByVal writable As writable.Writable) Implements Consumer(Of writable.Writable).accept
+            If metaData.isValid(writable) Then
+                operation.accept(writable)
+            End If
+        End Sub
+
+        Public Overridable Function [get]() As T Implements Supplier(Of T).[get]
+            Return operation.get()
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Dim other = TryCast(obj, AggregableCheckingOp(Of T))
+            If other Is Nothing Then Return False
+            Return Objects.equals(operation, other.operation) AndAlso Objects.equals(metaData, other.metaData)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(operation, metaData)
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "AggregableCheckingOp(operation=" & Objects.toString(operation) & ", metaData=" & Objects.toString(metaData) & ")"
+        End Function
+    End Class
 
 End Namespace

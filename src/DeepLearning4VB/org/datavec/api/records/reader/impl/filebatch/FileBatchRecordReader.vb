@@ -31,7 +31,7 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
+
 Imports FileBatch = DeepLearning4VB.org.nd4j.common.loader.FileBatch
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
@@ -68,8 +68,8 @@ Namespace org.datavec.api.records.reader.impl.filebatch
             Return False
         End Function
 
-        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of Writable)) Implements RecordReader.next
-            Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))(Math.Min(num, 10000))
+        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable)) Implements RecordReader.next
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))(Math.Min(num, 10000))
             Dim i As Integer = 0
             Do While i < num AndAlso hasNext()
                 [out].Add([next]())
@@ -78,13 +78,13 @@ Namespace org.datavec.api.records.reader.impl.filebatch
             Return [out]
         End Function
 
-        Public Overridable Function [next]() As IList(Of Writable) Implements RecordReader.next
+        Public Overridable Function [next]() As IList(Of writable.Writable) Implements RecordReader.next
             Preconditions.checkState(hasNext(), "No next element")
 
             Dim fileBytes() As Byte = fileBatch.getFileBytes()(position)
             Dim origPath As String = fileBatch.getOriginalUris()(position)
 
-            Dim [out] As IList(Of Writable)
+            Dim [out] As IList(Of writable.Writable)
             Try
                 Using dis As New DataInputStream(New MemoryStream(fileBytes))
                     [out] = recordReader.record(URIUtil.createURI(origPath), dis)
@@ -115,7 +115,7 @@ Namespace org.datavec.api.records.reader.impl.filebatch
             Return True
         End Function
 
-        Public Overridable Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable) Implements RecordReader.record
+        Public Overridable Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable) Implements RecordReader.record
             Throw New NotSupportedException("Not supported")
         End Function
 

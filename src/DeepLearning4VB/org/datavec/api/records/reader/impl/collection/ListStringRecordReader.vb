@@ -30,7 +30,6 @@ Imports ListIterator = DeepLearning4VB.org.datavec.api.records.reader.JavaIterat
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports ListStringSplit = DeepLearning4VB.org.datavec.api.split.ListStringSplit
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.collection
 
@@ -73,10 +72,10 @@ Namespace org.datavec.api.records.reader.impl.collection
         ''' Get the next record
         ''' </summary>
         ''' <returns> The list of next record </returns>
-        Public Overrides Function [next]() As IList(Of Writable)
+        Public Overrides Function [next]() As IList(Of writable.Writable)
             Dim nextRecord As IList(Of String) = dataIter.next()
             invokeListeners(nextRecord)
-            Dim ret As IList(Of Writable) = New List(Of Writable)()
+            Dim ret As IList(Of writable.Writable) = New List(Of writable.Writable)()
             For Each s As String In nextRecord
                 ret.Add(New Text(s))
             Next s
@@ -118,7 +117,7 @@ Namespace org.datavec.api.records.reader.impl.collection
         ''' </summary>
         ''' <param name="uri"> </param>
         ''' <param name="dataInputStream"> </param>
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             Return Nothing
         End Function
 

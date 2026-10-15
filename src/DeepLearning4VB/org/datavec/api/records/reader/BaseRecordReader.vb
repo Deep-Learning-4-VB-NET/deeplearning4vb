@@ -31,7 +31,6 @@ Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.Record
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports StreamInputSplit = DeepLearning4VB.org.datavec.api.split.StreamInputSplit
 Imports FileStreamCreatorFunction = DeepLearning4VB.org.datavec.api.split.streams.FileStreamCreatorFunction
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader
 
@@ -51,8 +50,11 @@ Namespace org.datavec.api.records.reader
         ''' <summary>Configuration key: whether to append the label to the records read.</summary>
         Public Const APPEND_LABEL As String = NAME_SPACE & ".appendlabel"
 
-        ''' <summary>Configuration key: the labels.</summary>
-        Public Const LABELS As String = NAME_SPACE & ".labels"
+        ''' <summary>
+        ''' Configuration key: the labels (<c>LABELS</c> in Java; renamed because VB is case-insensitive and
+        ''' the name would clash with the <see cref="Labels"/> property).
+        ''' </summary>
+        Public Const LABELS_KEY As String = NAME_SPACE & ".labels"
 
         Protected Friend inputSplit As InputSplit
         ''' <summary>The record listeners (the field is called <c>listeners</c> in Java; renamed because of the <c>Listeners</c> property).</summary>
@@ -71,7 +73,7 @@ Namespace org.datavec.api.records.reader
 
         Public MustOverride Sub initialize(ByVal conf As Configuration, ByVal split As InputSplit) Implements RecordReader.initialize
 
-        Public MustOverride Function [next]() As IList(Of Writable) Implements RecordReader.next
+        Public MustOverride Function [next]() As IList(Of writable.Writable) Implements RecordReader.next
 
         Public MustOverride Function hasNext() As Boolean Implements RecordReader.hasNext
 
@@ -81,7 +83,7 @@ Namespace org.datavec.api.records.reader
 
         Public MustOverride Function resetSupported() As Boolean Implements RecordReader.resetSupported
 
-        Public MustOverride Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable) Implements RecordReader.record
+        Public MustOverride Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable) Implements RecordReader.record
 
         Public MustOverride Function nextRecord() As Record Implements RecordReader.nextRecord
 
@@ -128,7 +130,7 @@ Namespace org.datavec.api.records.reader
             Return False
         End Function
 
-        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of Writable)) Implements RecordReader.next
+        Public Overridable Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable)) Implements RecordReader.next
             Throw New NotSupportedException()
         End Function
 

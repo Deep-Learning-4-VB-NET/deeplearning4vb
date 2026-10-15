@@ -1,9 +1,9 @@
-﻿Imports System
-Imports Configuration = org.datavec.api.conf.Configuration
-Imports BaseInputFormat = org.datavec.api.formats.input.BaseInputFormat
-Imports RecordReader = org.datavec.api.records.reader.RecordReader
-Imports LibSvmRecordReader = org.datavec.api.records.reader.impl.misc.LibSvmRecordReader
-Imports InputSplit = org.datavec.api.split.InputSplit
+Imports System
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports BaseInputFormat = DeepLearning4VB.org.datavec.api.formats.input.BaseInputFormat
+Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
+Imports LibSvmRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.misc.LibSvmRecordReader
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 
 '
 ' *  ******************************************************************************
@@ -23,27 +23,25 @@ Imports InputSplit = org.datavec.api.split.InputSplit
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.input.impl
 
+    ''' <summary>
+    ''' Lib svm input format
+    '''
+    ''' @author Adam Gibson
+    ''' </summary>
+    <Serializable>
+    Public Class LibSvmInputFormat
+        Inherits BaseInputFormat
 
-	''' <summary>
-	''' Lib svm input format
-	''' 
-	''' @author Adam Gibson
-	''' </summary>
-	<Serializable>
-	Public Class LibSvmInputFormat
-		Inherits BaseInputFormat
+        Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
+            Dim reader As RecordReader = New LibSvmRecordReader()
+            reader.initialize(conf, split)
+            Return reader
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split, org.datavec.api.conf.Configuration conf) throws IOException, InterruptedException
-		Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
-			Dim reader As RecordReader = New LibSvmRecordReader()
-			reader.initialize(conf, split)
-			Return reader
-		End Function
-	End Class
+    End Class
 
 End Namespace

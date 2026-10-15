@@ -1,9 +1,8 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
-Imports Text = org.datavec.api.writable.Text
-Imports Writable = org.datavec.api.writable.Writable
-Imports TypeReference = org.nd4j.shade.jackson.core.type.TypeReference
-Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
+Imports System.Text.Json
+Imports DeepLearning4VB.JavaCompat
+Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
 '
 ' *  ******************************************************************************
@@ -23,78 +22,88 @@ Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.reader.impl.jackson
 
+    ''' <summary>
+    ''' Extracts the fields of a <see cref="FieldSelection"/> from a JSON document. The Java version parsed the
+    ''' document with a Jackson <c>ObjectMapper</c> into a <c>Map</c>, which also allowed YAML and XML
+    ''' factories; this port reads JSON only, with System.Text.Json (<see cref="JsonDocument"/>), so the
+    ''' <c>ObjectMapper</c> parameter is gone. Numbers are returned as written in the document (Jackson
+    ''' returned <c>Number.toString()</c>, which only differs for exponent forms such as <c>1e3</c>), a JSON
+    ''' <c>null</c> counts as a missing value, and any other value kind (boolean, array, object) at the end
+    ''' of a path is an error, as it was in Java.
+    ''' </summary>
+    Public Class JacksonReaderUtils
 
-	Public Class JacksonReaderUtils
+        Private Sub New()
+        End Sub
 
-		Private Shared ReadOnly typeRef As TypeReference(Of IDictionary(Of String, Object)) = New TypeReferenceAnonymousInnerClass()
+        Public Shared Function parseRecord(ByVal line As String, ByVal selection As FieldSelection) As IList(Of writable.Writable)
+            Dim [out] As IList(Of writable.Writable) = New List(Of writable.Writable)()
+            Dim paths As IList(Of String()) = selection.getFieldPaths()
+            Dim valueIfMissing As IList(Of writable.Writable) = selection.getValueIfMissing()
 
-		Private Class TypeReferenceAnonymousInnerClass
-			Inherits TypeReference(Of IDictionary(Of String, Object))
+            Dim doc As JsonDocument
+            Try
+                doc = JsonDocument.Parse(line)
+            Catch e As JsonException
+                Throw New Exception("Error parsing file", e)
+            End Try
 
-		End Class
+            Using doc
+                Dim root As JsonElement = doc.RootElement
+                If root.ValueKind <> JsonValueKind.Object Then
+                    Throw New Exception("Error parsing file: expected a JSON object, found " & root.ValueKind.ToString())
+                End If
 
-		Private Sub New()
-		End Sub
+                'Now, extract out values...
+                For i As Integer = 0 To paths.Count - 1
+                    Dim currPath() As String = paths(i)
+                    Dim value As String = Nothing
+                    Dim currElement As JsonElement = root
+                    For j As Integer = 0 To currPath.Length - 1
+                        Dim o As JsonElement
+                        If currElement.ValueKind = JsonValueKind.Object AndAlso currElement.TryGetProperty(currPath(j), o) Then
+                            If j = currPath.Length - 1 Then
+                                'Expect to get the final value
+                                Select Case o.ValueKind
+                                    Case JsonValueKind.String
+                                        value = o.GetString()
+                                    Case JsonValueKind.Number
+                                        value = o.GetRawText()
+                                    Case JsonValueKind.Null
+                                        value = Nothing
+                                    Case Else
+                                        Throw New InvalidOperationException("Expected to find String on path " & Arrays.toString(currPath) & ", found " & o.ValueKind.ToString() & " with value " & o.GetRawText())
+                                End Select
+                            Else
+                                'Expect to get a map...
+                                If o.ValueKind = JsonValueKind.Object Then
+                                    currElement = o
+                                End If
+                            End If
+                        Else
+                            'Not found
+                            value = Nothing
+                            Exit For
+                        End If
+                    Next j
 
-		Public Shared Function parseRecord(ByVal line As String, ByVal selection As FieldSelection, ByVal mapper As ObjectMapper) As IList(Of Writable)
-			Dim [out] As IList(Of Writable) = New List(Of Writable)()
-			Dim paths As IList(Of String()) = selection.getFieldPaths()
-			Dim valueIfMissing As IList(Of Writable) = selection.getValueIfMissing()
-			Dim map As IDictionary(Of String, Object)
-			Try
-				map = mapper.readValue(line, typeRef)
-			Catch e As IOException
-				Throw New Exception("Error parsing file", e)
-			End Try
+                    Dim outputWritable As writable.Writable
+                    If value Is Nothing Then
+                        outputWritable = valueIfMissing(i)
+                    Else
+                        outputWritable = New Text(value)
+                    End If
+                    [out].Add(outputWritable)
+                Next i
+            End Using
 
-			'Now, extract out values...
-			For i As Integer = 0 To paths.Count - 1
-				Dim currPath() As String = paths(i)
-				Dim value As String = Nothing
-				Dim currMap As IDictionary(Of String, Object) = map
-				Dim j As Integer = 0
-				Do While j < currPath.Length
-					If currMap.ContainsKey(currPath(j)) Then
-						Dim o As Object = currMap(currPath(j))
-						If j = currPath.Length - 1 Then
-							'Expect to get the final value
-							If TypeOf o Is String Then
-								value = DirectCast(o, String)
-							ElseIf TypeOf o Is Number Then
-								value = o.ToString()
-							Else
-								Throw New System.InvalidOperationException("Expected to find String on path " & Arrays.toString(currPath) & ", found " & o.GetType() & " with value " & o)
-							End If
-						Else
-							'Expect to get a map...
-							If TypeOf o Is System.Collections.IDictionary Then
-								currMap = DirectCast(o, IDictionary(Of String, Object))
-							End If
-						End If
-					Else
-						'Not found
-						value = Nothing
-						Exit Do
-					End If
-					j += 1
-				Loop
+            Return [out]
+        End Function
 
-				Dim outputWritable As Writable
-				If value Is Nothing Then
-					outputWritable = valueIfMissing(i)
-				Else
-					outputWritable = New Text(value)
-				End If
-				[out].Add(outputWritable)
-			Next i
-
-			Return [out]
-		End Function
-
-	End Class
+    End Class
 
 End Namespace

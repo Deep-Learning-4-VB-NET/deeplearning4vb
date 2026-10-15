@@ -20,7 +20,6 @@
 
 Imports System.Collections.Generic
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records
 
@@ -32,13 +31,13 @@ Namespace org.datavec.api.records
     Public Interface Record
 
         ''' <summary>
-        ''' Get the record values, as a <c>List&lt;Writable&gt;</c>
+        ''' Get the record values, as a <c>List&lt;writable.Writable&gt;</c>
         ''' </summary>
         ''' <returns> Record values </returns>
-        Function getRecord() As IList(Of Writable)
+        Function getRecord() As IList(Of writable.Writable)
 
         ''' <summary>Set the record values</summary>
-        Sub setRecord(ByVal record As IList(Of Writable))
+        Sub setRecord(ByVal record As IList(Of writable.Writable))
 
         ''' <summary>
         ''' Get the RecordMetaData for this record
@@ -50,7 +49,7 @@ Namespace org.datavec.api.records
         Sub setMetaData(ByVal metaData As RecordMetaData)
 
         ''' <summary>The record values (<c>getRecord()</c>/<c>setRecord()</c> in Java)</summary>
-        Property Record As IList(Of Writable)
+        Property Record As IList(Of writable.Writable)
 
         ''' <summary>The metadata for this record, or Nothing if none has been set (<c>getMetaData()</c>/<c>setMetaData()</c> in Java)</summary>
         Property MetaData As RecordMetaData

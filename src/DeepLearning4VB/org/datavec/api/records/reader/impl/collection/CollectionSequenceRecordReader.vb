@@ -33,14 +33,13 @@ Imports BaseRecordReader = DeepLearning4VB.org.datavec.api.records.reader.BaseRe
 Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
 Imports SequenceIterator = DeepLearning4VB.org.datavec.api.records.reader.JavaIterator(Of System.Collections.Generic.IEnumerable(Of System.Collections.Generic.IEnumerable(Of DeepLearning4VB.org.datavec.api.writable.Writable)))
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.collection
 
     ''' <summary>
     ''' A sequence record reader over an in-memory collection of sequences. Java's
-    ''' <c>Collection&lt;? extends Collection&lt;? extends Collection&lt;Writable&gt;&gt;&gt;</c> is
-    ''' <c>IEnumerable(Of IEnumerable(Of IEnumerable(Of Writable)))</c> (the only covariant collection interface
+    ''' <c>Collection&lt;? extends Collection&lt;? extends Collection&lt;writable.Writable&gt;&gt;&gt;</c> is
+    ''' <c>IEnumerable(Of IEnumerable(Of IEnumerable(Of writable.Writable)))</c> (the only covariant collection interface
     ''' in .NET), so any list of lists of lists of writables can be passed.
     ''' </summary>
     <Serializable>
@@ -50,12 +49,12 @@ Namespace org.datavec.api.records.reader.impl.collection
 
         <NonSerialized>
         Private records As SequenceIterator
-        Private ReadOnly original As IEnumerable(Of IEnumerable(Of IEnumerable(Of Writable)))
+        Private ReadOnly original As IEnumerable(Of IEnumerable(Of IEnumerable(Of writable.Writable)))
         Private count As Integer = 0
 
-        ''' <param name="records">    Collection of sequences. For example, <c>List&lt;List&lt;List&lt;Writable&gt;&gt;&gt;</c> where the inner  two lists
+        ''' <param name="records">    Collection of sequences. For example, <c>List&lt;List&lt;List&lt;writable.Writable&gt;&gt;&gt;</c> where the inner  two lists
         '''                   are a sequence, and the outer list/collection is a list of sequences </param>
-        Public Sub New(ByVal records As IEnumerable(Of IEnumerable(Of IEnumerable(Of Writable))))
+        Public Sub New(ByVal records As IEnumerable(Of IEnumerable(Of IEnumerable(Of writable.Writable))))
             Me.records = New SequenceIterator(records.GetEnumerator())
             Me.original = records
         End Sub
@@ -68,7 +67,7 @@ Namespace org.datavec.api.records.reader.impl.collection
             initialize(split)
         End Sub
 
-        Public Overrides Function [next]() As IList(Of Writable)
+        Public Overrides Function [next]() As IList(Of writable.Writable)
             Throw New NotSupportedException("next() not supported for CollectionSequencRecordReader; use sequenceRecord()")
         End Function
 
@@ -104,7 +103,7 @@ Namespace org.datavec.api.records.reader.impl.collection
             Return True
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             Throw New NotSupportedException("Generating records from DataInputStream not supported for SequenceCollectionRecordReader")
         End Function
 
@@ -120,14 +119,14 @@ Namespace org.datavec.api.records.reader.impl.collection
             Throw New NotSupportedException("Loading from metadata not yet implemented")
         End Function
 
-        Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
-            Dim record As IList(Of IList(Of Writable)) = toList(records.next())
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
+            Dim record As IList(Of IList(Of writable.Writable)) = toList(records.next())
             invokeListeners(record)
             count += 1
             Return record
         End Function
 
-        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
             Throw New NotSupportedException("Generating records from DataInputStream not supported for SequenceCollectionRecordReader")
         End Function
 
@@ -155,24 +154,24 @@ Namespace org.datavec.api.records.reader.impl.collection
 
             Dim [out] As IList(Of SequenceRecord) = New List(Of SequenceRecord)()
             Dim i As Integer = 0
-            For Each c As IEnumerable(Of IEnumerable(Of Writable)) In original
+            For Each c As IEnumerable(Of IEnumerable(Of writable.Writable)) In original
                 If Not toLoad.Contains(i) Then
                     i += 1
                     Continue For
                 Else
                     i += 1
                 End If
-                Dim record As IList(Of IList(Of Writable)) = toList(c)
+                Dim record As IList(Of IList(Of writable.Writable)) = toList(c)
                 Dim r As SequenceRecord = New SequenceRecordImpl(record, New RecordMetaDataIndex(i - 1, Nothing, GetType(CollectionSequenceRecordReader)))
                 [out].Add(r)
             Next c
             Return [out]
         End Function
 
-        Private Shared Function toList(ByVal [next] As IEnumerable(Of IEnumerable(Of Writable))) As IList(Of IList(Of Writable))
-            Dim record As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
-            For Each c As IEnumerable(Of Writable) In [next]
-                record.Add(New List(Of Writable)(c))
+        Private Shared Function toList(ByVal [next] As IEnumerable(Of IEnumerable(Of writable.Writable))) As IList(Of IList(Of writable.Writable))
+            Dim record As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
+            For Each c As IEnumerable(Of writable.Writable) In [next]
+                record.Add(New List(Of writable.Writable)(c))
             Next c
             Return record
         End Function

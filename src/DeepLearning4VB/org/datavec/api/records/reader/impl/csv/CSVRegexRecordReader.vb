@@ -23,7 +23,6 @@ Imports System.Collections.Generic
 Imports System.Text.RegularExpressions
 Imports DeepLearning4VB.JavaCompat
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl.csv
 
@@ -61,9 +60,9 @@ Namespace org.datavec.api.records.reader.impl.csv
             End If
         End Sub
 
-        Protected Friend Overrides Function parseLine(ByVal line As String) As IList(Of Writable)
+        Protected Friend Overrides Function parseLine(ByVal line As String) As IList(Of writable.Writable)
             Dim split() As String = StringHelper.Split(line, delimiter, True)
-            Dim ret As IList(Of Writable) = New List(Of Writable)()
+            Dim ret As IList(Of writable.Writable) = New List(Of writable.Writable)()
             For i As Integer = 0 To split.Length - 1
                 Dim s As String = split(i)
                 If quote IsNot Nothing AndAlso s.StartsWith(quote, StringComparison.Ordinal) AndAlso s.EndsWith(quote, StringComparison.Ordinal) Then

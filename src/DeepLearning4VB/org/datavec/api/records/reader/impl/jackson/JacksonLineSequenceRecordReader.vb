@@ -1,15 +1,14 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
 Imports System.IO
-Imports IOUtils = org.apache.commons.io.IOUtils
-Imports LineIterator = org.apache.commons.io.LineIterator
-Imports SequenceRecord = org.datavec.api.records.SequenceRecord
-Imports RecordMetaData = org.datavec.api.records.metadata.RecordMetaData
-Imports RecordMetaDataURI = org.datavec.api.records.metadata.RecordMetaDataURI
-Imports SequenceRecordReader = org.datavec.api.records.reader.SequenceRecordReader
-Imports FileRecordReader = org.datavec.api.records.reader.impl.FileRecordReader
-Imports Writable = org.datavec.api.writable.Writable
-Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
+Imports DeepLearning4VB.JavaCompat
+Imports SequenceRecord = DeepLearning4VB.org.datavec.api.records.SequenceRecord
+Imports SequenceRecordImpl = DeepLearning4VB.org.datavec.api.records.impl.SequenceRecord
+Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
+Imports RecordMetaDataURI = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaDataURI
+Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
+Imports FileRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.FileRecordReader
+Imports LineIterator = DeepLearning4VB.org.datavec.api.records.reader.impl.LineIterator
 
 '
 ' *  ******************************************************************************
@@ -29,84 +28,83 @@ Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.reader.impl.jackson
 
+    ''' <summary>
+    ''' Reads each file of the split as a sequence with one JSON document per line (one time step per line),
+    ''' extracting the fields of a <see cref="FieldSelection"/>. The Java constructor also took an
+    ''' <c>ObjectMapper</c> (JSON, YAML or XML); this port reads JSON only with System.Text.Json (see
+    ''' <see cref="JacksonReaderUtils"/>).
+    ''' </summary>
+    <Serializable>
+    Public Class JacksonLineSequenceRecordReader
+        Inherits FileRecordReader
+        Implements SequenceRecordReader
 
-	<Serializable>
-	Public Class JacksonLineSequenceRecordReader
-		Inherits FileRecordReader
-		Implements SequenceRecordReader
+        Private selection As FieldSelection
 
-		Private selection As FieldSelection
-		Private mapper As ObjectMapper
+        ''' <param name="selection"> Fields to return </param>
+        Public Sub New(ByVal selection As FieldSelection)
+            Me.selection = selection
+        End Sub
 
-		''' 
-		''' <param name="selection"> Fields to return </param>
-		''' <param name="mapper">    Object mapper to use. For example, {@code new ObjectMapper(new JsonFactory())} for JSON </param>
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper)
-			Me.selection = selection
-			Me.mapper = mapper
-		End Sub
+        Public Overridable Function sequenceRecord() As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
+            Return nextSequence().getSequenceRecord()
+        End Function
 
-		Public Overridable Function sequenceRecord() As IList(Of IList(Of Writable)) Implements SequenceRecordReader.sequenceRecord
-			Return nextSequence().getSequenceRecord()
-		End Function
+        Public Overridable Function sequenceRecord(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of writable.Writable)) Implements SequenceRecordReader.sequenceRecord
+            Return loadAndClose(dataInputStream.BaseStream)
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public java.util.List<java.util.List<org.datavec.api.writable.Writable>> sequenceRecord(java.net.URI uri, DataInputStream dataInputStream) throws IOException
-		Public Overridable Function sequenceRecord(ByVal uri As URI, ByVal dataInputStream As DataInputStream) As IList(Of IList(Of Writable))
-			Return loadAndClose(dataInputStream)
-		End Function
+        Public Overridable Function nextSequence() As SequenceRecord Implements SequenceRecordReader.nextSequence
+            If Not hasNext() Then
+                Throw New InvalidOperationException("No next element")
+            End If
 
-		Public Overridable Function nextSequence() As SequenceRecord Implements SequenceRecordReader.nextSequence
-			If Not hasNext() Then
-				Throw New NoSuchElementException("No next element")
-			End If
+            Dim [next] As Uri = locationsIterator.next()
+            Dim [out] As IList(Of IList(Of writable.Writable)) = loadAndClose(streamCreatorFn.apply([next]))
+            Return New SequenceRecordImpl([out], New RecordMetaDataURI([next]))
+        End Function
 
-'JAVA TO VB CONVERTER TODO TASK: Java iterators are only converted within the context of 'while' and 'for' loops:
-			Dim [next] As URI = locationsIterator.next()
-			Dim [out] As IList(Of IList(Of Writable)) = loadAndClose(streamCreatorFn.apply([next]))
-			Return New org.datavec.api.records.impl.SequenceRecord([out], New RecordMetaDataURI([next]))
-		End Function
+        Public Overridable Function loadSequenceFromMetaData(ByVal recordMetaData As RecordMetaData) As SequenceRecord Implements SequenceRecordReader.loadSequenceFromMetaData
+            Return Nothing
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.SequenceRecord loadSequenceFromMetaData(org.datavec.api.records.metadata.RecordMetaData recordMetaData) throws IOException
-		Public Overridable Function loadSequenceFromMetaData(ByVal recordMetaData As RecordMetaData) As SequenceRecord Implements SequenceRecordReader.loadSequenceFromMetaData
-			Return Nothing
-		End Function
+        Public Overridable Function loadSequenceFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of SequenceRecord) Implements SequenceRecordReader.loadSequenceFromMetaData
+            Dim [out] As IList(Of SequenceRecord) = New List(Of SequenceRecord)()
+            For Each m As RecordMetaData In recordMetaDatas
+                [out].Add(loadSequenceFromMetaData(m))
+            Next m
+            Return [out]
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public java.util.List<org.datavec.api.records.SequenceRecord> loadSequenceFromMetaData(java.util.List<org.datavec.api.records.metadata.RecordMetaData> recordMetaDatas) throws IOException
-		Public Overridable Function loadSequenceFromMetaData(ByVal recordMetaDatas As IList(Of RecordMetaData)) As IList(Of SequenceRecord) Implements SequenceRecordReader.loadSequenceFromMetaData
-			Dim [out] As IList(Of SequenceRecord) = New List(Of SequenceRecord)()
-			For Each m As RecordMetaData In recordMetaDatas
-				[out].Add(loadSequenceFromMetaData(m))
-			Next m
-			Return [out]
-		End Function
+        Private Function loadAndClose(ByVal inputStream As Stream) As IList(Of IList(Of writable.Writable))
+            Dim lineIter As LineIterator = Nothing
+            Try
+                lineIter = New LineIterator(inputStream, charsetEncoding())
+                Return load(lineIter)
+            Finally
+                If lineIter IsNot Nothing Then
+                    lineIter.close()
+                End If
+                Try
+                    inputStream.Dispose()
+                Catch e As Exception
+                    ' IOUtils.closeQuietly
+                End Try
+            End Try
+        End Function
 
-		Private Function loadAndClose(ByVal inputStream As Stream) As IList(Of IList(Of Writable))
-			Dim lineIter As LineIterator = Nothing
-			Try
-				lineIter = IOUtils.lineIterator(New StreamReader(inputStream))
-				Return load(lineIter)
-			Finally
-				If lineIter IsNot Nothing Then
-					lineIter.close()
-				End If
-				IOUtils.closeQuietly(inputStream)
-			End Try
-		End Function
+        Private Function load(ByVal lineIter As LineIterator) As IList(Of IList(Of writable.Writable))
+            Dim [out] As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))()
+            Do While lineIter.hasNext()
+                [out].Add(JacksonReaderUtils.parseRecord(lineIter.next(), selection))
+            Loop
+            Return [out]
+        End Function
 
-		Private Function load(ByVal lineIter As IEnumerator(Of String)) As IList(Of IList(Of Writable))
-			Dim [out] As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))()
-			Do While lineIter.MoveNext()
-				[out].Add(JacksonReaderUtils.parseRecord(lineIter.Current, selection, mapper))
-			Loop
-			Return [out]
-		End Function
-	End Class
+    End Class
 
 End Namespace

@@ -1,9 +1,3 @@
-﻿Imports System
-Imports System.Text
-Imports Getter = lombok.Getter
-Imports Text = org.datavec.api.writable.Text
-Imports Writable = org.datavec.api.writable.Writable
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -22,69 +16,89 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Text
+Imports DeepLearning4VB.org.nd4j.common.function
+Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
 Namespace org.datavec.api.transform.ops
 
-	Public Class StringAggregatorImpls
+    ''' <summary>
+    ''' The string aggregations (append, prepend) as combinable accumulators. The Java base class was a private
+    ''' nested class; VB cannot derive a public class from a private one, so it is public here.
+    ''' </summary>
+    Public Class StringAggregatorImpls
 
-		<Serializable>
-		Private MustInherit Class AggregableStringReduce
-			Implements IAggregableReduceOp(Of String, Writable)
+        ''' <summary>Base of the string reductions: a shared <see cref="StringBuilder"/>.</summary>
+        <Serializable>
+        Public MustInherit Class AggregableStringReduce
+            Implements IAggregableReduceOp(Of String, writable.Writable)
 
-			Public MustOverride Sub combine(ByVal accu As W) Implements IAggregableReduceOp(Of String, Writable).combine
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter protected StringBuilder sb = new StringBuilder();
-			Protected Friend sb As New StringBuilder()
-		End Class
+            Protected Friend sb As New StringBuilder()
 
-		<Serializable>
-		Public Class AggregableStringAppend
-			Inherits AggregableStringReduce
+            ''' <summary>The builder holding the accumulated text (Java <c>getSb()</c>).</summary>
+            Public Function getSb() As StringBuilder
+                Return sb
+            End Function
 
-			Public Overrides Sub combine(Of W As IAggregableReduceOp(Of String, Writable))(ByVal accu As W)
-				If TypeOf accu Is AggregableStringAppend Then
-					sb.Append(CType(accu, AggregableStringAppend).getSb())
-				Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-					Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where" & Me.GetType().FullName & " expected")
-				End If
-			End Sub
+            Public MustOverride Sub combine(ByVal accu As IAggregableReduceOp(Of String, writable.Writable)) Implements IAggregableReduceOp(Of String, writable.Writable).combine
 
-			Public Overridable Sub accept(ByVal s As String)
-				sb.Append(s)
-			End Sub
+            Public MustOverride Sub accept(ByVal s As String) Implements Consumer(Of String).accept
 
-			Public Overridable Function get() As Writable
-				Return New Text(sb.ToString())
-			End Function
-		End Class
+            Public MustOverride Function [get]() As writable.Writable Implements Supplier(Of writable.Writable).[get]
 
-		<Serializable>
-		Public Class AggregableStringPrepend
-			Inherits AggregableStringReduce
+            Protected Shared Function incompatible(ByVal accu As Object, ByVal expected As Object) As NotSupportedException
+                Return New NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where" & expected.GetType().FullName & " expected")
+            End Function
+        End Class
 
-			Public Overrides Sub combine(Of W As IAggregableReduceOp(Of String, Writable))(ByVal accu As W)
-				If TypeOf accu Is AggregableStringPrepend Then
-					sb.Append(CType(accu, AggregableStringPrepend).getSb())
-				Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-					Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where" & Me.GetType().FullName & " expected")
-				End If
-			End Sub
+        ''' <summary>Concatenates the strings in the order seen.</summary>
+        <Serializable>
+        Public Class AggregableStringAppend
+            Inherits AggregableStringReduce
 
-			Public Overridable Sub accept(ByVal s As String)
-'JAVA TO VB CONVERTER TODO TASK: There is no .NET StringBuilder equivalent to the Java 'reverse' method:
-				Dim rev As String = (New StringBuilder(s)).reverse().ToString()
-				sb.Append(rev)
-			End Sub
+            Public Overrides Sub combine(ByVal accu As IAggregableReduceOp(Of String, writable.Writable))
+                If TypeOf accu Is AggregableStringAppend Then
+                    sb.Append(DirectCast(accu, AggregableStringAppend).getSb())
+                Else
+                    Throw incompatible(accu, Me)
+                End If
+            End Sub
 
-			Public Overridable Function get() As Writable
-'JAVA TO VB CONVERTER TODO TASK: There is no .NET StringBuilder equivalent to the Java 'reverse' method:
-				Return New Text(sb.reverse().ToString())
-			End Function
-		End Class
+            Public Overrides Sub accept(ByVal s As String)
+                sb.Append(s)
+            End Sub
 
-	End Class
+            Public Overrides Function [get]() As writable.Writable
+                Return New Text(sb.ToString())
+            End Function
+        End Class
+
+        ''' <summary>Concatenates the strings in reverse order (each string is prepended to the result).</summary>
+        <Serializable>
+        Public Class AggregableStringPrepend
+            Inherits AggregableStringReduce
+
+            Public Overrides Sub combine(ByVal accu As IAggregableReduceOp(Of String, writable.Writable))
+                If TypeOf accu Is AggregableStringPrepend Then
+                    sb.Append(DirectCast(accu, AggregableStringPrepend).getSb())
+                Else
+                    Throw incompatible(accu, Me)
+                End If
+            End Sub
+
+            Public Overrides Sub accept(ByVal s As String)
+                Dim rev As String = JavaStrings.reverse(s)
+                sb.Append(rev)
+            End Sub
+
+            Public Overrides Function [get]() As writable.Writable
+                Return New Text(JavaStrings.reverse(sb.ToString()))
+            End Function
+        End Class
+
+    End Class
 
 End Namespace

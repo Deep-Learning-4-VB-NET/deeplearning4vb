@@ -1,9 +1,7 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
-Imports LineRecordReader = org.datavec.api.records.reader.impl.LineRecordReader
-Imports Text = org.datavec.api.writable.Text
-Imports Writable = org.datavec.api.writable.Writable
-Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
+Imports LineRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.LineRecordReader
+Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
 '
 ' *  ******************************************************************************
@@ -23,38 +21,41 @@ Imports ObjectMapper = org.nd4j.shade.jackson.databind.ObjectMapper
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.records.reader.impl.jackson
 
+    ''' <summary>
+    ''' Reads one JSON document per line and extracts the fields of a <see cref="FieldSelection"/>. The Java
+    ''' constructor also took an <c>ObjectMapper</c> (JSON, YAML or XML); this port reads JSON only with
+    ''' System.Text.Json (see <see cref="JacksonReaderUtils"/>).
+    ''' </summary>
+    <Serializable>
+    Public Class JacksonLineRecordReader
+        Inherits LineRecordReader
 
-	<Serializable>
-	Public Class JacksonLineRecordReader
-		Inherits LineRecordReader
+        Private selection As FieldSelection
 
-		Private selection As FieldSelection
-		Private mapper As ObjectMapper
+        Public Sub New(ByVal selection As FieldSelection)
+            Me.selection = selection
+        End Sub
 
-		Public Sub New(ByVal selection As FieldSelection, ByVal mapper As ObjectMapper)
-			Me.selection = selection
-			Me.mapper = mapper
-		End Sub
+        Public Overrides Function [next]() As IList(Of writable.Writable)
+            Dim t As Text = CType(MyBase.next()(0), Text)
+            Dim val As String = t.ToString()
+            Return parseLine(val)
+        End Function
 
-		Public Overrides Function [next]() As IList(Of Writable)
-			Dim t As Text = CType(MyBase.next().GetEnumerator().next(), Text)
-			Dim val As String = t.ToString()
-			Return parseLine(val)
-		End Function
+        Protected Friend Overridable Function parseLine(ByVal line As String) As IList(Of writable.Writable)
+            Return JacksonReaderUtils.parseRecord(line, selection)
+        End Function
 
-		Protected Friend Overridable Function parseLine(ByVal line As String) As IList(Of Writable)
-			Return JacksonReaderUtils.parseRecord(line, selection, mapper)
-		End Function
+        Public Overrides ReadOnly Property Labels As IList(Of String)
+            Get
+                Throw New NotSupportedException()
+            End Get
+        End Property
 
-		Public Overrides ReadOnly Property Labels As IList(Of String)
-			Get
-				Throw New System.NotSupportedException()
-			End Get
-		End Property
-	End Class
+    End Class
 
 End Namespace

@@ -1,7 +1,9 @@
-﻿Imports System
-Imports RecordReader = org.datavec.api.records.reader.RecordReader
-Imports InputSplit = org.datavec.api.split.InputSplit
-Imports WritableType = org.datavec.api.writable.WritableType
+Imports System
+Imports DeepLearning4VB.JavaCompat
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
+Imports WritableType = DeepLearning4VB.org.datavec.api.writable.WritableType
 
 '
 ' *  ******************************************************************************
@@ -21,63 +23,58 @@ Imports WritableType = org.datavec.api.writable.WritableType
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.input
 
+    ''' <summary>
+    ''' Base class for input formats: <c>createReader(split)</c> delegates to
+    ''' <c>createReader(split, Nothing)</c>; the <see cref="writable.Writable"/> members are no-ops or unsupported.
+    '''
+    ''' @author Adam Gibson
+    ''' </summary>
+    <Serializable>
+    Public MustInherit Class BaseInputFormat
+        Implements InputFormat
 
-	''' <summary>
-	''' @author Adam Gibson
-	''' </summary>
-	<Serializable>
-	Public MustInherit Class BaseInputFormat
-		Implements InputFormat
+        Public MustOverride Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader Implements InputFormat.createReader
 
-		Public MustOverride Function createReader(ByVal split As InputSplit, ByVal conf As org.datavec.api.conf.Configuration) As RecordReader Implements InputFormat.createReader
+        Public Overridable Function createReader(ByVal split As InputSplit) As RecordReader Implements InputFormat.createReader
+            Return createReader(split, Nothing)
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split) throws IOException, InterruptedException
-		Public Overridable Function createReader(ByVal split As InputSplit) As RecordReader Implements InputFormat.createReader
-			Return createReader(split, Nothing)
-		End Function
+        Public Overridable Sub write(ByVal [out] As DataOutput) Implements writable.Writable.write
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void write(java.io.DataOutput out) throws java.io.IOException
-		Public Overridable Sub write(ByVal [out] As DataOutput)
+        End Sub
 
-		End Sub
+        Public Overridable Sub readFields(ByVal [in] As DataInput) Implements writable.Writable.readFields
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void readFields(java.io.DataInput in) throws java.io.IOException
-		Public Overridable Sub readFields(ByVal [in] As DataInput)
+        End Sub
 
-		End Sub
+        Public Overridable Function toDouble() As Double Implements writable.Writable.toDouble
+            Throw New NotSupportedException()
+        End Function
 
-		Public Overridable Function toDouble() As Double
-			Throw New System.NotSupportedException()
-		End Function
+        Public Overridable Function toFloat() As Single Implements writable.Writable.toFloat
+            Throw New NotSupportedException()
+        End Function
 
-		Public Overridable Function toFloat() As Single
-			Throw New System.NotSupportedException()
-		End Function
+        Public Overridable Function toInt() As Integer Implements writable.Writable.toInt
+            Throw New NotSupportedException()
+        End Function
 
-		Public Overridable Function toInt() As Integer
-			Throw New System.NotSupportedException()
-		End Function
+        Public Overridable Function toLong() As Long Implements writable.Writable.toLong
+            Throw New NotSupportedException()
+        End Function
 
-		Public Overridable Function toLong() As Long
-			Throw New System.NotSupportedException()
-		End Function
+        Public Overridable Sub writeType(ByVal [out] As DataOutput) Implements writable.Writable.writeType
+            Throw New NotSupportedException()
+        End Sub
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void writeType(java.io.DataOutput out) throws java.io.IOException
-		Public Overridable Sub writeType(ByVal [out] As DataOutput)
-			Throw New System.NotSupportedException()
-		End Sub
+        Public Overridable Function [getType]() As WritableType Implements writable.Writable.getType
+            Throw New NotSupportedException()
+        End Function
 
-		Public Overridable Function [getType]() As WritableType
-			Throw New System.NotSupportedException()
-		End Function
-	End Class
+    End Class
 
 End Namespace

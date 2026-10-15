@@ -1,11 +1,3 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-Imports Getter = lombok.Getter
-Imports NonNull = lombok.NonNull
-Imports Writable = org.datavec.api.writable.Writable
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -24,56 +16,78 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Collections.Generic
+Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.nd4j.common.function
 
 Namespace org.datavec.api.transform.ops
 
+    ''' <summary>
+    ''' Applies several aggregations to the same column at once; the result is the list of their results.
+    ''' </summary>
+    <Serializable>
+    Public Class AggregableMultiOp(Of T)
+        Implements IAggregableReduceOp(Of T, IList(Of writable.Writable))
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data public class AggregableMultiOp<T> implements IAggregableReduceOp<T, java.util.List<org.datavec.api.writable.Writable>>
-	<Serializable>
-	Public Class AggregableMultiOp(Of T)
-		Implements IAggregableReduceOp(Of T, IList(Of Writable))
+        Private ReadOnly operations As IList(Of IAggregableReduceOp(Of T, writable.Writable))
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter @NonNull private java.util.List<IAggregableReduceOp<T, org.datavec.api.writable.Writable>> operations;
-		Private operations As IList(Of IAggregableReduceOp(Of T, Writable))
+        Public Sub New(ByVal operations As IList(Of IAggregableReduceOp(Of T, writable.Writable)))
+            If operations Is Nothing Then
+                Throw New ArgumentNullException("operations", "operations is marked non-null but is null")
+            End If
+            Me.operations = operations
+        End Sub
 
-		Public Overridable Sub accept(ByVal t As T)
-			Dim i As Integer = 0
-			Do While i < operations.Count
-				operations(i).accept(t)
-				i += 1
-			Loop
-		End Sub
+        Public Function getOperations() As IList(Of IAggregableReduceOp(Of T, writable.Writable))
+            Return operations
+        End Function
 
-		Public Overridable Sub combine(Of U As IAggregableReduceOp(Of T, IList(Of Writable)))(ByVal accu As U)
-			If TypeOf accu Is AggregableMultiOp Then
-				Dim accumulator As AggregableMultiOp(Of T) = CType(accu, AggregableMultiOp(Of T))
-				Dim otherAccumulators As IList(Of IAggregableReduceOp(Of T, Writable)) = accumulator.getOperations()
-				If operations.Count <> otherAccumulators.Count Then
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-					Throw New System.ArgumentException("Tried to combine() incompatible " & Me.GetType().FullName & " operators: received " & otherAccumulators.Count & " operations, expected " & operations.Count)
-				End If
-				Dim i As Integer = 0
-				Do While i < operations.Count
-					operations(i).combine(otherAccumulators(i))
-					i += 1
-				Loop
-			Else
-'JAVA TO VB CONVERTER WARNING: The .NET Type.FullName property will not always yield results identical to the Java Class.getName method:
-				Throw New System.NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
-			End If
-		End Sub
+        Public Overridable Sub accept(ByVal t As T) Implements Consumer(Of T).accept
+            For i As Integer = 0 To operations.Count - 1
+                operations(i).accept(t)
+            Next i
+        End Sub
 
-		Public Overridable Function get() As IList(Of Writable)
-			Dim res As IList(Of Writable) = New List(Of Writable)(operations.Count)
-			For i As Integer = 0 To operations.Count - 1
-				res.Add(operations(i).get())
-			Next i
-			Return res
-		End Function
+        Public Overridable Sub combine(ByVal accu As IAggregableReduceOp(Of T, IList(Of writable.Writable))) Implements IAggregableReduceOp(Of T, IList(Of writable.Writable)).combine
+            Dim accumulator = TryCast(accu, AggregableMultiOp(Of T))
+            If accumulator IsNot Nothing Then
+                Dim otherAccumulators As IList(Of IAggregableReduceOp(Of T, writable.Writable)) = accumulator.getOperations()
+                If operations.Count <> otherAccumulators.Count Then
+                    Throw New ArgumentException("Tried to combine() incompatible " & Me.GetType().FullName & " operators: received " & otherAccumulators.Count & " operations, expected " & operations.Count)
+                End If
+                For i As Integer = 0 To operations.Count - 1
+                    operations(i).combine(otherAccumulators(i))
+                Next i
+            Else
+                Throw New NotSupportedException("Tried to combine() incompatible " & accu.GetType().FullName & " operator where " & Me.GetType().FullName & " expected")
+            End If
+        End Sub
 
-	End Class
+        Public Overridable Function [get]() As IList(Of writable.Writable) Implements Supplier(Of IList(Of writable.Writable)).[get]
+            Dim res As IList(Of writable.Writable) = New List(Of writable.Writable)(operations.Count)
+            For i As Integer = 0 To operations.Count - 1
+                res.Add(operations(i).get())
+            Next i
+            Return res
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Dim other = TryCast(obj, AggregableMultiOp(Of T))
+            If other Is Nothing Then Return False
+            Return Arrays.equals(New List(Of IAggregableReduceOp(Of T, writable.Writable))(operations).ToArray(), New List(Of IAggregableReduceOp(Of T, writable.Writable))(other.operations).ToArray())
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Arrays.hashCode(New List(Of IAggregableReduceOp(Of T, writable.Writable))(operations).ToArray())
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "AggregableMultiOp(operations=" & Arrays.toString(New List(Of IAggregableReduceOp(Of T, writable.Writable))(operations).ToArray()) & ")"
+        End Function
+
+    End Class
 
 End Namespace

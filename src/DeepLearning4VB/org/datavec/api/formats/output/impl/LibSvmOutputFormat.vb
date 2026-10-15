@@ -1,8 +1,7 @@
-﻿Imports Configuration = org.datavec.api.conf.Configuration
-Imports DataVecException = org.datavec.api.exceptions.DataVecException
-Imports OutputFormat = org.datavec.api.formats.output.OutputFormat
-Imports RecordWriter = org.datavec.api.records.writer.RecordWriter
-Imports LibSvmRecordWriter = org.datavec.api.records.writer.impl.misc.LibSvmRecordWriter
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports OutputFormat = DeepLearning4VB.org.datavec.api.formats.output.OutputFormat
+Imports RecordWriter = DeepLearning4VB.org.datavec.api.records.writer.RecordWriter
+Imports LibSvmRecordWriter = DeepLearning4VB.org.datavec.api.records.writer.impl.misc.LibSvmRecordWriter
 
 '
 ' *  ******************************************************************************
@@ -22,23 +21,24 @@ Imports LibSvmRecordWriter = org.datavec.api.records.writer.impl.misc.LibSvmReco
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.output.impl
 
-	''' <summary>
-	''' @author Adam Gibson
-	''' </summary>
-	Public Class LibSvmOutputFormat
-		Implements OutputFormat
+    ''' <summary>
+    ''' Output format creating a <see cref="LibSvmRecordWriter"/>.
+    '''
+    ''' @author Adam Gibson
+    ''' </summary>
+    Public Class LibSvmOutputFormat
+        Implements OutputFormat
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.writer.RecordWriter createWriter(org.datavec.api.conf.Configuration conf) throws org.datavec.api.exceptions.DataVecException
-		Public Overridable Function createWriter(ByVal conf As Configuration) As RecordWriter Implements OutputFormat.createWriter
-			Dim writer As RecordWriter = New LibSvmRecordWriter()
-			writer.Conf = conf
-			Return writer
-		End Function
-	End Class
+        Public Overridable Function createWriter(ByVal conf As Configuration) As RecordWriter Implements OutputFormat.createWriter
+            Dim writer As RecordWriter = New LibSvmRecordWriter()
+            writer.Conf = conf
+            Return writer
+        End Function
+
+    End Class
 
 End Namespace

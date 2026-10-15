@@ -1,6 +1,3 @@
-﻿Imports org.nd4j.common.function
-Imports org.nd4j.common.function
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -19,16 +16,24 @@ Imports org.nd4j.common.function
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports DeepLearning4VB.org.nd4j.common.function
 
 Namespace org.datavec.api.transform.ops
 
+    ''' <summary>
+    ''' An aggregation that consumes elements one at a time (<see cref="Consumer(Of T)"/>), can be combined with
+    ''' another accumulator of the same kind, and produces its result (<see cref="Supplier(Of T)"/>).
+    ''' The Java generic method <c>&lt;W extends IAggregableReduceOp&lt;T, V&gt;&gt; void combine(W accu)</c> is the
+    ''' plain <see cref="combine"/> with its bound as the parameter type. Implementations are serializable.
+    ''' </summary>
+    Public Interface IAggregableReduceOp(Of T, V)
+        Inherits Consumer(Of T), Supplier(Of V)
 
-	Public Interface IAggregableReduceOp(Of T, V)
-		Inherits Consumer(Of T), Supplier(Of V)
+        ''' <summary>Merges the state of another accumulator of the same kind into this one.</summary>
+        Sub combine(ByVal accu As IAggregableReduceOp(Of T, V))
 
-		 Sub combine(Of W As IAggregableReduceOp(Of T, V))(ByVal accu As W)
-
-	End Interface
+    End Interface
 
 End Namespace

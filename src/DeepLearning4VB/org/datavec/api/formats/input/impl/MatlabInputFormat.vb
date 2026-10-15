@@ -1,9 +1,9 @@
-﻿Imports System
-Imports Configuration = org.datavec.api.conf.Configuration
-Imports BaseInputFormat = org.datavec.api.formats.input.BaseInputFormat
-Imports RecordReader = org.datavec.api.records.reader.RecordReader
-Imports MatlabRecordReader = org.datavec.api.records.reader.impl.misc.MatlabRecordReader
-Imports InputSplit = org.datavec.api.split.InputSplit
+Imports System
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports BaseInputFormat = DeepLearning4VB.org.datavec.api.formats.input.BaseInputFormat
+Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
+Imports MatlabRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.misc.MatlabRecordReader
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 
 '
 ' *  ******************************************************************************
@@ -23,33 +23,29 @@ Imports InputSplit = org.datavec.api.split.InputSplit
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.input.impl
 
+    ''' <summary>
+    ''' Matlab input format
+    '''
+    ''' @author Adam Gibson
+    ''' </summary>
+    <Serializable>
+    Public Class MatlabInputFormat
+        Inherits BaseInputFormat
 
-	''' <summary>
-	''' Matlab input format
-	''' 
-	''' @author Adam Gibson
-	''' </summary>
-	<Serializable>
-	Public Class MatlabInputFormat
-		Inherits BaseInputFormat
+        Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
+            Return createReader(split)
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split, org.datavec.api.conf.Configuration conf) throws IOException, InterruptedException
-		Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
-			Return createReader(split)
-		End Function
+        Public Overrides Function createReader(ByVal split As InputSplit) As RecordReader
+            Dim reader As RecordReader = New MatlabRecordReader()
+            reader.initialize(split)
+            Return reader
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split) throws IOException, InterruptedException
-		Public Overrides Function createReader(ByVal split As InputSplit) As RecordReader
-			Dim reader As RecordReader = New MatlabRecordReader()
-			reader.initialize(split)
-			Return reader
-		End Function
-	End Class
+    End Class
 
 End Namespace

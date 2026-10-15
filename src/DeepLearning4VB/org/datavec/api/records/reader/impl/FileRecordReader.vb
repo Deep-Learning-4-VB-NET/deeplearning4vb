@@ -35,7 +35,6 @@ Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.reader.impl
 
@@ -96,12 +95,12 @@ Namespace org.datavec.api.records.reader.impl
             Me.confValue = conf
         End Sub
 
-        Public Overrides Function [next]() As IList(Of Writable)
+        Public Overrides Function [next]() As IList(Of writable.Writable)
             Return nextRecord().getRecord()
         End Function
 
-        Private Function loadFromStream(ByVal uri As Uri, ByVal [next] As Stream, ByVal encoding As Encoding) As IList(Of Writable)
-            Dim ret As IList(Of Writable) = New List(Of Writable)()
+        Private Function loadFromStream(ByVal uri As Uri, ByVal [next] As Stream, ByVal encoding As Encoding) As IList(Of writable.Writable)
+            Dim ret As IList(Of writable.Writable) = New List(Of writable.Writable)()
             Try
                 Dim s As String
                 Using reader As New StreamReader([next], encoding, True, 4096, True)
@@ -176,8 +175,8 @@ Namespace org.datavec.api.records.reader.impl
             End Get
         End Property
 
-        Public Overrides Function [next](ByVal num As Integer) As IList(Of IList(Of Writable))
-            Dim ret As IList(Of IList(Of Writable)) = New List(Of IList(Of Writable))(num)
+        Public Overrides Function [next](ByVal num As Integer) As IList(Of IList(Of writable.Writable))
+            Dim ret As IList(Of IList(Of writable.Writable)) = New List(Of IList(Of writable.Writable))(num)
             Dim numBatches As Integer = 0
             Do While hasNext() AndAlso numBatches < num
                 ret.Add([next]())
@@ -205,7 +204,7 @@ Namespace org.datavec.api.records.reader.impl
             Return False 'reset() throws exception on reset() if inputSplit is null
         End Function
 
-        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of Writable)
+        Public Overrides Function record(ByVal uri As Uri, ByVal dataInputStream As DataInputStream) As IList(Of writable.Writable)
             invokeListeners(uri)
             'Here: reading the entire file to a Text writable
             Dim br As New StreamReader(dataInputStream.BaseStream, charsetEncoding(), True, 4096, True)
@@ -216,7 +215,7 @@ Namespace org.datavec.api.records.reader.impl
                 sb.Append(line).Append(ControlChars.Lf)
                 line = br.ReadLine()
             Loop
-            Return JavaCollections.singletonList(Of Writable)(New Text(sb.ToString()))
+            Return JavaCollections.singletonList(Of writable.Writable)(New Text(sb.ToString()))
         End Function
 
         Public Overrides Function nextRecord() As Record
@@ -224,7 +223,7 @@ Namespace org.datavec.api.records.reader.impl
             currentUri = [next]
             invokeListeners([next])
 
-            Dim ret As IList(Of Writable)
+            Dim ret As IList(Of writable.Writable)
             Try
                 Using s As Stream = streamCreatorFn.apply([next])
                     ret = loadFromStream([next], s, charsetEncoding())
@@ -246,7 +245,7 @@ Namespace org.datavec.api.records.reader.impl
             For Each meta As RecordMetaData In recordMetaDatas
                 Dim uri As Uri = meta.URI
 
-                Dim list As IList(Of Writable)
+                Dim list As IList(Of writable.Writable)
                 Try
                     Using s As Stream = streamCreatorFn.apply(uri)
                         list = loadFromStream(uri, s, charsetEncoding())

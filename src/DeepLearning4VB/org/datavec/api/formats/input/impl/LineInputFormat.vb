@@ -1,9 +1,10 @@
-﻿Imports System
-Imports Configuration = org.datavec.api.conf.Configuration
-Imports BaseInputFormat = org.datavec.api.formats.input.BaseInputFormat
-Imports RecordReader = org.datavec.api.records.reader.RecordReader
-Imports LineRecordReader = org.datavec.api.records.reader.impl.LineRecordReader
-Imports InputSplit = org.datavec.api.split.InputSplit
+Imports System
+Imports DeepLearning4VB.JavaCompat
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports BaseInputFormat = DeepLearning4VB.org.datavec.api.formats.input.BaseInputFormat
+Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
+Imports LineRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.LineRecordReader
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 
 '
 ' *  ******************************************************************************
@@ -23,42 +24,33 @@ Imports InputSplit = org.datavec.api.split.InputSplit
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.input.impl
 
+    ''' <summary>Input format creating a <see cref="LineRecordReader"/>.</summary>
+    <Serializable>
+    Public Class LineInputFormat
+        Inherits BaseInputFormat
 
+        Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
+            Return createReader(split)
+        End Function
 
-	<Serializable>
-	Public Class LineInputFormat
-		Inherits BaseInputFormat
+        Public Overrides Function createReader(ByVal split As InputSplit) As RecordReader
+            Dim ret As New LineRecordReader()
+            ret.initialize(split)
+            Return ret
+        End Function
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split, org.datavec.api.conf.Configuration conf) throws IOException, InterruptedException
-		Public Overrides Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
-			Return createReader(split)
-		End Function
+        Public Overrides Sub write(ByVal [out] As DataOutput)
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split) throws IOException, InterruptedException
-		Public Overrides Function createReader(ByVal split As InputSplit) As RecordReader
-			Dim ret As New LineRecordReader()
-			ret.initialize(split)
-			Return ret
+        End Sub
 
-		End Function
+        Public Overrides Sub readFields(ByVal [in] As DataInput)
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void write(java.io.DataOutput out) throws java.io.IOException
-		Public Overrides Sub write(ByVal [out] As DataOutput)
+        End Sub
 
-		End Sub
-
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: @Override public void readFields(java.io.DataInput in) throws java.io.IOException
-		Public Overrides Sub readFields(ByVal [in] As DataInput)
-
-		End Sub
-	End Class
+    End Class
 
 End Namespace

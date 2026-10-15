@@ -26,7 +26,6 @@ Imports RecordWriter = DeepLearning4VB.org.datavec.api.records.writer.RecordWrit
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports NumberOfRecordsPartitioner = DeepLearning4VB.org.datavec.api.split.partition.NumberOfRecordsPartitioner
 Imports Partitioner = DeepLearning4VB.org.datavec.api.split.partition.Partitioner
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records.mapper
 
@@ -150,7 +149,7 @@ Namespace org.datavec.api.records.mapper
         Private Sub write(ByVal recordReader As RecordReader, ByVal closeWriter As Boolean)
             If batchSize > 0 AndAlso recordReader.batchesSupported() AndAlso recordWriter.supportsBatch() Then
                 Do While recordReader.hasNext()
-                    Dim [next] As IList(Of IList(Of Writable)) = recordReader.next(batchSize)
+                    Dim [next] As IList(Of IList(Of writable.Writable)) = recordReader.next(batchSize)
                     'ensure we can write a file for either the current or next iterations
                     If partitionerValue.needsNewPartition() Then
                         partitionerValue.currentOutputStream().Flush()
@@ -171,7 +170,7 @@ Namespace org.datavec.api.records.mapper
 
             Else
                 Do While recordReader.hasNext()
-                    Dim [next] As IList(Of Writable) = recordReader.next()
+                    Dim [next] As IList(Of writable.Writable) = recordReader.next()
                     'update records written
                     partitionerValue.updatePartitionInfo(recordWriter.write([next]))
                     If partitionerValue.needsNewPartition() Then
@@ -197,68 +196,68 @@ Namespace org.datavec.api.records.mapper
             Friend partitionerValue As Partitioner = New NumberOfRecordsPartitioner()
             Friend batchSizeValue As Integer
 
-            Public Function recordReader(ByVal recordReader As RecordReader) As Builder
-                Me.recordReaderValue = recordReader
+            Public Function recordReader(ByVal value As RecordReader) As Builder
+                Me.recordReaderValue = value
                 Return Me
             End Function
 
-            Public Function recordWriter(ByVal recordWriter As RecordWriter) As Builder
-                Me.recordWriterValue = recordWriter
+            Public Function recordWriter(ByVal value As RecordWriter) As Builder
+                Me.recordWriterValue = value
                 Return Me
             End Function
 
-            Public Function inputUrl(ByVal inputUrl As InputSplit) As Builder
-                Me.inputUrlValue = inputUrl
+            Public Function inputUrl(ByVal value As InputSplit) As Builder
+                Me.inputUrlValue = value
                 Return Me
             End Function
 
-            Public Function splitPerReader(ByVal splitPerReader() As InputSplit) As Builder
-                Me.splitPerReaderValue = splitPerReader
+            Public Function splitPerReader(ByVal value() As InputSplit) As Builder
+                Me.splitPerReaderValue = value
                 Return Me
             End Function
 
-            Public Function readersToConcat(ByVal readersToConcat() As RecordReader) As Builder
-                Me.readersToConcatValue = readersToConcat
+            Public Function readersToConcat(ByVal value() As RecordReader) As Builder
+                Me.readersToConcatValue = value
                 Return Me
             End Function
 
-            Public Function outputUrl(ByVal outputUrl As InputSplit) As Builder
-                Me.outputUrlValue = outputUrl
+            Public Function outputUrl(ByVal value As InputSplit) As Builder
+                Me.outputUrlValue = value
                 Return Me
             End Function
 
-            Public Function callInitRecordReader(ByVal callInitRecordReader As Boolean) As Builder
-                Me.callInitRecordReaderValue = callInitRecordReader
+            Public Function callInitRecordReader(ByVal value As Boolean) As Builder
+                Me.callInitRecordReaderValue = value
                 Return Me
             End Function
 
-            Public Function callInitRecordWriter(ByVal callInitRecordWriter As Boolean) As Builder
-                Me.callInitRecordWriterValue = callInitRecordWriter
+            Public Function callInitRecordWriter(ByVal value As Boolean) As Builder
+                Me.callInitRecordWriterValue = value
                 Return Me
             End Function
 
-            Public Function callInitPartitioner(ByVal callInitPartitioner As Boolean) As Builder
-                Me.callInitPartitionerValue = callInitPartitioner
+            Public Function callInitPartitioner(ByVal value As Boolean) As Builder
+                Me.callInitPartitionerValue = value
                 Return Me
             End Function
 
-            Public Function configuration(ByVal configuration As Configuration) As Builder
-                Me.configurationValue = configuration
+            Public Function configuration(ByVal value As Configuration) As Builder
+                Me.configurationValue = value
                 Return Me
             End Function
 
-            Public Function configurationsPerReader(ByVal configurationsPerReader() As Configuration) As Builder
-                Me.configurationsPerReaderValue = configurationsPerReader
+            Public Function configurationsPerReader(ByVal value() As Configuration) As Builder
+                Me.configurationsPerReaderValue = value
                 Return Me
             End Function
 
-            Public Function partitioner(ByVal partitioner As Partitioner) As Builder
-                Me.partitionerValue = partitioner
+            Public Function partitioner(ByVal value As Partitioner) As Builder
+                Me.partitionerValue = value
                 Return Me
             End Function
 
-            Public Function batchSize(ByVal batchSize As Integer) As Builder
-                Me.batchSizeValue = batchSize
+            Public Function batchSize(ByVal value As Integer) As Builder
+                Me.batchSizeValue = value
                 Return Me
             End Function
 

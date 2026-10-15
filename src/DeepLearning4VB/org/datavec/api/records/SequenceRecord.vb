@@ -20,7 +20,6 @@
 
 Imports System.Collections.Generic
 Imports RecordMetaData = DeepLearning4VB.org.datavec.api.records.metadata.RecordMetaData
-Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.records
 
@@ -35,10 +34,10 @@ Namespace org.datavec.api.records
         ''' Get the sequence record values
         ''' </summary>
         ''' <returns> Sequence record values </returns>
-        Function getSequenceRecord() As IList(Of IList(Of Writable))
+        Function getSequenceRecord() As IList(Of IList(Of writable.Writable))
 
         ''' <summary>Set the sequence record values</summary>
-        Sub setSequenceRecord(ByVal sequenceRecord As IList(Of IList(Of Writable)))
+        Sub setSequenceRecord(ByVal sequenceRecord As IList(Of IList(Of writable.Writable)))
 
         ''' <summary>
         ''' Get the overall length of the sequence record (number of time/sequence steps, etc).
@@ -52,7 +51,7 @@ Namespace org.datavec.api.records
         ''' </summary>
         ''' <param name="timeStep"> Time step to get. Must be <c>0 &lt;= timeStep &lt; getSequenceLength()</c> </param>
         ''' <returns> Values for a single time step </returns>
-        Function getTimeStep(ByVal timeStep As Integer) As IList(Of Writable)
+        Function getTimeStep(ByVal timeStep As Integer) As IList(Of writable.Writable)
 
         ''' <summary>
         ''' Get the RecordMetaData for this record
@@ -64,7 +63,7 @@ Namespace org.datavec.api.records
         Sub setMetaData(ByVal metaData As RecordMetaData)
 
         ''' <summary>The sequence record values (<c>getSequenceRecord()</c>/<c>setSequenceRecord()</c> in Java)</summary>
-        Property SequenceRecord As IList(Of IList(Of Writable))
+        Property SequenceRecord As IList(Of IList(Of writable.Writable))
 
         ''' <summary>The number of time steps (<c>getSequenceLength()</c> in Java)</summary>
         ReadOnly Property SequenceLength As Integer

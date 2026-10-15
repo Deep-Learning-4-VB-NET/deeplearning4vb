@@ -1,7 +1,6 @@
-﻿Imports Configuration = org.datavec.api.conf.Configuration
-Imports RecordReader = org.datavec.api.records.reader.RecordReader
-Imports InputSplit = org.datavec.api.split.InputSplit
-Imports Writable = org.datavec.api.writable.Writable
+Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
+Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
+Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 
 '
 ' *  ******************************************************************************
@@ -21,31 +20,29 @@ Imports Writable = org.datavec.api.writable.Writable
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
 
 Namespace org.datavec.api.formats.input
 
+    ''' <summary>
+    ''' An input format creates the record reader for an input split. Like in Java, input formats are
+    ''' themselves <see cref="writable.Writable"/>s.
+    ''' </summary>
+    Public Interface InputFormat
+        Inherits writable.Writable
 
+        ''' <summary>
+        ''' Creates a reader from an input split </summary>
+        ''' <param name="split"> the split to read </param>
+        ''' <returns> the reader from the given input split </returns>
+        Function createReader(ByVal split As InputSplit, ByVal conf As Configuration) As RecordReader
 
-	Public Interface InputFormat
-		Inherits Writable
+        ''' <summary>
+        ''' Creates a reader from an input split </summary>
+        ''' <param name="split"> the split to read </param>
+        ''' <returns> the reader from the given input split </returns>
+        Function createReader(ByVal split As InputSplit) As RecordReader
 
-		''' <summary>
-		''' Creates a reader from an input split </summary>
-		''' <param name="split"> the split to read </param>
-		''' <returns> the reader from the given input split </returns>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split, org.datavec.api.conf.Configuration conf) throws IOException, InterruptedException;
-		Function createReader(ByVal split As org.datavec.api.Split.InputSplit, ByVal conf As Configuration) As RecordReader
-
-		''' <summary>
-		''' Creates a reader from an input split </summary>
-		''' <param name="split"> the split to read </param>
-		''' <returns> the reader from the given input split </returns>
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: org.datavec.api.records.reader.RecordReader createReader(org.datavec.api.split.InputSplit split) throws IOException, InterruptedException;
-		Function createReader(ByVal split As org.datavec.api.Split.InputSplit) As RecordReader
-
-	End Interface
+    End Interface
 
 End Namespace
