@@ -116,7 +116,8 @@ Namespace org.datavec.api.transform
         ''' <summary>Parses the enum constant name (Java <c>ColumnType.valueOf</c>).</summary>
         Public Function ColumnTypeValueOf(ByVal name As String) As ColumnType
             Dim result As ColumnType
-            If [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ColumnType), result) Then
+            ' Enum.TryParse also accepts numeric strings ("3"); Java valueOf only accepts the constant names
+            If name IsNot Nothing AndAlso name.Length > 0 AndAlso Char.IsLetter(name(0)) AndAlso [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ColumnType), result) Then
                 Return result
             End If
             Throw New ArgumentException("No enum constant ColumnType." & name)

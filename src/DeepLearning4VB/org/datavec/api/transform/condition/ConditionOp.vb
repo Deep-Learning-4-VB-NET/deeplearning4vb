@@ -166,7 +166,7 @@ Namespace org.datavec.api.transform.condition
         ''' <summary>Parses the enum constant name (Java <c>ConditionOp.valueOf</c>).</summary>
         Public Function ConditionOpValueOf(ByVal name As String) As ConditionOp
             Dim result As ConditionOp
-            If [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ConditionOp), result) Then
+            If name IsNot Nothing AndAlso name.Length > 0 AndAlso Char.IsLetter(name(0)) AndAlso [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ConditionOp), result) Then
                 Return result
             End If
             Throw New ArgumentException("No enum constant ConditionOp." & name)

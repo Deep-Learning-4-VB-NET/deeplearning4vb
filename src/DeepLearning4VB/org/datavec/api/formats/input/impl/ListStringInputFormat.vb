@@ -103,7 +103,7 @@ Namespace org.datavec.api.formats.input.impl
             Return 0
         End Function
 
-        Public Overridable Function [getType]() As WritableType Implements writable.Writable.getType
+        Public Overridable Shadows Function [getType]() As WritableType Implements writable.Writable.getType
             Throw New NotSupportedException()
         End Function
 

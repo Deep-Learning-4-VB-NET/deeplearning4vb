@@ -45,7 +45,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         Public Const LINES_PER_SEQUENCE As String = NAME_SPACE & ".nlinespersequence"
 
         Private nLinesPerSequence As Integer
-        Private delimiter As String
+        Private Shadows delimiter As String
 
         ''' <summary>
         ''' No-arg constructor with the default number of lines per sequence (10)

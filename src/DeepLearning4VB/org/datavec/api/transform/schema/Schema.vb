@@ -159,7 +159,7 @@ Namespace org.datavec.api.transform.schema
         ''' for the column at the specified index </summary>
         ''' <param name="column"> the index of the column to get the type for </param>
         ''' <returns> the type of the column to at the specified inde </returns>
-        Public Overridable Function [getType](ByVal column As Integer) As ColumnType
+        Public Overridable Overloads Function [getType](ByVal column As Integer) As ColumnType
             If column < 0 OrElse column >= columnMetaDataList.Count Then
                 Throw New ArgumentException("Invalid column number. " & column & "only " & columnMetaDataList.Count & "present.")
             End If
@@ -171,7 +171,7 @@ Namespace org.datavec.api.transform.schema
         ''' for the column at the specified index </summary>
         ''' <param name="columnName"> the index of the column to get the type for </param>
         ''' <returns> the type of the column to at the specified inde </returns>
-        Public Overridable Function [getType](ByVal columnName As String) As ColumnType
+        Public Overridable Overloads Function [getType](ByVal columnName As String) As ColumnType
             If Not hasColumn(columnName) Then
                 Throw New ArgumentException("Column """ & columnName & """ does not exist in schema")
             End If
@@ -824,7 +824,7 @@ Namespace org.datavec.api.transform.schema
                 ElseIf TypeOf record(i) Is Text Then
                     builder.addColumnString(i.ToString())
                 Else
-                    Throw New InvalidOperationException("Illegal writable for infering schema of type " & record(i).GetType().ToString() & " with record " & Arrays.toString(New List(Of writable.Writable)(record).ToArray()))
+                    Throw New InvalidOperationException("Illegal writable for infering schema of type " & CObj(record(i)).GetType().ToString() & " with record " & Arrays.toString(New List(Of writable.Writable)(record).ToArray()))
                 End If
             Next i
 

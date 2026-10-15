@@ -26,6 +26,7 @@ Namespace org.datavec.api.io
     ''' A value whose ordering, equality and hash are defined by a byte array
     ''' (<see cref="Bytes"/>, valid up to <see cref="Length"/>).
     ''' </summary>
+    <Serializable>
     Public MustInherit Class BinaryComparable
         Implements IComparable(Of BinaryComparable), IComparable
 

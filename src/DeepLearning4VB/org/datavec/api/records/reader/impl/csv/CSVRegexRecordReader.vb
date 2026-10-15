@@ -36,8 +36,8 @@ Namespace org.datavec.api.records.reader.impl.csv
 
         Protected Friend regexs() As String = Nothing
         Protected Friend patterns() As System.Text.RegularExpressions.Regex = Nothing
-        Protected Friend delimiter As String
-        Protected Friend quote As String
+        Protected Friend Shadows delimiter As String
+        Protected Friend Shadows quote As String
 
         ''' <summary>
         ''' Skip lines, use delimiter, strip quotes, and parse each column with a regex </summary>

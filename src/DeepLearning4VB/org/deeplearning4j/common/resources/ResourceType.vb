@@ -50,7 +50,7 @@ Namespace org.deeplearning4j.common.resources
         ''' <summary>Parses the enum constant name (Java <c>ResourceType.valueOf</c>).</summary>
         Public Function ResourceTypeValueOf(ByVal name As String) As ResourceType
             Dim result As ResourceType
-            If [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ResourceType), result) Then
+            If name IsNot Nothing AndAlso name.Length > 0 AndAlso Char.IsLetter(name(0)) AndAlso [Enum].TryParse(name, False, result) AndAlso [Enum].IsDefined(GetType(ResourceType), result) Then
                 Return result
             End If
             Throw New ArgumentException("No enum constant ResourceType." & name)

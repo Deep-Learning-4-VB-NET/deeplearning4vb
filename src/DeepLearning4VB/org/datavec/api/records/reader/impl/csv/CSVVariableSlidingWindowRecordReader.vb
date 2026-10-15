@@ -44,7 +44,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         Public Const LINES_PER_SEQUENCE As String = NAME_SPACE & ".nlinespersequence"
 
         Private maxLinesPerSequence As Integer
-        Private delimiter As String
+        Private Shadows delimiter As String
         Private stride As Integer
         Private queue As LinkedList(Of IList(Of writable.Writable))
         Private exhausted As Boolean

@@ -118,7 +118,7 @@ Namespace org.datavec.api.transform.schema
         End Function
 
         ''' <summary>Fluent builder for a <see cref="SequenceSchema"/>.</summary>
-        Public Class Builder
+        Public Shadows Class Builder
             Inherits Schema.Builder
 
             Friend minSequenceLengthField As Integer?
@@ -169,7 +169,7 @@ Namespace org.datavec.api.transform.schema
                 ElseIf TypeOf element Is FloatWritable Then
                     builder.addColumnFloat(i.ToString())
                 Else
-                    Throw New InvalidOperationException("Illegal writable for inferring schema of type " & record(i).GetType().ToString() & " with record " & record(0).ToString())
+                    Throw New InvalidOperationException("Illegal writable for inferring schema of type " & CObj(record(i)).GetType().ToString() & " with record " & record(0).ToString())
                 End If
                 builder.minSequenceLength(Math.Min(record(i).Count, minSequenceLength))
                 builder.maxSequenceLength(Math.Max(record(i).Count, maxSequenceLength))
@@ -199,7 +199,7 @@ Namespace org.datavec.api.transform.schema
                 ElseIf TypeOf element Is FloatWritable Then
                     builder.addColumnFloat(i.ToString())
                 Else
-                    Throw New InvalidOperationException("Illegal writable for infering schema of type " & record(i).GetType().ToString())
+                    Throw New InvalidOperationException("Illegal writable for infering schema of type " & CObj(record(i)).GetType().ToString())
                 End If
             Next i
 

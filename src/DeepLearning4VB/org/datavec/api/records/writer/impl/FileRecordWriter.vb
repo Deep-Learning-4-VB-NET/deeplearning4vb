@@ -78,12 +78,16 @@ Namespace org.datavec.api.records.writer.impl
             initialize(split, partitioner)
         End Sub
 
-        ''' <summary>Flushes and closes the output stream (Java <c>close()</c>).</summary>
+        ''' <summary>Flushes and closes the output stream (Java <c>close()</c>). Closing twice is a no-op, as in Java.</summary>
         Public Overridable Sub Dispose() Implements IDisposable.Dispose
             If [out] IsNot Nothing Then
+                Dim stream = [out]
+                [out] = Nothing
                 Try
-                    [out].flush()
-                    [out].Close()
+                    stream.flush()
+                    stream.Close()
+                Catch e As ObjectDisposedException
+                    ' the underlying stream was already closed elsewhere
                 Catch e As IOException
                     Throw New InvalidOperationException(e.Message, e)
                 End Try

@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-13 (step 2 in progress: datavec-api wave A, the writables, I/O, configuration, splits and record metadata, is complete).
+Last updated: 2026-10-15 (step 2 in progress: datavec-api waves A and B are complete, that is the writables, I/O, configuration, splits, record readers and writers, input/output formats and the transform core).
 
 ## Where the code came from
 
@@ -23,9 +23,9 @@ compiled:
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting `net481`, `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`, `.gitignore`/`.gitattributes`; the committed `.vs`, `obj` and `packages` folders were removed. |
-| `nd4j-common`, `deeplearning4j-common` and the first part of `datavec-api` (library) | 194 source files, about 34,400 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). Includes managed stand-ins for the external libraries DataVec uses: a Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`) and `java.util.concurrent.TimeUnit`. |
-| Tests | 56 test files, 395 tests, all passing: the DL4J JUnit test classes for `nd4j-common`, `deeplearning4j-common` and the ported `datavec-api` packages ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation, class loading, writables, splits, configuration, record metadata and the Joda/t-digest/TimeUnit stand-ins. |
-| Everything else | Moved unchanged to `unported/`, 4,750 files, excluded from the build. |
+| `nd4j-common`, `deeplearning4j-common` and most of `datavec-api` (library) | 339 source files, about 52,600 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). Includes managed stand-ins for the external libraries DataVec uses: a Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`) and `java.util.concurrent.TimeUnit`. |
+| Tests | 90 test files, 595 tests, all passing: the DL4J JUnit test classes for `nd4j-common`, `deeplearning4j-common` and the ported `datavec-api` packages ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation, class loading, writables, splits, configuration, record metadata, the record readers and writers (CSV, line, regex, JSON, LibSVM/SVMLight, file batch, collections), the input/output formats, schemas, column metadata, conditions and filters, and the Joda/t-digest/TimeUnit stand-ins. |
+| Everything else | Moved unchanged to `unported/`, 4,610 files, excluded from the build. |
 
 ## Module table
 
@@ -43,7 +43,7 @@ API, which in turn needs a tensor backend.
 | nd4j/nd4j-serde | 32 | Netty/Aeron (17), INDArray (14), Arrow, Spark | Not started |
 | nd4j/samediff-import | 21 | INDArray (16), TensorFlow (2) | Not started |
 | nd4j/nd4j-onnxruntime, nd4j-tensorflow, nd4j-tensorflow-lite, nd4j-tvm | 16 | JavaCPP bindings, INDArray | Not started |
-| datavec/datavec-api | 315 remaining | INDArray (9 files) | **In progress.** Ported: `writable` (+comparator, batch), `io` (+converters, filters, labels, serializers), `exceptions`, `util` (+files), `conf`, `split` (+partition, streams), `records/metadata`. Next: the transform core (schema, metadata, conditions, filters, quality), record readers/writers/formats, then the transform implementations, analysis, sequences and the JSON serde (`TransformProcess`). |
+| datavec/datavec-api | 175 remaining | INDArray (9 files) | **In progress.** Ported: `writable` (+comparator, batch), `io` (+converters, filters, labels, serializers), `exceptions`, `util` (+files), `conf`, `split` (+partition, streams), `records` (readers, writers, listeners, mappers, metadata), `formats`, and the transform core (`schema`, `metadata`, `condition`, `filter`, `quality`, `ops`, `split`, the column/math enums). Next (wave C): the transform implementations (`transform/transform/*`), `analysis`, `reduce`, `stringreduce`, `rank`, `join`, `sequence`; then (wave D) `TransformProcess`, `DataAction`, the JSON serde and the `TransformProcess` record readers. |
 | datavec/datavec-data | 55 | JavaCPP (24), Jackson (14), INDArray (18) | Not started |
 | datavec/datavec-local | 61 | INDArray (6), Arrow (1) | Not started |
 | datavec/datavec-spark | 96 | Spark (72) | Not started; Spark has no .NET equivalent here |
@@ -87,6 +87,7 @@ such a parameter. Those two types therefore serialize through their public `Valu
 | `writable/NDArrayWritable`, `writable/batch/NDArrayRecordBatch`, `util/ndarray/*`, `timeseries/util/*`, `transform/ndarray/*`, `transform/analysis/counter/NDArrayAnalysisCounter`, `transform/analysis/histogram/NDArrayHistogramCounter`, `transform/metadata/NDArrayMetaData`, `transform/transform/string/StringListTo*NDArrayTransform` | Need `INDArray`; wait for the managed tensor engine (step 3). |
 | `vector/*` | Vectorizer interfaces over `INDArray`; same reason. |
 | `transform/ui/*` | FreeMarker HTML templates; the templates are not in the dump. |
+| `transform/TransformProcess`, `transform/DataAction`, `records/reader/impl/transform/*` | Waiting for the remaining transform implementations and the System.Text.Json serde (wave D). |
 
 ## Deliberate differences from the Java original
 
@@ -176,7 +177,28 @@ These are the intentional exceptions:
   or simple type name through `ND4JClassLoading`. `DataInputStream` reads big-endian with proper widening
   (a `Byte << 8` stays a `Byte` in VB, which was the one real bug the tests caught).
 
+- **datavec-api wave B**: the Jackson record readers (`JacksonRecordReader`, `JacksonLineRecordReader`,
+  `JacksonLineSequenceRecordReader`) read JSON only, through `System.Text.Json`; Jackson's YAML and XML
+  factories have no counterpart here. `FileRecordWriter.close()` may be called twice, as Java's streams
+  allow. The `...ValueOf` helpers of the ported enums (`ColumnTypeValueOf`, `ConditionOpValueOf`,
+  `ResourceTypeValueOf`, `TimeUnitValueOf`) reject numeric strings, which `Enum.TryParse` would accept.
+  `SequenceSchema.Builder.buildSequence()` is a typed convenience on top of `build()`; the inherited
+  `addColumn*` methods return the base `Schema.Builder`, so cast the result of `build()` when chaining.
+  The HyperLogLog++ stand-in implements the dense register representation only: the sparse precision
+  `sp` is accepted and ignored, and the empirical bias-correction tables are not included.
+- **Shuffled stream order**: `StreamInputSplit` and the other shuffling splits use `System.Random`, so a
+  given seed produces a different order than `java.util.Random` with the same seed.
+
 ## Porting rules
+
+> **Name shadowing.** VB looks up names in the enclosing namespaces before it considers `Imports`
+> aliases, so inside `org.datavec.api.transform.*` the name `Schema` resolves to the namespace
+> `transform.schema`, and in the test project `Writable` resolves to the test namespace
+> `...Tests.org.datavec.api.writable`. The ported code therefore uses aliases with a `T` suffix
+> (`Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema`, `WritableT`,
+> `ConditionT`, `FileBatchT`) or fully qualified names (`System.Text.RegularExpressions.Regex`). The same
+> case-insensitivity makes a `getType()` method hide `Object.GetType()`; write `CObj(x).GetType()` when the
+> .NET type is meant.
 
 Use these when moving the next file from `unported/` to `src/`.
 

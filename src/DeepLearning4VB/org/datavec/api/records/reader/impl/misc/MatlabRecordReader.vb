@@ -32,8 +32,9 @@ Namespace org.datavec.api.records.reader.impl.misc
     ''' <summary>
     ''' Reads Matlab ASCII files: one record per line, values separated by spaces or tabs, <c>%</c> starts a
     ''' comment. Each file of the split is parsed on the first <c>next()</c> call and its records are then
-    ''' returned one at a time. (The Java version threw "Strange state detected" after parsing a file and
-    ''' only looked at the file iterator in <c>hasNext()</c>; both are fixed here.)
+    ''' returned one at a time. (The Java version threw "Strange state detected" after parsing a file, only
+    ''' looked at the file iterator in <c>hasNext()</c>, and returned an extra empty record for a file ending
+    ''' in a new line; all three are fixed here.)
     ''' </summary>
     <Serializable>
     Public Class MatlabRecordReader
@@ -113,6 +114,12 @@ Namespace org.datavec.api.records.reader.impl.misc
                 ' last number?
                 If fileContent.Length > 0 Then
                     currRecord.Add(New DoubleWritable(parseDouble(fileContent.ToString())))
+                End If
+
+                ' A file ending in a new line leaves an empty record behind (the Java version returned it as
+                ' a record); only an empty file still yields a single empty record.
+                If records.Count > 1 AndAlso records(records.Count - 1).Count = 0 Then
+                    records.RemoveAt(records.Count - 1)
                 End If
 
                 currIter = New JavaIterator(Of IList(Of writable.Writable))(records)

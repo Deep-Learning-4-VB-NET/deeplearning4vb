@@ -71,7 +71,7 @@ Namespace org.datavec.api.formats.input
             Throw New NotSupportedException()
         End Sub
 
-        Public Overridable Function [getType]() As WritableType Implements writable.Writable.getType
+        Public Overridable Shadows Function [getType]() As WritableType Implements writable.Writable.getType
             Throw New NotSupportedException()
         End Function
 
