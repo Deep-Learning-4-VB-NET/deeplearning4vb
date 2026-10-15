@@ -1,0 +1,2 @@
+# a multilabel record with label index 0, which is invalid with one-based label indexing
+0,1 1:1.0 2:2.0

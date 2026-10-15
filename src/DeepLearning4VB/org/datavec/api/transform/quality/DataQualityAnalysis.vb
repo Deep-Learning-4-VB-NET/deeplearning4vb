@@ -1,13 +1,3 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-Imports Microsoft.VisualBasic
-Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-Imports ColumnType = org.datavec.api.transform.ColumnType
-Imports ColumnQuality = org.datavec.api.transform.quality.columns.ColumnQuality
-Imports Schema = org.datavec.api.transform.schema.Schema
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -26,48 +16,98 @@ Imports Schema = org.datavec.api.transform.schema.Schema
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Collections.Generic
+Imports System.Linq
+Imports System.Text
+Imports ColumnType = DeepLearning4VB.org.datavec.api.transform.ColumnType
+Imports ColumnQuality = DeepLearning4VB.org.datavec.api.transform.quality.columns.ColumnQuality
+Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 
 Namespace org.datavec.api.transform.quality
 
+    ''' <summary>
+    ''' A report outlining number of invalid and missing features
+    ''' </summary>
+    ' Java: @AllArgsConstructor @Data
+    <Serializable>
+    Public Class DataQualityAnalysis
 
-	''' <summary>
-	'''A report outlining number of invalid and missing features
-	''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data public class DataQualityAnalysis
-	Public Class DataQualityAnalysis
+        Private schemaField As SchemaT
+        Private columnQualityList As IList(Of ColumnQuality)
 
-		Private schema As Schema
-		Private columnQualityList As IList(Of ColumnQuality)
+        Public Sub New()
+        End Sub
 
+        Public Sub New(ByVal schema As SchemaT, ByVal columnQualityList As IList(Of ColumnQuality))
+            Me.schemaField = schema
+            Me.columnQualityList = columnQualityList
+        End Sub
 
-		Public Overrides Function ToString() As String
-			Dim sb As New StringBuilder()
-			Dim nCol As Integer = schema.numColumns()
+        ''' <summary>Java <c>getSchema()</c> (Lombok).</summary>
+        Public Function getSchema() As SchemaT
+            Return schemaField
+        End Function
 
-			Dim maxNameLength As Integer = 0
-			For Each s As String In schema.getColumnNames()
-				maxNameLength = Math.Max(maxNameLength, s.Length)
-			Next s
+        ''' <summary>Java <c>setSchema()</c> (Lombok).</summary>
+        Public Sub setSchema(ByVal schema As SchemaT)
+            schemaField = schema
+        End Sub
 
-			'Header:
-'JAVA TO VB CONVERTER TODO TASK: The following line has a Java format specifier which cannot be directly translated to .NET:
-			sb.Append(String.Format("{0,-6}", "idx")).Append(String.Format("%-" & (maxNameLength + 8) & "s", "name")).Append(String.Format("{0,-15}", "type")).Append(String.Format("{0,-10}", "quality")).Append("details").Append(vbLf)
+        ''' <summary>Java <c>getColumnQualityList()</c> (Lombok).</summary>
+        Public Function getColumnQualityList() As IList(Of ColumnQuality)
+            Return columnQualityList
+        End Function
 
-			For i As Integer = 0 To nCol - 1
-				Dim colName As String = schema.getName(i)
-				Dim type As ColumnType = schema.getType(i)
-				Dim columnQuality As ColumnQuality = columnQualityList(i)
-				Dim pass As Boolean = columnQuality.getCountInvalid() = 0L AndAlso columnQuality.getCountMissing() = 0L
-'JAVA TO VB CONVERTER TODO TASK: The following line has a Java format specifier which cannot be directly translated to .NET:
-				Dim paddedName As String = String.Format("%-" & (maxNameLength + 8) & "s", """" & colName & """")
-				sb.Append(String.Format("{0,-6:D}", i)).Append(paddedName).Append(String.Format("{0,-15}", type)).Append(String.Format("{0,-10}", (If(pass, "ok", "FAIL")))).Append(columnQuality).Append(vbLf)
-			Next i
+        ''' <summary>Java <c>setColumnQualityList()</c> (Lombok).</summary>
+        Public Sub setColumnQualityList(ByVal list As IList(Of ColumnQuality))
+            columnQualityList = list
+        End Sub
 
-			Return sb.ToString()
-		End Function
+        Public Overrides Function ToString() As String
+            Dim sb As New StringBuilder()
+            Dim nCol As Integer = schemaField.numColumns()
 
-	End Class
+            Dim maxNameLength As Integer = 0
+            For Each s As String In schemaField.getColumnNames()
+                maxNameLength = Math.Max(maxNameLength, s.Length)
+            Next s
+
+            'Header:
+            sb.Append(JavaString.format("%-6s", "idx")).Append(JavaString.format("%-" & (maxNameLength + 8) & "s", "name")).Append(JavaString.format("%-15s", "type")).Append(JavaString.format("%-10s", "quality")).Append("details").Append(ControlChars.Lf)
+
+            For i As Integer = 0 To nCol - 1
+                Dim colName As String = schemaField.getName(i)
+                Dim type As ColumnType = schemaField.getType(i)
+                Dim columnQuality As ColumnQuality = columnQualityList(i)
+                Dim pass As Boolean = columnQuality.getCountInvalid() = 0L AndAlso columnQuality.getCountMissing() = 0L
+                Dim paddedName As String = JavaString.format("%-" & (maxNameLength + 8) & "s", """" & colName & """")
+                sb.Append(JavaString.format("%-6d", i)).Append(paddedName).Append(JavaString.format("%-15s", type.ToString())).Append(JavaString.format("%-10s", If(pass, "ok", "FAIL"))).Append(columnQuality.ToString()).Append(ControlChars.Lf)
+            Next i
+
+            Return sb.ToString()
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Dim other As DataQualityAnalysis = TryCast(obj, DataQualityAnalysis)
+            If other Is Nothing Then Return False
+            If Not Object.Equals(schemaField, other.schemaField) Then Return False
+            If columnQualityList Is Nothing OrElse other.columnQualityList Is Nothing Then Return columnQualityList Is other.columnQualityList
+            Return columnQualityList.SequenceEqual(other.columnQualityList)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Dim h As Integer = If(schemaField Is Nothing, 0, schemaField.GetHashCode())
+            If columnQualityList IsNot Nothing Then
+                For Each q As ColumnQuality In columnQualityList
+                    h = h * 31 + If(q Is Nothing, 0, q.GetHashCode())
+                Next
+            End If
+            Return h
+        End Function
+
+    End Class
 
 End Namespace

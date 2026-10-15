@@ -266,10 +266,10 @@ Namespace org.datavec.api.records.mapper
             End Function
 
             Public Overrides Function ToString() As String
-                Return "RecordMapper.RecordMapperBuilder(recordReader=" & JavaCompat.Objects.toString(recordReaderValue) &
-                    ", recordWriter=" & JavaCompat.Objects.toString(recordWriterValue) &
-                    ", inputUrl=" & JavaCompat.Objects.toString(inputUrlValue) &
-                    ", outputUrl=" & JavaCompat.Objects.toString(outputUrlValue) &
+                Return "RecordMapper.RecordMapperBuilder(recordReader=" & Objects.toString(recordReaderValue) &
+                    ", recordWriter=" & Objects.toString(recordWriterValue) &
+                    ", inputUrl=" & Objects.toString(inputUrlValue) &
+                    ", outputUrl=" & Objects.toString(outputUrlValue) &
                     ", callInitRecordReader=" & callInitRecordReaderValue &
                     ", callInitRecordWriter=" & callInitRecordWriterValue &
                     ", callInitPartitioner=" & callInitPartitionerValue &

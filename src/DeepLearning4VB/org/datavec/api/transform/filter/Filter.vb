@@ -1,10 +1,3 @@
-﻿Imports System.Collections.Generic
-Imports ColumnOp = org.datavec.api.transform.ColumnOp
-Imports Schema = org.datavec.api.transform.schema.Schema
-Imports Writable = org.datavec.api.writable.Writable
-Imports JsonInclude = org.nd4j.shade.jackson.annotation.JsonInclude
-Imports JsonTypeInfo = org.nd4j.shade.jackson.annotation.JsonTypeInfo
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -23,37 +16,38 @@ Imports JsonTypeInfo = org.nd4j.shade.jackson.annotation.JsonTypeInfo
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System.Collections.Generic
+Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.transform.filter
 
+    ''' <summary>
+    ''' Decides whether an example (or a sequence) is removed from the data. The <c>InputSchema</c>
+    ''' property is inherited from <see cref="ColumnOp"/>.
+    ''' </summary>
+    ' TODO(serde): polymorphic JSON attributes added in the serde wave
+    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    Public Interface Filter
+        Inherits ColumnOp
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @JsonInclude(JsonInclude.Include.NON_NULL) @JsonTypeInfo(use = JsonTypeInfo.Id.@CLASS, include = JsonTypeInfo.@As.@PROPERTY, property = "@class") public interface Filter extends java.io.Serializable, org.datavec.api.transform.ColumnOp
-	Public Interface Filter
-		Inherits ColumnOp
+        ''' <param name="example"> Example </param>
+        ''' <returns> true if example should be removed, false to keep </returns>
+        Function removeExample(ByVal example As Object) As Boolean
 
-		''' <param name="example"> Example </param>
-		''' <returns> true if example should be removed, false to keep </returns>
-		Function removeExample(ByVal example As Object) As Boolean
+        ''' <param name="sequence"> sequence example </param>
+        ''' <returns> true if example should be removed, false to keep </returns>
+        Function removeSequence(ByVal sequence As Object) As Boolean
 
-		''' <param name="sequence"> sequence example </param>
-		''' <returns> true if example should be removed, false to keep </returns>
-		Function removeSequence(ByVal sequence As Object) As Boolean
+        ''' <param name="writables"> Example </param>
+        ''' <returns> true if example should be removed, false to keep </returns>
+        Function removeExample(ByVal writables As IList(Of WritableT)) As Boolean
 
-		''' <param name="writables"> Example </param>
-		''' <returns> true if example should be removed, false to keep </returns>
-		Function removeExample(ByVal writables As IList(Of Writable)) As Boolean
+        ''' <param name="sequence"> sequence example </param>
+        ''' <returns> true if example should be removed, false to keep </returns>
+        Function removeSequence(ByVal sequence As IList(Of IList(Of WritableT))) As Boolean
 
-		''' <param name="sequence"> sequence example </param>
-		''' <returns> true if example should be removed, false to keep </returns>
-		Function removeSequence(ByVal sequence As IList(Of IList(Of Writable))) As Boolean
-
-		''' 
-		''' <param name="schema"> </param>
-		Property InputSchema As Schema
-
-
-	End Interface
+    End Interface
 
 End Namespace

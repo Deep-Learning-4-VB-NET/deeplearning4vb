@@ -1,0 +1,4 @@
+# several (regression) outputs per record, comma separated
+7,2.45,9 2:1.0 4:2.0 6:3.0 8:4.0 10:5.0
+2,3,4 qid:42 1:0.1 2:2.0 6:6.6 8:80.0
+33,32.0,31.9

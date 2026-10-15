@@ -70,7 +70,7 @@ Namespace org.datavec.api.records.reader.impl.regex
 
         Private regex As String
         Private skipNumLines As Integer
-        Private pattern As Regex
+        Private pattern As System.Text.RegularExpressions.Regex
         Private errorHandling As LineErrorHandling
 
         Public Sub New(ByVal regex As String, ByVal skipNumLines As Integer)

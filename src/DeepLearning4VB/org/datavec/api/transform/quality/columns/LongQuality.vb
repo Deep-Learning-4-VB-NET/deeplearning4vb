@@ -1,7 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -20,36 +16,50 @@ Imports EqualsAndHashCode = lombok.EqualsAndHashCode
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.quality.columns
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data public class LongQuality extends ColumnQuality
-	<Serializable>
-	Public Class LongQuality
-		Inherits ColumnQuality
+    ''' <summary>Quality report of a long column: adds the count of non-long values.</summary>
+    ' Java: @EqualsAndHashCode(callSuper = true) @Data
+    <Serializable>
+    Public Class LongQuality
+        Inherits ColumnQuality
 
-		Private ReadOnly countNonLong As Long
+        Private ReadOnly countNonLong As Long
 
-		Public Sub New()
-			Me.New(0, 0, 0, 0, 0)
-		End Sub
+        Public Sub New()
+            Me.New(0, 0, 0, 0, 0)
+        End Sub
 
-		Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonLong As Long)
-			MyBase.New(countValid, countInvalid, countMissing, countTotal)
-			Me.countNonLong = countNonLong
-		End Sub
+        Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonLong As Long)
+            MyBase.New(countValid, countInvalid, countMissing, countTotal)
+            Me.countNonLong = countNonLong
+        End Sub
 
+        Public Function getCountNonLong() As Long
+            Return countNonLong
+        End Function
 
-		Public Overridable Function add(ByVal other As LongQuality) As LongQuality
-			Return New LongQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonLong + other.countNonLong)
-		End Function
+        Public Overridable Function add(ByVal other As LongQuality) As LongQuality
+            Return New LongQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonLong + other.countNonLong)
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "LongQuality(" & MyBase.ToString() & ", countNonLong=" & countNonLong & ")"
-		End Function
+        Public Overrides Function ToString() As String
+            Return "LongQuality(" & MyBase.ToString() & ", countNonLong=" & countNonLong & ")"
+        End Function
 
-	End Class
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            If Not MyBase.Equals(obj) Then Return False
+            Return countNonLong = DirectCast(obj, LongQuality).countNonLong
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(MyBase.GetHashCode(), countNonLong)
+        End Function
+
+    End Class
 
 End Namespace

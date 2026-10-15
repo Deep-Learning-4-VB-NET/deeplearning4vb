@@ -97,7 +97,7 @@ Namespace org.datavec.api.transform.condition.column
             Return inputSchema
         End Function
 
-        Public Overridable Function condition(ByVal list As IList(Of writable.Writable)) As Boolean Implements Condition.condition
+        Public Overridable Overloads Function condition(ByVal list As IList(Of writable.Writable)) As Boolean Implements Condition.condition
             Return columnCondition(list(columnIdx))
         End Function
 

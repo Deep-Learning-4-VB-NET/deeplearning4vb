@@ -1,11 +1,3 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports Data = lombok.Data
-Imports Schema = org.datavec.api.transform.schema.Schema
-Imports Writable = org.datavec.api.writable.Writable
-Imports JsonIgnoreProperties = org.nd4j.shade.jackson.annotation.JsonIgnoreProperties
-Imports JsonProperty = org.nd4j.shade.jackson.annotation.JsonProperty
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -24,40 +16,40 @@ Imports JsonProperty = org.nd4j.shade.jackson.annotation.JsonProperty
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Collections.Generic
+Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.transform.condition.column
 
+    ''' <summary>A column condition that is always satisfied.</summary>
+    ' Java: @JsonIgnoreProperties({"schema"}) @Data; the JSON property is "name".
+    <Serializable>
+    Public Class TrivialColumnCondition
+        Inherits BaseColumnCondition
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @JsonIgnoreProperties({"schema"}) @Data public class TrivialColumnCondition extends BaseColumnCondition
-	<Serializable>
-	Public Class TrivialColumnCondition
-		Inherits BaseColumnCondition
+        Public Sub New(ByVal name As String)
+            MyBase.New(name, DEFAULT_SEQUENCE_CONDITION_MODE)
+        End Sub
 
-		Private Shadows schema As Schema
+        Public Overrides Function ToString() As String
+            Return "Trivial(" & columnNameField & ")"
+        End Function
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public TrivialColumnCondition(@JsonProperty("name") String name)
-		Public Sub New(ByVal name As String)
-			MyBase.New(name, DEFAULT_SEQUENCE_CONDITION_MODE)
-		End Sub
+        Public Overrides Function columnCondition(ByVal writable As WritableT) As Boolean
+            Return True
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "Trivial(" & MyBase.columnName_Conflict & ")"
-		End Function
+        Public Overrides Function condition(ByVal writables As IList(Of WritableT)) As Boolean
+            Return True
+        End Function
 
-		Public Overrides Function columnCondition(ByVal writable As Writable) As Boolean
-			Return True
-		End Function
+        Public Overrides Function condition(ByVal input As Object) As Boolean
+            Return True
+        End Function
 
-		Public Overridable Overloads Function condition(ByVal writables As IList(Of Writable)) As Boolean
-			Return True
-		End Function
-
-		Public Overrides Function condition(ByVal input As Object) As Boolean
-			Return True
-		End Function
-	End Class
+    End Class
 
 End Namespace

@@ -45,7 +45,7 @@ Namespace org.datavec.api.records.reader.impl.regex
 
         Private regex As String
         Private skipNumLines As Integer
-        Private pattern As Regex
+        Private pattern As System.Text.RegularExpressions.Regex
         Private numLinesSkipped As Integer
         Private currLine As Integer = 0
 
@@ -56,8 +56,8 @@ Namespace org.datavec.api.records.reader.impl.regex
         End Sub
 
         ''' <summary>A regex that, like Java's <c>Matcher.matches()</c>, only matches the entire input.</summary>
-        Friend Shared Function compileFullMatch(ByVal regex As String) As Regex
-            Return New Regex("\A(?:" & regex & ")\z")
+        Friend Shared Function compileFullMatch(ByVal regex As String) As System.Text.RegularExpressions.Regex
+            Return New System.Text.RegularExpressions.Regex("\A(?:" & regex & ")\z")
         End Function
 
         Public Overrides Sub initialize(ByVal conf As Configuration, ByVal split As InputSplit)

@@ -1,0 +1,2 @@
+# a feature with index 0, which is invalid with one-based feature indexing
+7 0:1.0 2:2.0 4:3.0

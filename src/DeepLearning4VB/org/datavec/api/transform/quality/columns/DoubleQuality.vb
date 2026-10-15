@@ -1,7 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -20,40 +16,63 @@ Imports EqualsAndHashCode = lombok.EqualsAndHashCode
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.quality.columns
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data public class DoubleQuality extends ColumnQuality
-	<Serializable>
-	Public Class DoubleQuality
-		Inherits ColumnQuality
+    ''' <summary>Quality report of a double column: adds the counts of non-real, NaN and infinite values.</summary>
+    ' Java: @EqualsAndHashCode(callSuper = true) @Data
+    <Serializable>
+    Public Class DoubleQuality
+        Inherits ColumnQuality
 
-		Private ReadOnly countNonReal As Long
-		Private ReadOnly countNaN As Long
-		Private ReadOnly countInfinite As Long
+        Private ReadOnly countNonReal As Long
+        Private ReadOnly countNaN As Long
+        Private ReadOnly countInfinite As Long
 
-		Public Sub New()
-			Me.New(0, 0, 0, 0, 0, 0, 0)
-		End Sub
+        Public Sub New()
+            Me.New(0, 0, 0, 0, 0, 0, 0)
+        End Sub
 
-		Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonReal As Long, ByVal countNaN As Long, ByVal countInfinite As Long)
-			MyBase.New(countValid, countInvalid, countMissing, countTotal)
-			Me.countNonReal = countNonReal
-			Me.countNaN = countNaN
-			Me.countInfinite = countInfinite
-		End Sub
+        Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonReal As Long, ByVal countNaN As Long, ByVal countInfinite As Long)
+            MyBase.New(countValid, countInvalid, countMissing, countTotal)
+            Me.countNonReal = countNonReal
+            Me.countNaN = countNaN
+            Me.countInfinite = countInfinite
+        End Sub
 
+        Public Function getCountNonReal() As Long
+            Return countNonReal
+        End Function
 
-		Public Overridable Function add(ByVal other As DoubleQuality) As DoubleQuality
-			Return New DoubleQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonReal + other.countNonReal, countNaN + other.countNaN, countInfinite + other.countInfinite)
-		End Function
+        Public Function getCountNaN() As Long
+            Return countNaN
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "DoubleQuality(" & MyBase.ToString() & ", countNonReal=" & countNonReal & ", countNaN=" & countNaN & ", countInfinite=" & countInfinite & ")"
-		End Function
+        Public Function getCountInfinite() As Long
+            Return countInfinite
+        End Function
 
-	End Class
+        Public Overridable Function add(ByVal other As DoubleQuality) As DoubleQuality
+            Return New DoubleQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonReal + other.countNonReal, countNaN + other.countNaN, countInfinite + other.countInfinite)
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "DoubleQuality(" & MyBase.ToString() & ", countNonReal=" & countNonReal & ", countNaN=" & countNaN & ", countInfinite=" & countInfinite & ")"
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            If Not MyBase.Equals(obj) Then Return False
+            Dim other As DoubleQuality = DirectCast(obj, DoubleQuality)
+            Return countNonReal = other.countNonReal AndAlso countNaN = other.countNaN AndAlso countInfinite = other.countInfinite
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(MyBase.GetHashCode(), countNonReal, countNaN, countInfinite)
+        End Function
+
+    End Class
 
 End Namespace

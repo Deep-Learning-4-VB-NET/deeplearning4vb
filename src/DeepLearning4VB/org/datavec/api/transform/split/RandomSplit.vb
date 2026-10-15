@@ -1,6 +1,3 @@
-﻿Imports AllArgsConstructor = lombok.AllArgsConstructor
-Imports Data = lombok.Data
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -19,18 +16,50 @@ Imports Data = lombok.Data
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.split
 
+    ''' <summary>A random train/test split strategy with the given fraction of examples in the training set.</summary>
+    ' Java: @AllArgsConstructor @Data
+    <Serializable>
+    Public Class RandomSplit
+        Implements SplitStrategy
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @AllArgsConstructor @Data public class RandomSplit implements SplitStrategy
-	Public Class RandomSplit
-		Implements SplitStrategy
+        Private fractionTrain As Double
 
-		Private fractionTrain As Double
+        Public Sub New()
+        End Sub
 
-	End Class
+        Public Sub New(ByVal fractionTrain As Double)
+            Me.fractionTrain = fractionTrain
+        End Sub
+
+        ''' <summary>Java <c>getFractionTrain()</c> (Lombok).</summary>
+        Public Function getFractionTrain() As Double
+            Return fractionTrain
+        End Function
+
+        ''' <summary>Java <c>setFractionTrain()</c> (Lombok).</summary>
+        Public Sub setFractionTrain(ByVal value As Double)
+            fractionTrain = value
+        End Sub
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            Dim other As RandomSplit = TryCast(obj, RandomSplit)
+            Return other IsNot Nothing AndAlso fractionTrain.Equals(other.fractionTrain)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return fractionTrain.GetHashCode()
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "RandomSplit(fractionTrain=" & fractionTrain.ToString(Globalization.CultureInfo.InvariantCulture) & ")"
+        End Function
+
+    End Class
 
 End Namespace

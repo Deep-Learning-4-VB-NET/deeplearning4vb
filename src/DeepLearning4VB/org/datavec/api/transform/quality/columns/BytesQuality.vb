@@ -1,6 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -19,28 +16,34 @@ Imports Data = lombok.Data
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.quality.columns
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Data public class BytesQuality extends ColumnQuality
-	<Serializable>
-	Public Class BytesQuality
-		Inherits ColumnQuality
+    ''' <summary>Quality report of a bytes column (only the base counts).</summary>
+    ' Java: @Data
+    <Serializable>
+    Public Class BytesQuality
+        Inherits ColumnQuality
 
-		Public Sub New()
-			Me.New(0, 0, 0, 0)
-		End Sub
+        Public Sub New()
+            Me.New(0, 0, 0, 0)
+        End Sub
 
-		Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long)
-			MyBase.New(countValid, countInvalid, countMissing, countTotal)
-		End Sub
+        Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long)
+            MyBase.New(countValid, countInvalid, countMissing, countTotal)
+        End Sub
 
-		Public Overrides Function ToString() As String
-			Return "BytesQuality(" & MyBase.ToString() & ")"
-		End Function
+        Public Overridable Function add(ByVal other As BytesQuality) As BytesQuality
+            Return New BytesQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal)
+        End Function
 
-	End Class
+        Public Overrides Function ToString() As String
+            Return "BytesQuality(" & MyBase.ToString() & ")"
+        End Function
+
+    End Class
 
 End Namespace

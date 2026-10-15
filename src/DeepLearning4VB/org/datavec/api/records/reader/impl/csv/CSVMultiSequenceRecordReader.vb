@@ -57,7 +57,7 @@ Namespace org.datavec.api.records.reader.impl.csv
 
         Private sequenceSeparatorRegex As String
         <NonSerialized>
-        Private separatorPattern As Regex
+        Private separatorPattern As System.Text.RegularExpressions.Regex
         Private modeValue As Mode
         Private padValue As writable.Writable
 
@@ -105,7 +105,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         ''' <summary>Java <c>String.matches(sequenceSeparatorRegex)</c>: the whole line must match.</summary>
         Private Function isSeparator(ByVal line As String) As Boolean
             If separatorPattern Is Nothing Then
-                separatorPattern = New Regex("\A(?:" & sequenceSeparatorRegex & ")\z")
+                separatorPattern = New System.Text.RegularExpressions.Regex("\A(?:" & sequenceSeparatorRegex & ")\z")
             End If
             Return separatorPattern.IsMatch(line)
         End Function

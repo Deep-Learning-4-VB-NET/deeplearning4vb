@@ -1,0 +1,4 @@
+# basic SVMLight/LibSVM records: label, optional qid, index:value pairs, comments
+7 2:1.0 4:2.0 6:3.0 8:4.0 10:5.0
+2 qid:42 1:0.1 2:2.0 6:6.6 8:80.0
+33 # a record with a label but no features

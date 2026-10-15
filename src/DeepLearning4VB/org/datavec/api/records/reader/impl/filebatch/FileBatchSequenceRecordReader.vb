@@ -34,7 +34,7 @@ Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.Se
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 
-Imports FileBatch = DeepLearning4VB.org.nd4j.common.loader.FileBatch
+Imports FileBatchT = DeepLearning4VB.org.nd4j.common.loader.FileBatch
 Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.filebatch
@@ -48,12 +48,12 @@ Namespace org.datavec.api.records.reader.impl.filebatch
         Implements SequenceRecordReader
 
         Private ReadOnly recordReader As SequenceRecordReader
-        Private ReadOnly fileBatch As FileBatch
+        Private ReadOnly fileBatch As FileBatchT
         Private position As Integer = 0
 
         ''' <param name="seqRR">     Underlying record reader to read files from </param>
         ''' <param name="fileBatch"> File batch to read files from </param>
-        Public Sub New(ByVal seqRR As SequenceRecordReader, ByVal fileBatch As FileBatch)
+        Public Sub New(ByVal seqRR As SequenceRecordReader, ByVal fileBatch As FileBatchT)
             Me.recordReader = seqRR
             Me.fileBatch = fileBatch
         End Sub

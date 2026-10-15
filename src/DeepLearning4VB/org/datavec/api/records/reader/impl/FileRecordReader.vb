@@ -75,7 +75,7 @@ Namespace org.datavec.api.records.reader.impl
                 If locations.Length > 0 Then
                     Dim labels As ISet(Of String) = New HashSet(Of String)()
                     For Each u As Uri In locations
-                        Dim pathSplit() As String = Regex.Split(URIUtil.toUriString(u), "[/\\]")
+                        Dim pathSplit() As String = System.Text.RegularExpressions.Regex.Split(URIUtil.toUriString(u), "[/\\]")
                         labels.Add(pathSplit(pathSplit.Length - 2))
                     Next u
                     Dim sorted As New List(Of String)(labels)

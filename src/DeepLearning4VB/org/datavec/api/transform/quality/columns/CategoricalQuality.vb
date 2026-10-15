@@ -1,7 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -20,32 +16,34 @@ Imports EqualsAndHashCode = lombok.EqualsAndHashCode
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.quality.columns
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data public class CategoricalQuality extends ColumnQuality
-	<Serializable>
-	Public Class CategoricalQuality
-		Inherits ColumnQuality
+    ''' <summary>Quality report of a categorical column (only the base counts).</summary>
+    ' Java: @EqualsAndHashCode(callSuper = true) @Data
+    <Serializable>
+    Public Class CategoricalQuality
+        Inherits ColumnQuality
 
-		Public Sub New()
-			MyBase.New(0, 0, 0, 0)
-		End Sub
+        Public Sub New()
+            MyBase.New(0, 0, 0, 0)
+        End Sub
 
-		Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long)
-			MyBase.New(countValid, countInvalid, countMissing, countTotal)
-		End Sub
+        Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long)
+            MyBase.New(countValid, countInvalid, countMissing, countTotal)
+        End Sub
 
-		Public Overridable Function add(ByVal other As CategoricalQuality) As CategoricalQuality
-			Return New CategoricalQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal)
-		End Function
+        Public Overridable Function add(ByVal other As CategoricalQuality) As CategoricalQuality
+            Return New CategoricalQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal)
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "CategoricalQuality(" & MyBase.ToString() & ")"
-		End Function
+        Public Overrides Function ToString() As String
+            Return "CategoricalQuality(" & MyBase.ToString() & ")"
+        End Function
 
-	End Class
+    End Class
 
 End Namespace

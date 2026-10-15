@@ -62,7 +62,7 @@ Namespace org.datavec.api.records.writer.impl.misc
         Protected Friend zeroBasedIndexing As Boolean = False ' whether to use zero-based indexing, false is safest
         Protected Friend zeroBasedLabelIndexing As Boolean = False ' whether to use zero-based label indexing (NONSTANDARD!)
         Protected Friend hasLabel As Boolean = True ' Whether record has label
-        Protected Friend multilabel As Boolean = False ' Whether labels are for multilabel binary classification
+        Protected Friend multilabelTargets As Boolean = False ' Whether labels are for multilabel binary classification
         Protected Friend labelFirstColumn As Integer = -1 ' First column with label
         Protected Friend labelLastColumn As Integer = -1 ' Last column with label
 
@@ -77,7 +77,7 @@ Namespace org.datavec.api.records.writer.impl.misc
                 MyBase.Conf = value
                 featureFirstColumn = value.getInt(FEATURE_FIRST_COLUMN, 0)
                 hasLabel = value.getBoolean(HAS_LABELS, True)
-                multilabel = value.getBoolean(MULTILABEL, False)
+                multilabelTargets = value.getBoolean(MULTILABEL, False)
                 labelFirstColumn = value.getInt(LABEL_FIRST_COLUMN, -1)
                 labelLastColumn = value.getInt(LABEL_LAST_COLUMN, -1)
                 featureLastColumn = value.getInt(FEATURE_LAST_COLUMN, If(labelFirstColumn > 0, labelFirstColumn - 1, -1))
@@ -142,7 +142,7 @@ Namespace org.datavec.api.records.writer.impl.misc
                             For j As Long = 0 To arr.length() - 1
                                 Dim val As Double = arr.getDouble(j)
                                 ' If multilabel, only store indeces of non-zero labels
-                                If multilabel Then
+                                If multilabelTargets Then
                                     If val = 1.0 Then
                                         result.Append(SVMLightRecordReader.LABEL_DELIMITER & labelIndex)
                                     ElseIf val <> 0.0 AndAlso val <> -1.0 Then
@@ -155,7 +155,7 @@ Namespace org.datavec.api.records.writer.impl.misc
                             Next j
                         Else ' Handle scalar Writables
                             ' If multilabel, only store indeces of non-zero labels
-                            If multilabel Then
+                            If multilabelTargets Then
                                 Dim val As Double = parseDouble(w.ToString())
                                 If val = 1.0 Then
                                     result.Append(SVMLightRecordReader.LABEL_DELIMITER & labelIndex)

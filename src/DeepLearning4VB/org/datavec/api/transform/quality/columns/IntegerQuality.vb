@@ -1,7 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -20,32 +16,50 @@ Imports EqualsAndHashCode = lombok.EqualsAndHashCode
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
 
 Namespace org.datavec.api.transform.quality.columns
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data public class IntegerQuality extends ColumnQuality
-	<Serializable>
-	Public Class IntegerQuality
-		Inherits ColumnQuality
+    ''' <summary>Quality report of an integer column: adds the count of non-integer values.</summary>
+    ' Java: @EqualsAndHashCode(callSuper = true) @Data
+    <Serializable>
+    Public Class IntegerQuality
+        Inherits ColumnQuality
 
-		Private ReadOnly countNonInteger As Long
+        Private ReadOnly countNonInteger As Long
 
-		Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonInteger As Long)
-			MyBase.New(countValid, countInvalid, countMissing, countTotal)
-			Me.countNonInteger = countNonInteger
-		End Sub
+        Public Sub New()
+            Me.New(0, 0, 0, 0, 0)
+        End Sub
 
+        Public Sub New(ByVal countValid As Long, ByVal countInvalid As Long, ByVal countMissing As Long, ByVal countTotal As Long, ByVal countNonInteger As Long)
+            MyBase.New(countValid, countInvalid, countMissing, countTotal)
+            Me.countNonInteger = countNonInteger
+        End Sub
 
-		Public Overridable Function add(ByVal other As IntegerQuality) As IntegerQuality
-			Return New IntegerQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonInteger + other.countNonInteger)
-		End Function
+        Public Function getCountNonInteger() As Long
+            Return countNonInteger
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "IntegerQuality(" & MyBase.ToString() & ", countNonInteger=" & countNonInteger & ")"
-		End Function
+        Public Overridable Function add(ByVal other As IntegerQuality) As IntegerQuality
+            Return New IntegerQuality(countValid + other.countValid, countInvalid + other.countInvalid, countMissing + other.countMissing, countTotal + other.countTotal, countNonInteger + other.countNonInteger)
+        End Function
 
-	End Class
+        Public Overrides Function ToString() As String
+            Return "IntegerQuality(" & MyBase.ToString() & ", countNonInteger=" & countNonInteger & ")"
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            If Not MyBase.Equals(obj) Then Return False
+            Return countNonInteger = DirectCast(obj, IntegerQuality).countNonInteger
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(MyBase.GetHashCode(), countNonInteger)
+        End Function
+
+    End Class
 
 End Namespace

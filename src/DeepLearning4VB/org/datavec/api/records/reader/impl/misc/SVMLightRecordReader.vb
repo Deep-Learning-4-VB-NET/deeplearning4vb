@@ -76,7 +76,7 @@ Namespace org.datavec.api.records.reader.impl.misc
         '                                                 * but adds extraneous column if data is not zero indexed
         Protected Friend zeroBasedLabelIndexing As Boolean = False ' whether to use zero-based label indexing (NONSTANDARD!)
         Protected Friend appendLabel As Boolean = True ' whether to append labels to output
-        Protected Friend multilabel As Boolean = False ' whether targets are multilabel
+        Protected Friend multilabelTargets As Boolean = False ' whether targets are multilabel
         Protected Friend numLabels As Integer = -1 ' number of labels (required for multilabel targets)
         Protected Friend recordLookahead As writable.Writable = Nothing
 
@@ -110,11 +110,11 @@ Namespace org.datavec.api.records.reader.impl.misc
                     Throw New NotSupportedException("numFeatures must be set in configuration")
                 End If
                 appendLabel = value.getBoolean(APPEND_LABEL, True)
-                multilabel = value.getBoolean(MULTILABEL, False)
+                multilabelTargets = value.getBoolean(MULTILABEL, False)
                 zeroBasedIndexing = value.getBoolean(ZERO_BASED_INDEXING, True)
                 zeroBasedLabelIndexing = value.getBoolean(ZERO_BASED_LABEL_INDEXING, False)
                 numLabels = value.getInt(NUM_LABELS, -1)
-                If multilabel AndAlso numLabels < 0 Then
+                If multilabelTargets AndAlso numLabels < 0 Then
                     Throw New NotSupportedException("numLabels must be set in confirmation for multilabel problems")
                 End If
             End Set
@@ -164,7 +164,7 @@ Namespace org.datavec.api.records.reader.impl.misc
 
             ' Remove trailing comments
             Dim commentRegex As String = ALLOWED_DELIMITERS & "*" & COMMENT_CHAR & ".*$"
-            Dim tokens() As String = StringHelper.Split(New Regex(commentRegex).Replace(line, "", 1), ALLOWED_DELIMITERS, True)
+            Dim tokens() As String = StringHelper.Split(New System.Text.RegularExpressions.Regex(commentRegex).Replace(line, "", 1), ALLOWED_DELIMITERS, True)
 
             ' Iterate over feature tokens
             For i As Integer = 1 To tokens.Length - 1
@@ -206,7 +206,7 @@ Namespace org.datavec.api.records.reader.impl.misc
             If appendLabel Then
                 Dim labels As IList(Of writable.Writable) = New List(Of writable.Writable)()
                 ' Treat labels as indeces for multilabel binary classification
-                If multilabel Then
+                If multilabelTargets Then
                     labels = New List(Of writable.Writable)(Enumerable.Repeat(LABEL_ZERO, numLabels))
                     If Not tokens(0).Equals("") Then
                         Dim labelTokens() As String = StringHelper.Split(tokens(0), LABEL_DELIMITER, True)

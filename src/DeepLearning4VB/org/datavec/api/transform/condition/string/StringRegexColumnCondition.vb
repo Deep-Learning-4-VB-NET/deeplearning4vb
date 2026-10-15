@@ -1,11 +1,3 @@
-﻿Imports System
-Imports Data = lombok.Data
-Imports EqualsAndHashCode = lombok.EqualsAndHashCode
-Imports SequenceConditionMode = org.datavec.api.transform.condition.SequenceConditionMode
-Imports BaseColumnCondition = org.datavec.api.transform.condition.column.BaseColumnCondition
-Imports Writable = org.datavec.api.writable.Writable
-Imports JsonProperty = org.nd4j.shade.jackson.annotation.JsonProperty
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -24,48 +16,81 @@ Imports JsonProperty = org.nd4j.shade.jackson.annotation.JsonProperty
 ' *  *
 ' *  * SPDX-License-Identifier: Apache-2.0
 ' *  *****************************************************************************
-' 
+'
+
+Imports System
+Imports System.Text.RegularExpressions
+Imports SequenceConditionMode = DeepLearning4VB.org.datavec.api.transform.condition.SequenceConditionMode
+Imports BaseColumnCondition = DeepLearning4VB.org.datavec.api.transform.condition.column.BaseColumnCondition
+Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
+Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
 
 Namespace org.datavec.api.transform.condition.string
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @EqualsAndHashCode(callSuper = true) @Data public class StringRegexColumnCondition extends org.datavec.api.transform.condition.column.BaseColumnCondition
-	<Serializable>
-	Public Class StringRegexColumnCondition
-		Inherits BaseColumnCondition
+    ''' <summary>
+    ''' Condition that is satisfied when the whole string value of the column matches a regular expression
+    ''' (Java <c>String.matches</c> semantics: the expression must match the entire value).
+    ''' </summary>
+    ' Java: @EqualsAndHashCode(callSuper = true) @Data; JSON properties "columnName" and "regex".
+    <Serializable>
+    Public Class StringRegexColumnCondition
+        Inherits BaseColumnCondition
 
-		Private ReadOnly regex As String
+        Private ReadOnly regex As String
+        <NonSerialized> Private compiled As Regex
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public StringRegexColumnCondition(@JsonProperty("columnName") String columnName, @JsonProperty("regex") String regex)
-		Public Sub New(ByVal columnName As String, ByVal regex As String)
-			Me.New(columnName, regex, DEFAULT_SEQUENCE_CONDITION_MODE)
-		End Sub
+        Public Sub New(ByVal columnName As String, ByVal regex As String)
+            Me.New(columnName, regex, DEFAULT_SEQUENCE_CONDITION_MODE)
+        End Sub
 
-		Public Sub New(ByVal columnName As String, ByVal regex As String, ByVal sequenceConditionMode As SequenceConditionMode)
-			MyBase.New(columnName, sequenceConditionMode)
-			Me.regex = regex
-		End Sub
+        Public Sub New(ByVal columnName As String, ByVal regex As String, ByVal sequenceConditionMode As SequenceConditionMode)
+            MyBase.New(columnName, sequenceConditionMode)
+            If regex Is Nothing Then Throw New ArgumentNullException("regex")
+            Me.regex = regex
+        End Sub
 
-		Public Overrides Function columnCondition(ByVal writable As Writable) As Boolean
-			Return writable.ToString().matches(regex)
-		End Function
+        ''' <summary>Java <c>getRegex()</c> (Lombok).</summary>
+        Public Function getRegex() As String
+            Return regex
+        End Function
 
-		Public Overrides Function ToString() As String
-			Return "StringRegexColumnCondition(columnName=""" & columnName_Conflict & """,regex=""" & regex & """)"
-		End Function
+        Private Function Matches(ByVal text As String) As Boolean
+            Dim re As Regex = compiled
+            If re Is Nothing Then
+                re = New Regex("\A(?:" & regex & ")\z", RegexOptions.CultureInvariant)
+                compiled = re
+            End If
+            Return re.IsMatch(text)
+        End Function
 
-		''' <summary>
-		''' Condition on arbitrary input
-		''' </summary>
-		''' <param name="input"> the input to return
-		'''              the condition for </param>
-		''' <returns> true if the condition is met
-		''' false otherwise </returns>
-		Public Overrides Function condition(ByVal input As Object) As Boolean
-			Return input.ToString().matches(regex)
-		End Function
+        Public Overrides Function columnCondition(ByVal writable As WritableT) As Boolean
+            Return Matches(writable.ToString())
+        End Function
 
-	End Class
+        Public Overrides Function ToString() As String
+            Return "StringRegexColumnCondition(columnName=""" & columnNameField & """,regex=""" & regex & """)"
+        End Function
+
+        ''' <summary>
+        ''' Condition on arbitrary input
+        ''' </summary>
+        ''' <param name="input"> the input to return
+        '''              the condition for </param>
+        ''' <returns> true if the condition is met
+        ''' false otherwise </returns>
+        Public Overrides Function condition(ByVal input As Object) As Boolean
+            Return Matches(input.ToString())
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            If Not MyBase.Equals(obj) Then Return False
+            Return String.Equals(regex, DirectCast(obj, StringRegexColumnCondition).regex)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Return Objects.hash(columnNameField, regex)
+        End Function
+
+    End Class
 
 End Namespace

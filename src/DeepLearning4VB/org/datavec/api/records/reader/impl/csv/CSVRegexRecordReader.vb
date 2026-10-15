@@ -35,7 +35,7 @@ Namespace org.datavec.api.records.reader.impl.csv
         Inherits CSVRecordReader
 
         Protected Friend regexs() As String = Nothing
-        Protected Friend patterns() As Regex = Nothing
+        Protected Friend patterns() As System.Text.RegularExpressions.Regex = Nothing
         Protected Friend delimiter As String
         Protected Friend quote As String
 
@@ -51,10 +51,10 @@ Namespace org.datavec.api.records.reader.impl.csv
             Me.quote = quote
             Me.regexs = regexs
             If regexs IsNot Nothing Then
-                patterns = New Regex(regexs.Length - 1) {}
+                patterns = New System.Text.RegularExpressions.Regex(regexs.Length - 1) {}
                 For i As Integer = 0 To regexs.Length - 1
                     If regexs(i) IsNot Nothing Then
-                        patterns(i) = New Regex("\A(?:" & regexs(i) & ")\z")
+                        patterns(i) = New System.Text.RegularExpressions.Regex("\A(?:" & regexs(i) & ")\z")
                     End If
                 Next i
             End If
