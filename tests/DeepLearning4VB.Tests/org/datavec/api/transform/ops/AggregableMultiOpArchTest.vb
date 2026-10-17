@@ -33,7 +33,7 @@ Namespace org.datavec.api.transform.ops
                 If tick >= 0 Then simpleName = simpleName.Substring(0, tick)
                 If excluded.Contains(simpleName) Then Continue For
                 checkedTypes.Add(t.FullName)
-                If Not t.IsSerializable Then offenders.Add(t.FullName)
+                If Not isSerializableType(t) Then offenders.Add(t.FullName)
             Next t
 
             ' The rule must actually cover the aggregators (AggregableFirst ... AggregableCountUnique, the

@@ -1,7 +1,6 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports RecordReader = DeepLearning4VB.org.datavec.api.records.reader.RecordReader
 Imports LineRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.LineRecordReader
@@ -27,7 +26,7 @@ Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResourc
 Namespace org.datavec.api.records.reader.impl
 
     ''' <summary>
-    ''' Ported from the DL4J JUnit test of the same name: Java serialization is the BinaryFormatter here.
+    ''' Ported from the DL4J JUnit test of the same name: Java serialization is SerializationUtils here.
     ''' The TransformProcessRecordReader / TransformProcessSequenceRecordReader entries are not ported
     ''' (they need TransformProcess).
     ''' </summary>
@@ -35,7 +34,7 @@ Namespace org.datavec.api.records.reader.impl
     Public Class TestSerialization
 
         Private Shared Function roundTrip(Of T)(ByVal value As T) As T
-            Dim formatter As New BinaryFormatter()
+            Dim formatter As New ObjectFormatter()
             Using ms As New MemoryStream()
                 formatter.Serialize(ms, value)
                 ms.Position = 0

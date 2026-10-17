@@ -1,7 +1,6 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB.org.datavec.api.records.metadata
 
@@ -306,11 +305,11 @@ Namespace org.datavec.api.records.metadata
         <TestMethod>
         Public Sub testSerializable()
             For Each t As Type In New Type() {GetType(RecordMetaDataLine), GetType(RecordMetaDataLineInterval), GetType(RecordMetaDataIndex), GetType(RecordMetaDataInterval), GetType(RecordMetaDataURI), GetType(RecordMetaDataImageURI), GetType(RecordMetaDataComposable), GetType(RecordMetaDataComposableMap)}
-                assertTrue(t.IsSerializable, t.Name & " should be serializable")
+                assertTrue(isSerializableType(t), t.Name & " should be serializable")
             Next t
 
             Dim original As New RecordMetaDataComposable(GetType(String), New RecordMetaDataLine(3, FileUri, GetType(String)), New RecordMetaDataImageURI(OtherUri, Nothing, 3, 4, 5))
-            Dim formatter As New BinaryFormatter()
+            Dim formatter As New ObjectFormatter()
             Dim copy As RecordMetaDataComposable
             Using ms As New MemoryStream()
                 formatter.Serialize(ms, original)

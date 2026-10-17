@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
 Imports System.IO
 Imports System.Linq
@@ -225,7 +225,7 @@ Namespace org.nd4vb.common.util
 
         <TestMethod>
         Public Sub Index_AssignsSequentialIndices()
-            Dim idx As New Index()
+            Dim idx As New Global.DeepLearning4VB.org.nd4vb.common.util.Index() ' System.Index exists on .NET 10
             assertTrue(idx.add("a"))
             assertTrue(idx.add("b"))
             assertFalse(idx.add("a"))

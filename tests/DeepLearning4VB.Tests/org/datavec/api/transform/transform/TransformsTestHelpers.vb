@@ -1,7 +1,6 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.transform.transforms
@@ -24,9 +23,9 @@ Namespace org.datavec.api.transform.transforms
             Return New List(Of Object)(values)
         End Function
 
-        ''' <summary>Java serialization round trip (ObjectOutputStream/ObjectInputStream): the BinaryFormatter.</summary>
+        ''' <summary>Java serialization round trip (ObjectOutputStream/ObjectInputStream): SerializationUtils.</summary>
         Public Function serializeRoundTrip(Of T)(ByVal obj As T) As T
-            Dim bf As New BinaryFormatter()
+            Dim bf As New ObjectFormatter()
             Using ms As New MemoryStream()
                 bf.Serialize(ms, obj)
                 ms.Position = 0

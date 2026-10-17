@@ -58,7 +58,7 @@ Namespace org.datavec.api.transform.analysis.sequence
             assertEquals("SequenceLengthAnalysis.SequenceLengthAnalysisBuilder(totalNumSequences=3, minSeqLength=0, maxSeqLength=0, countZeroLength=0, " &
                          "countOneLength=0, meanLength=0.0, histogramBuckets=null, histogramBucketCounts=null)",
                          SequenceLengthAnalysisT.builder().totalNumSequences(3).ToString())
-            assertTrue(GetType(SequenceLengthAnalysisT).IsSerializable)
+            assertTrue(isSerializableType(GetType(SequenceLengthAnalysisT)))
         End Sub
 
     End Class

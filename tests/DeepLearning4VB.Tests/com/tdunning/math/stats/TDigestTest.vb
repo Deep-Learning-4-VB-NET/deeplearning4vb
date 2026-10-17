@@ -1,7 +1,6 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports System.Text.Json
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB
@@ -384,12 +383,12 @@ Namespace com.tdunning.math.stats
             assertEquals(d.centroidCount(), back.centroidCount())
             assertEquals(d.ToString(), back.ToString())
 
-            ' Unmerged buffered samples survive a plain BinaryFormatter round trip too.
+            ' Unmerged buffered samples survive a SerializationUtils round trip too.
             Dim buffered = TDigest.createDigest(100)
             For i As Integer = 1 To 10
                 buffered.add(i)
             Next
-            Dim bf As New BinaryFormatter()
+            Dim bf As New ObjectFormatter()
             Dim bytes As Byte()
             Using ms As New MemoryStream()
                 bf.Serialize(ms, buffered)

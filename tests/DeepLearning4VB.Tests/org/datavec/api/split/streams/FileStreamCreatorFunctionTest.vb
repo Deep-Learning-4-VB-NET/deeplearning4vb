@@ -69,7 +69,7 @@ Namespace org.datavec.api.split.streams
             assertTrue(ex.Message.StartsWith("Error loading stream for file: ", StringComparison.Ordinal), ex.Message)
             assertTrue(TypeOf ex.InnerException Is FileNotFoundException)
             'the function is serializable, as the split that carries it
-            assertTrue(GetType(FileStreamCreatorFunction).IsSerializable)
+            assertTrue(isSerializableType(GetType(FileStreamCreatorFunction)))
         End Sub
 
     End Class

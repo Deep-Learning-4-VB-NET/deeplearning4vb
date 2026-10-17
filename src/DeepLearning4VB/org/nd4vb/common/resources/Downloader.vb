@@ -41,8 +41,11 @@ Namespace org.nd4vb.common.resources
         Public Const DEFAULT_READ_TIMEOUT As Integer = 60000
 
         Shared Sub New()
+#If NETFRAMEWORK Then
             ' .NET Framework defaults to old TLS versions; current download hosts need TLS 1.2.
+            ' (.NET 10 uses the operating system's TLS defaults, and ServicePointManager is obsolete there.)
             ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol Or SecurityProtocolType.Tls12
+#End If
         End Sub
 
         Private Sub New()

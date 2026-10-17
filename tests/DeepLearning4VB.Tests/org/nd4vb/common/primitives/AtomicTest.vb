@@ -1,5 +1,4 @@
 ﻿Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB.org.nd4vb.common.primitives
 
@@ -20,11 +19,11 @@ Namespace org.nd4vb.common.primitives
             assertEquals(v0.GetHashCode(), v1.GetHashCode())
         End Sub
 
-        ''' <summary>The Java test used SerializationUtils; the .NET equivalent for [Serializable] types is the BinaryFormatter.</summary>
+        ''' <summary>The Java test used SerializationUtils; the .NET equivalent for [Serializable] types is SerializationUtils.</summary>
         <TestMethod>
         Public Sub testSerialization_1()
             Dim v0 = New Atomic(Of Integer)(1327541)
-            Dim formatter As New BinaryFormatter()
+            Dim formatter As New ObjectFormatter()
             Using baos As New MemoryStream()
                 formatter.Serialize(baos, v0)
                 Using bais As New MemoryStream(baos.ToArray())

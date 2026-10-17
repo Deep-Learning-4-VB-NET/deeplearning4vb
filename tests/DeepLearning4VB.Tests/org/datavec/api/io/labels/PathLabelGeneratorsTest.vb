@@ -81,9 +81,9 @@ Namespace org.datavec.api.io.labels
         ''' <summary>Both generators are serializable (they are shipped to Spark workers in Java).</summary>
         <TestMethod>
         Public Sub testGeneratorsAreSerializable()
-            assertTrue(GetType(ParentPathLabelGenerator).IsSerializable)
-            assertTrue(GetType(PatternPathLabelGenerator).IsSerializable)
-            Dim formatter As New System.Runtime.Serialization.Formatters.Binary.BinaryFormatter()
+            assertTrue(isSerializableType(GetType(ParentPathLabelGenerator)))
+            assertTrue(isSerializableType(GetType(PatternPathLabelGenerator)))
+            Dim formatter As New ObjectFormatter()
             Using ms As New System.IO.MemoryStream()
                 formatter.Serialize(ms, New PatternPathLabelGenerator("-", 1))
                 ms.Position = 0

@@ -1004,7 +1004,10 @@ Namespace org.datavec.api.conf
             If url.IsFile Then
                 Return New FileStream(url.LocalPath, FileMode.Open, FileAccess.Read)
             End If
-            Return WebRequest.Create(url).GetResponse().GetResponseStream()
+            ' WebRequest is obsolete on .NET 10; HttpClient works on both target frameworks.
+            Using client As New System.Net.Http.HttpClient()
+                Return New MemoryStream(client.GetByteArrayAsync(url).GetAwaiter().GetResult())
+            End Using
         End Function
 
         Private Function getProps() As Properties

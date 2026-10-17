@@ -1,7 +1,6 @@
 Imports System
 Imports System.Globalization
 Imports System.IO
-Imports System.Runtime.Serialization.Formatters.Binary
 Imports System.Text.Json
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB
@@ -837,9 +836,9 @@ Namespace org.joda.time
             assertEquals("2016-01-01 12:30:45", back.print(NewYear2016))
             assertThrows(Of ArgumentException)(Sub() back.parseMillis("2016-13-01 12:30:45"))
 
-            ' Also with a locale, a fixed-offset zone and the offset-parsed flag, through a plain BinaryFormatter.
+            ' Also with a locale, a fixed-offset zone and the offset-parsed flag, through SerializationUtils.
             Dim de = DateTimeFormat.forPattern("d. MMMM yyyy HH:mm ZZ").withZone(DateTimeZone.forID("+05:30")).withLocale(New CultureInfo("de-DE")).withOffsetParsed()
-            Dim bf As New BinaryFormatter()
+            Dim bf As New ObjectFormatter()
             Dim bytes As Byte()
             Using ms As New MemoryStream()
                 bf.Serialize(ms, de)

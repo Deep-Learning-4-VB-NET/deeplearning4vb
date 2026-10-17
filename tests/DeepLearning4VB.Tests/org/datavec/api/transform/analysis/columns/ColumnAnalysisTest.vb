@@ -232,7 +232,7 @@ Namespace org.datavec.api.transform.analysis.columns
                 assertEquals(expectedTypes(i), all(i).getColumnType())
                 assertEquals(expectedCounts(i), all(i).CountTotal)
                 assertEquals(expectedCounts(i), all(i).getCountTotal())
-                assertTrue(CObj(all(i)).GetType().IsSerializable)
+                assertTrue(isSerializableType(CObj(all(i)).GetType()))
             Next i
         End Sub
 
