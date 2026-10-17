@@ -718,8 +718,13 @@ Namespace org.nd4vb.common.util
                     Case T_STRUCT
                         Dim st As Type = ReadTypeRef()
                         CheckAllowed(st)
-                        Dim boxed As Object = CreateUninitialized(st)
-                        ReadFields(boxed, st)
+                        Dim fieldValues As List(Of KeyValuePair(Of FieldInfo, Object)) = ReadFieldValues(st)
+                        ' VB copies a boxed value type whenever it passes through an Object-typed variable, so the
+                        ' box is kept in a ValueType variable while its fields are set.
+                        Dim boxed As ValueType = DirectCast(CreateUninitialized(st), ValueType)
+                        For Each fv As KeyValuePair(Of FieldInfo, Object) In fieldValues
+                            fv.Key.SetValue(boxed, ConvertForField(fv.Key, fv.Value))
+                        Next
                         Return boxed
                     Case T_OBJECT
                         Dim slot As Integer = Reserve()
@@ -749,7 +754,15 @@ Namespace org.nd4vb.common.util
                 Return obj
             End Function
 
+            ''' <summary>Sets the fields of a reference-type instance.</summary>
             Private Sub ReadFields(ByVal target As Object, ByVal t As Type)
+                For Each fv As KeyValuePair(Of FieldInfo, Object) In ReadFieldValues(t)
+                    fv.Key.SetValue(target, ConvertForField(fv.Key, fv.Value))
+                Next
+            End Sub
+
+            ''' <summary>Reads the layout and the field values of one object or struct.</summary>
+            Private Function ReadFieldValues(ByVal t As Type) As List(Of KeyValuePair(Of FieldInfo, Object))
                 Dim layoutRef As Integer = br.ReadInt32()
                 Dim keys As String()
                 If layoutRef >= 0 Then
@@ -764,25 +777,28 @@ Namespace org.nd4vb.common.util
                     layouts.Add(keys)
                 End If
                 Dim byKey As Dictionary(Of String, FieldInfo) = FieldsByKey(t)
+                Dim result As New List(Of KeyValuePair(Of FieldInfo, Object))(keys.Length)
                 For Each key As String In keys
                     Dim value As Object = ReadValue()
                     Dim f As FieldInfo = Nothing
                     If Not byKey.TryGetValue(key, f) Then Continue For ' field removed since the data was written
-                    SetField(f, target, value)
+                    result.Add(New KeyValuePair(Of FieldInfo, Object)(f, value))
                 Next
-            End Sub
+                Return result
+            End Function
 
-            Private Shared Sub SetField(ByVal f As FieldInfo, ByVal target As Object, ByVal value As Object)
+            ''' <summary>Converts a stored value to the field's type when the field type changed (enums, widened numbers).</summary>
+            Private Shared Function ConvertForField(ByVal f As FieldInfo, ByVal value As Object) As Object
                 If value IsNot Nothing AndAlso Not f.FieldType.IsInstanceOfType(value) Then
                     Dim ft As Type = If(Nullable.GetUnderlyingType(f.FieldType), f.FieldType)
                     If ft.IsEnum Then
-                        value = [Enum].ToObject(ft, value)
+                        Return [Enum].ToObject(ft, value)
                     ElseIf TypeOf value Is IConvertible AndAlso GetType(IConvertible).IsAssignableFrom(ft) Then
-                        value = Convert.ChangeType(value, ft, CultureInfo.InvariantCulture)
+                        Return Convert.ChangeType(value, ft, CultureInfo.InvariantCulture)
                     End If
                 End If
-                f.SetValue(target, value)
-            End Sub
+                Return value
+            End Function
 
             Private Function ReadArray() As Object
                 Dim slot As Integer = Reserve()
