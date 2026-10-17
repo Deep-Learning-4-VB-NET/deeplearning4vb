@@ -19,7 +19,7 @@
 '
 
 Imports System
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports LongQuality = DeepLearning4VB.org.datavec.api.transform.quality.columns.LongQuality
 
 Namespace org.datavec.api.transform.analysis.quality.longq

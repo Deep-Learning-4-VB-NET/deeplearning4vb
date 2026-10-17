@@ -27,8 +27,8 @@ Namespace org.datavec.api.writable
 
     ''' <summary>
     ''' A writable over a raw byte array, indexable as big-endian doubles, floats, ints and longs
-    ''' (Java's <c>ByteBuffer.wrap</c> default order). The Java <c>asNd4jBuffer</c> method needs
-    ''' the ND4J <c>DataBuffer</c> API and is not ported yet.
+    ''' (Java's <c>ByteBuffer.wrap</c> default order). The Java <c>asNd4vbBuffer</c> method needs
+    ''' the ND4VB <c>DataBuffer</c> API and is not ported yet.
     ''' </summary>
     <Serializable>
     Public Class BytesWritable

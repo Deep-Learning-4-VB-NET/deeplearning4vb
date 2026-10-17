@@ -3,7 +3,7 @@ Imports System.Collections.Generic
 Imports System.IO
 Imports System.Text
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports CSVRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.csv.CSVRecordReader
 Imports CSVSequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit

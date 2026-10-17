@@ -20,7 +20,7 @@
 
 Imports System
 Imports DeepLearning4VB.JavaCompat
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 
 Namespace org.datavec.api.transform.ops
 

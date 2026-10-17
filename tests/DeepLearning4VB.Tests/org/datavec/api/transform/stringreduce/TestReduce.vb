@@ -26,7 +26,7 @@ Namespace org.datavec.api.transform.stringreduce
             inputs.Add(New List(Of WritableT) From {New Text("1"), New Text("2")})
             inputs.Add(New List(Of WritableT) From {New Text("1"), New Text("2")})
 
-            Dim exp As IDictionary(Of StringReduceOp, String) = New DeepLearning4VB.JavaCompat.LinkedHashMap(Of StringReduceOp, String)()
+            Dim exp As IDictionary(Of StringReduceOp, String) = New Global.DeepLearning4VB.JavaCompat.LinkedHashMap(Of StringReduceOp, String)()
             exp(StringReduceOp.MERGE) = "12"
             exp(StringReduceOp.APPEND) = "12"
             exp(StringReduceOp.PREPEND) = "21"

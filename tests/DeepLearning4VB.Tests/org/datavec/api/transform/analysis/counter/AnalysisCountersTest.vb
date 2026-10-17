@@ -6,7 +6,7 @@ Imports AnalysisCounterT = DeepLearning4VB.org.datavec.api.transform.analysis.An
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports LongWritable = DeepLearning4VB.org.datavec.api.writable.LongWritable
-Imports SerializationUtils = DeepLearning4VB.org.nd4j.common.util.SerializationUtils
+Imports SerializationUtils = DeepLearning4VB.org.nd4vb.common.util.SerializationUtils
 Imports TDigest = DeepLearning4VB.com.tdunning.math.stats.TDigest
 Imports TextT = DeepLearning4VB.org.datavec.api.writable.Text
 

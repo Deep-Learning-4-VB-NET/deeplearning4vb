@@ -8,7 +8,7 @@ Imports FileSplit = DeepLearning4VB.org.datavec.api.split.FileSplit
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.records.reader.impl
 

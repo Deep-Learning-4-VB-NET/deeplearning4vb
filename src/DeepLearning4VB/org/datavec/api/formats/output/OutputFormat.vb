@@ -41,7 +41,7 @@ Namespace org.datavec.api.formats.output
     Public Module OutputFormatConstants
 
         ''' <summary>Configuration key of the output path (<c>OutputFormat.OUTPUT_PATH</c> in Java).</summary>
-        Public Const OUTPUT_PATH As String = "org.nd4j.outputpath"
+        Public Const OUTPUT_PATH As String = "org.nd4vb.outputpath"
 
     End Module
 

@@ -22,7 +22,7 @@ Imports RegexSequenceRecordReader = DeepLearning4VB.org.datavec.api.records.read
 Imports FileSplit = DeepLearning4VB.org.datavec.api.split.FileSplit
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.records.reader.impl
 
@@ -103,11 +103,11 @@ Namespace org.datavec.api.records.reader.impl
             regex.close()
 
             Dim multi As CSVMultiSequenceRecordReader = roundTrip(New CSVMultiSequenceRecordReader("^$", CSVMultiSequenceRecordReader.Mode.CONCAT))
-            multi.initialize(New DeepLearning4VB.org.datavec.api.split.StringSplit("a,b"))
+            multi.initialize(New Global.DeepLearning4VB.org.datavec.api.split.StringSplit("a,b"))
             assertEquals(2, multi.sequenceRecord().Count)
 
             Dim svm As SVMLightRecordReader = roundTrip(New SVMLightRecordReader())
-            Dim config As New DeepLearning4VB.org.datavec.api.conf.Configuration()
+            Dim config As New Global.DeepLearning4VB.org.datavec.api.conf.Configuration()
             config.setInt(SVMLightRecordReader.NUM_FEATURES, 11)
             svm.initialize(config, New FileSplit(New ClassPathResource("datavec-api/svmlight/basic.txt").File))
             assertEquals(12, svm.next().Count)

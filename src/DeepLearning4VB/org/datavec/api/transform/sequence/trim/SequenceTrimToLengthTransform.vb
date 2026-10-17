@@ -22,7 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Linq
 Imports System.Text.Json.Serialization
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable

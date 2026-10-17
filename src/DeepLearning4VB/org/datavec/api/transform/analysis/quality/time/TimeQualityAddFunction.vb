@@ -19,7 +19,7 @@
 '
 
 Imports System
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports NullWritable = DeepLearning4VB.org.datavec.api.writable.NullWritable
 Imports TextT = DeepLearning4VB.org.datavec.api.writable.Text
 Imports TimeMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.TimeMetaData

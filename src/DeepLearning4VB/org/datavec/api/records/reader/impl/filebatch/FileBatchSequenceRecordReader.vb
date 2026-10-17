@@ -34,8 +34,8 @@ Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.Se
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 
-Imports FileBatchT = DeepLearning4VB.org.nd4j.common.loader.FileBatch
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports FileBatchT = DeepLearning4VB.org.nd4vb.common.loader.FileBatch
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.filebatch
 

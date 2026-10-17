@@ -19,7 +19,7 @@
 '
 
 Imports System
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports IntegerMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.IntegerMetaData
 Imports IntegerQuality = DeepLearning4VB.org.datavec.api.transform.quality.columns.IntegerQuality
 Imports NullWritable = DeepLearning4VB.org.datavec.api.writable.NullWritable

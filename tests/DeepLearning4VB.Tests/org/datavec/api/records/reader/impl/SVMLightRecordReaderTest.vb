@@ -10,7 +10,7 @@ Imports FileSplit = DeepLearning4VB.org.datavec.api.split.FileSplit
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.records.reader.impl
 
@@ -307,7 +307,7 @@ Namespace org.datavec.api.records.reader.impl
             assertThrows(Of IndexOutOfRangeException)(Sub() rr.next())
             'a bad feature index is a NumberFormatException
             Dim bad As New SVMLightRecordReader()
-            bad.initialize(config, New DeepLearning4VB.org.datavec.api.split.StringSplit("1 x:2.0"))
+            bad.initialize(config, New Global.DeepLearning4VB.org.datavec.api.split.StringSplit("1 x:2.0"))
             assertThrows(Of NumberFormatException)(Sub() bad.next())
         End Sub
 

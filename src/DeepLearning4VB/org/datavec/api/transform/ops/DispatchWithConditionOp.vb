@@ -20,7 +20,7 @@
 
 Imports System
 Imports System.Collections.Generic
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 Namespace org.datavec.api.transform.ops
 

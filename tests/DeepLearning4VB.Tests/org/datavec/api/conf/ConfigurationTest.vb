@@ -548,7 +548,7 @@ Namespace org.datavec.api.conf
         <TestMethod>
         Public Sub testWritableOperationsAreUnsupported()
             Dim conf As New Configuration(False)
-            Dim w As DeepLearning4VB.org.datavec.api.writable.Writable = conf
+            Dim w As Global.DeepLearning4VB.org.datavec.api.writable.Writable = conf
             assertThrows(Of NotSupportedException)(Sub() w.toDouble())
             assertThrows(Of NotSupportedException)(Sub() w.toFloat())
             assertThrows(Of NotSupportedException)(Sub() w.toInt())
@@ -588,12 +588,12 @@ Namespace org.datavec.api.conf
             'ReflectionUtils.setConf configures Configurables only, and only with a non-null conf
 #Disable Warning BC40000 ' ReflectionUtils is obsolete, as @Deprecated in Java
             Dim thing As New ConfigurableThing()
-            DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf(thing, Nothing)
+            Global.DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf(thing, Nothing)
             assertNull(thing.getConf())
-            DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf(thing, conf)
+            Global.DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf(thing, conf)
             assertTrue(thing.getConf() Is conf)
-            DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf("not configurable", conf)
-            Dim created As ConfigurableThing = DeepLearning4VB.org.datavec.api.util.ReflectionUtils.newInstance(Of ConfigurableThing)(GetType(ConfigurableThing), conf)
+            Global.DeepLearning4VB.org.datavec.api.util.ReflectionUtils.setConf("not configurable", conf)
+            Dim created As ConfigurableThing = Global.DeepLearning4VB.org.datavec.api.util.ReflectionUtils.newInstance(Of ConfigurableThing)(GetType(ConfigurableThing), conf)
             assertTrue(created.getConf() Is conf)
             assertEquals(1, created.timesConfigured)
 #Enable Warning BC40000

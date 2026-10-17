@@ -19,7 +19,7 @@
 '
 
 Imports System
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports TimeQuality = DeepLearning4VB.org.datavec.api.transform.quality.columns.TimeQuality
 
 Namespace org.datavec.api.transform.analysis.quality.time

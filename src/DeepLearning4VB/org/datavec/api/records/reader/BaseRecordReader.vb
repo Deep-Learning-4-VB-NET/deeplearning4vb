@@ -22,7 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.IO
 Imports DeepLearning4VB.JavaCompat
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports Configurable = DeepLearning4VB.org.datavec.api.conf.Configurable
 Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
 Imports Record = DeepLearning4VB.org.datavec.api.records.Record

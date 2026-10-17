@@ -3,7 +3,7 @@ Imports System.Collections.Generic
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB.org.datavec.api.transform.ops
 Imports DeepLearning4VB.org.datavec.api.transform.reduce
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports ColumnOp = DeepLearning4VB.org.datavec.api.transform.ColumnOp
 Imports ColumnType = DeepLearning4VB.org.datavec.api.transform.ColumnType
@@ -41,7 +41,7 @@ Namespace org.datavec.api.transform.reduce
             inputs.Add(row(New Text("someKey"), New DoubleWritable(2)))
             inputs.Add(row(New Text("someKey"), New DoubleWritable(2)))
 
-            Dim exp As IDictionary(Of ReduceOp, Double) = New DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
+            Dim exp As IDictionary(Of ReduceOp, Double) = New Global.DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
             exp(ReduceOp.Min) = 0.0
             exp(ReduceOp.Max) = 2.0
             exp(ReduceOp.Range) = 2.0
@@ -85,7 +85,7 @@ Namespace org.datavec.api.transform.reduce
             inputs.Add(row(New Text("someKey"), New IntWritable(2)))
             inputs.Add(row(New Text("someKey"), New IntWritable(2)))
 
-            Dim exp As IDictionary(Of ReduceOp, Double) = New DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
+            Dim exp As IDictionary(Of ReduceOp, Double) = New Global.DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
             exp(ReduceOp.Min) = 0.0
             exp(ReduceOp.Max) = 2.0
             exp(ReduceOp.Range) = 2.0
@@ -128,7 +128,7 @@ Namespace org.datavec.api.transform.reduce
             inputs.Add(row(New Text("someKey"), New Text("3")))
             inputs.Add(row(New Text("someKey"), New Text("4")))
 
-            Dim exp As IDictionary(Of ReduceOp, String) = New DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, String)()
+            Dim exp As IDictionary(Of ReduceOp, String) = New Global.DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, String)()
             exp(ReduceOp.Append) = "1234"
             exp(ReduceOp.Prepend) = "4321"
 
@@ -166,7 +166,7 @@ Namespace org.datavec.api.transform.reduce
             inputs.Add(row(New Text("someKey"), New Text("also ignore me")))
             inputs.Add(row(New Text("someKey"), New Text("2")))
 
-            Dim exp As IDictionary(Of ReduceOp, Double) = New DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
+            Dim exp As IDictionary(Of ReduceOp, Double) = New Global.DeepLearning4VB.JavaCompat.LinkedHashMap(Of ReduceOp, Double)()
             exp(ReduceOp.Min) = 0.0
             exp(ReduceOp.Max) = 2.0
             exp(ReduceOp.Range) = 2.0

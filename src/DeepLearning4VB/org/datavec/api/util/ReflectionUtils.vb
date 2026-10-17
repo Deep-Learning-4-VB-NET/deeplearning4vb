@@ -51,7 +51,7 @@ Namespace org.datavec.api.util
         ''' <param name="conf"> Configuration </param>
         ''' <returns> a new object </returns>
         Public Shared Function newInstance(Of T)(ByVal theClass As Type, ByVal conf As Configuration) As T
-            Dim result As T = DeepLearning4VB.org.nd4j.common.io.ReflectionUtils.newInstance(Of T)(theClass)
+            Dim result As T = Global.DeepLearning4VB.org.nd4vb.common.io.ReflectionUtils.newInstance(Of T)(theClass)
             setConf(result, conf)
             Return result
         End Function

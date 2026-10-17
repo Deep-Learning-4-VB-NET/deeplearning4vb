@@ -6,7 +6,7 @@ Imports System.Text.Json
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB
 Imports DeepLearning4VB.org.joda.time.format
-Imports DeepLearning4VB.org.nd4j.common.util
+Imports DeepLearning4VB.org.nd4vb.common.util
 Imports JodaDateTime = DeepLearning4VB.org.joda.time.DateTime
 Imports DateTimeZone = DeepLearning4VB.org.joda.time.DateTimeZone
 Imports DateTimeFieldType = DeepLearning4VB.org.joda.time.DateTimeFieldType

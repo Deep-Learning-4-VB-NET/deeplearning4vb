@@ -3,7 +3,7 @@ Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports CategoricalMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.CategoricalMetaData
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable

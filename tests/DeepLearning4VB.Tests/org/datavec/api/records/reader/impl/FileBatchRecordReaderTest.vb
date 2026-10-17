@@ -10,11 +10,11 @@ Imports CSVSequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader
 Imports FileBatchRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.filebatch.FileBatchRecordReader
 Imports FileBatchSequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.filebatch.FileBatchSequenceRecordReader
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports FileBatch = DeepLearning4VB.org.nd4j.common.loader.FileBatch
+Imports FileBatch = DeepLearning4VB.org.nd4vb.common.loader.FileBatch
 
 Namespace org.datavec.api.records.reader.impl
 
-    ''' <summary>Ported from the DL4J JUnit test of the same name (the Nd4j backend parameter of the JUnit tests is not used by the tests).</summary>
+    ''' <summary>Ported from the DL4J JUnit test of the same name (the Nd4vb backend parameter of the JUnit tests is not used by the tests).</summary>
     <TestClass>
     Public Class FileBatchRecordReaderTest
 

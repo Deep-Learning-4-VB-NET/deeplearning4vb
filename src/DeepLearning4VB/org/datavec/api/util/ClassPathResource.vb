@@ -22,12 +22,12 @@ Imports System
 
 Namespace org.datavec.api.util
 
-    ''' <summary>Kept for compatibility; use <see cref="org.nd4j.common.io.ClassPathResource"/> directly.</summary>
-    <Obsolete("Use org.nd4j.common.io.ClassPathResource")>
+    ''' <summary>Kept for compatibility; use <see cref="org.nd4vb.common.io.ClassPathResource"/> directly.</summary>
+    <Obsolete("Use org.nd4vb.common.io.ClassPathResource")>
     Public Class ClassPathResource
-        Inherits DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+        Inherits Global.DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
-        <Obsolete("Use org.nd4j.common.io.ClassPathResource")>
+        <Obsolete("Use org.nd4vb.common.io.ClassPathResource")>
         Public Sub New(ByVal resourceName As String)
             MyBase.New(resourceName)
         End Sub

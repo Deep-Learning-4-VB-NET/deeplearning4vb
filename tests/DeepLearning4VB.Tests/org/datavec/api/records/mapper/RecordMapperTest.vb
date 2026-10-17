@@ -17,7 +17,7 @@ Imports NumberOfRecordsPartitioner = DeepLearning4VB.org.datavec.api.split.parti
 Imports PartitionMetaData = DeepLearning4VB.org.datavec.api.split.partition.PartitionMetaData
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.records.mapper
 
@@ -175,7 +175,7 @@ Namespace org.datavec.api.records.mapper
                 close()
             End Sub
 
-            Public Property Conf As Configuration Implements DeepLearning4VB.org.datavec.api.conf.Configurable.Conf
+            Public Property Conf As Configuration Implements Global.DeepLearning4VB.org.datavec.api.conf.Configurable.Conf
                 Get
                     Return confValue
                 End Get
@@ -184,11 +184,11 @@ Namespace org.datavec.api.records.mapper
                 End Set
             End Property
 
-            Public Sub setConf(ByVal conf As Configuration) Implements DeepLearning4VB.org.datavec.api.conf.Configurable.setConf
+            Public Sub setConf(ByVal conf As Configuration) Implements Global.DeepLearning4VB.org.datavec.api.conf.Configurable.setConf
                 confValue = conf
             End Sub
 
-            Public Function getConf() As Configuration Implements DeepLearning4VB.org.datavec.api.conf.Configurable.getConf
+            Public Function getConf() As Configuration Implements Global.DeepLearning4VB.org.datavec.api.conf.Configurable.getConf
                 Return confValue
             End Function
         End Class

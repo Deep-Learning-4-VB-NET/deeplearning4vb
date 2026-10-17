@@ -20,7 +20,7 @@
 
 Imports System
 Imports System.Text.RegularExpressions
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports HyperLogLogPlus = DeepLearning4VB.com.clearspring.analytics.stream.cardinality.HyperLogLogPlus
 Imports NullWritable = DeepLearning4VB.org.datavec.api.writable.NullWritable
 Imports StringMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.StringMetaData

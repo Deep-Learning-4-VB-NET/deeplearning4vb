@@ -15,7 +15,7 @@ Imports FileRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.F
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 '
 ' *  ******************************************************************************

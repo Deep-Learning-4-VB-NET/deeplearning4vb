@@ -3,8 +3,8 @@ Imports System.Collections.Generic
 Imports System.IO
 Imports System.Linq
 Imports DeepLearning4VB.org.datavec.api.util.files
-Imports DeepLearning4VB.org.nd4j.common.function
-Imports DeepLearning4VB.org.nd4j.common.util
+Imports DeepLearning4VB.org.nd4vb.common.function
+Imports DeepLearning4VB.org.nd4vb.common.util
 
 '
 ' *  ******************************************************************************

@@ -12,13 +12,13 @@ Imports NumberOfRecordsPartitioner = DeepLearning4VB.org.datavec.api.split.parti
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.records.writer.impl
 
     ''' <summary>
     ''' Ported from the DL4J JUnit test of the same name. The NDArrayWritable tests (testNDArrayWritables,
-    ''' testNDArrayWritablesMultilabel, testNDArrayWritablesZeroIndex) are not ported: they need Nd4j/INDArray.
+    ''' testNDArrayWritablesMultilabel, testNDArrayWritablesZeroIndex) are not ported: they need Nd4vb/INDArray.
     ''' </summary>
     <TestClass>
     Public Class LibSvmRecordWriterTest

@@ -26,7 +26,7 @@ Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
 Imports DeepLearning4VB.org.datavec.api.transform.ops
 Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TrivialColumnCondition = DeepLearning4VB.org.datavec.api.transform.condition.column.TrivialColumnCondition
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable

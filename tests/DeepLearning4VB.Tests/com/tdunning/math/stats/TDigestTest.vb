@@ -6,7 +6,7 @@ Imports System.Text.Json
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB
 Imports DeepLearning4VB.com.tdunning.math.stats
-Imports DeepLearning4VB.org.nd4j.common.util
+Imports DeepLearning4VB.org.nd4vb.common.util
 
 Namespace com.tdunning.math.stats
 

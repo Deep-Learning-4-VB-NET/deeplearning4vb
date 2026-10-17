@@ -74,7 +74,7 @@ Namespace org.datavec.api.writable
         ''' <summary>
         ''' Return the class of the implementation corresponding to each WritableType.
         ''' Note that if <seealso cref="isCoreWritable"/> returns false, null will be returned by this method.
-        ''' <c>NDArray</c> also returns Nothing until <c>NDArrayWritable</c> is ported (it needs the ND4J tensor API).
+        ''' <c>NDArray</c> also returns Nothing until <c>NDArrayWritable</c> is ported (it needs the ND4VB tensor API).
         ''' Like the Java original, <c>Bytes</c> maps to <see cref="ByteWritable"/> (not <see cref="BytesWritable"/>).
         ''' </summary>
         ''' <returns> Class for the given WritableType </returns>

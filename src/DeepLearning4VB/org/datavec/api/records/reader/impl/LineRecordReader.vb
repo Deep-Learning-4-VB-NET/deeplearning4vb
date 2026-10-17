@@ -24,7 +24,7 @@ Imports System.IO
 Imports System.Linq
 Imports System.Text
 Imports DeepLearning4VB.JavaCompat
-Imports DeepLearning4VB.org.nd4j.common.primitives
+Imports DeepLearning4VB.org.nd4vb.common.primitives
 Imports DeepLearning4VB.org.slf4j
 Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
 Imports Record = DeepLearning4VB.org.datavec.api.records.Record
@@ -39,7 +39,7 @@ Imports StringSplit = DeepLearning4VB.org.datavec.api.split.StringSplit
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl
 

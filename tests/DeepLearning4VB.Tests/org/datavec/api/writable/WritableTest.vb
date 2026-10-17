@@ -8,8 +8,8 @@ Imports DVW = DeepLearning4VB.org.datavec.api.writable
 Namespace org.datavec.api.writable
 
     ''' <summary>
-    ''' Ported from the DataVec JUnit test of the same name. The tests that need the ND4J tensor API
-    ''' (<c>NDArrayWritable</c>, <c>NDArrayRecordBatch</c>, <c>BytesWritable.asNd4jBuffer</c>) are
+    ''' Ported from the DataVec JUnit test of the same name. The tests that need the ND4VB tensor API
+    ''' (<c>NDArrayWritable</c>, <c>NDArrayRecordBatch</c>, <c>BytesWritable.asNd4vbBuffer</c>) are
     ''' left out; the rest keep their shape, plus a few checks of the port's own behaviour.
     ''' </summary>
     <TestClass>

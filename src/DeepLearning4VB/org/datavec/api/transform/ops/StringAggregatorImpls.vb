@@ -20,7 +20,7 @@
 
 Imports System
 Imports System.Text
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
 Namespace org.datavec.api.transform.ops

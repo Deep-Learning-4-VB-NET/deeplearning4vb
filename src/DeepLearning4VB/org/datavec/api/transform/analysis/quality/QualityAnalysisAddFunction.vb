@@ -21,7 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports BytesQualityAnalysisState = DeepLearning4VB.org.datavec.api.transform.analysis.quality.bytes.BytesQualityAnalysisState
 Imports CategoricalQualityAnalysisState = DeepLearning4VB.org.datavec.api.transform.analysis.quality.categorical.CategoricalQualityAnalysisState
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType

@@ -31,7 +31,7 @@ Imports RecordMetaDataInterval = DeepLearning4VB.org.datavec.api.records.metadat
 Imports SequenceRecordReader = DeepLearning4VB.org.datavec.api.records.reader.SequenceRecordReader
 Imports URIUtil = DeepLearning4VB.org.datavec.api.util.files.URIUtil
 
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.csv
 

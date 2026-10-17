@@ -18,7 +18,7 @@
 ' *  *****************************************************************************
 '
 
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 
 Namespace org.datavec.api.transform.ops
 

@@ -23,10 +23,10 @@ Imports System.Collections.Generic
 Imports System.Globalization
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.transform.ops
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports AggregableColumnReduction = DeepLearning4VB.org.datavec.api.transform.reduce.AggregableColumnReduction
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports StringMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.StringMetaData
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text

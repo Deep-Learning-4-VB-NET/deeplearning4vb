@@ -19,7 +19,7 @@
 '
 
 Imports System
-Imports DeepLearning4VB.org.nd4j.common.function
+Imports DeepLearning4VB.org.nd4vb.common.function
 Imports CardinalityMergeException = DeepLearning4VB.com.clearspring.analytics.stream.cardinality.CardinalityMergeException
 Imports HyperLogLogPlus = DeepLearning4VB.com.clearspring.analytics.stream.cardinality.HyperLogLogPlus
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable

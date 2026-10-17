@@ -29,7 +29,7 @@ Namespace org.datavec.api.split.streams
             Dim target As String = Path.Combine(tmpDir, "with space.txt")
             File.WriteAllText(target, "line one" & vbLf & "line two", New UTF8Encoding(False))
             Dim fn As New FileStreamCreatorFunction()
-            Dim f As DeepLearning4VB.org.nd4j.common.function.[Function](Of Uri, Stream) = fn
+            Dim f As Global.DeepLearning4VB.org.nd4vb.common.function.[Function](Of Uri, Stream) = fn
             Using s As Stream = f.apply(URIUtil.fileToURI(target))
                 assertTrue(s.CanRead)
                 assertFalse(s.CanWrite)

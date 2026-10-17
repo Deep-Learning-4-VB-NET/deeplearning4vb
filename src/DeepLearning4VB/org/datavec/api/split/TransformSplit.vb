@@ -2,7 +2,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.IO
 Imports DeepLearning4VB.org.datavec.api.util.files
-Imports DeepLearning4VB.org.nd4j.common.collection
+Imports DeepLearning4VB.org.nd4vb.common.collection
 
 '
 ' *  ******************************************************************************

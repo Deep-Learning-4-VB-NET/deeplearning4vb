@@ -110,7 +110,7 @@ Namespace org.datavec.api.transform.reduce
             Dim op As IAggregableReduceOp(Of WritableT, IList(Of WritableT)) = reduction.reduceOp()
             assertThrows(Of InvalidOperationException)(Sub() op.accept(New Text("1.0,2.0,3.0")))
             assertThrows(Of InvalidOperationException)(Sub() op.accept(New Text("1.0")))
-            assertThrows(Of DeepLearning4VB.JavaCompat.NumberFormatException)(Sub() op.accept(New Text("north,south")))
+            assertThrows(Of Global.DeepLearning4VB.JavaCompat.NumberFormatException)(Sub() op.accept(New Text("north,south")))
 
             'Latitude out of range
             assertThrows(Of InvalidOperationException)(Sub() op.accept(New Text("91.0,0.0")))

@@ -7,7 +7,7 @@ Imports Microsoft.VisualStudio.TestTools.UnitTesting
 Imports DeepLearning4VB.JavaCompat
 Imports DeepLearning4VB.org.datavec.api.io
 Imports DeepLearning4VB.org.datavec.api.writable
-Imports DeepLearning4VB.org.nd4j.common.holder
+Imports DeepLearning4VB.org.nd4vb.common.holder
 Imports DVW = DeepLearning4VB.org.datavec.api.writable
 
 Namespace org.datavec.api.writable

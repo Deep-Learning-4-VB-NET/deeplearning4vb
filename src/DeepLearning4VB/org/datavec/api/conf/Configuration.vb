@@ -13,10 +13,10 @@ Imports System.Text.RegularExpressions
 Imports System.Xml
 Imports System.Xml.Linq
 Imports DeepLearning4VB.JavaCompat
-Imports DeepLearning4VB.org.nd4j.common.collections
-Imports DeepLearning4VB.org.nd4j.common.config
+Imports DeepLearning4VB.org.nd4vb.common.collections
+Imports DeepLearning4VB.org.nd4vb.common.config
 Imports DeepLearning4VB.org.slf4j
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 '
 ' *  ******************************************************************************
@@ -55,7 +55,7 @@ Namespace org.datavec.api.conf
     '''
     ''' <para>Differences from the Java original: the XML is parsed with <see cref="XmlReader"/>/<see cref="XDocument"/>
     ''' (comments are ignored, whitespace is kept, DTDs are ignored and XInclude is not supported); class names
-    ''' are resolved through <see cref="ND4JClassLoading"/> and there is no class loader property; <c>main</c>
+    ''' are resolved through <see cref="ND4VBClassLoading"/> and there is no class loader property; <c>main</c>
     ''' was dropped; file locations are path strings.</para>
     ''' </summary>
     Public Class Configuration
@@ -769,7 +769,7 @@ Namespace org.datavec.api.conf
             Return result
         End Function
 
-        ''' <summary>Load a class by name, through <see cref="ND4JClassLoading"/>.</summary>
+        ''' <summary>Load a class by name, through <see cref="ND4VBClassLoading"/>.</summary>
         ''' <param name="name"> the class name. </param>
         ''' <returns> the class object. </returns>
         ''' <exception cref="TypeLoadException"> if the class is not found (<c>ClassNotFoundException</c> in Java). </exception>
@@ -778,7 +778,7 @@ Namespace org.datavec.api.conf
             If CACHE_CLASSES.TryGetValue(name, clazz) Then
                 Return clazz
             End If
-            clazz = ND4JClassLoading.loadClassByName(name)
+            clazz = ND4VBClassLoading.loadClassByName(name)
             If clazz Is Nothing Then
                 Throw New TypeLoadException("Class not found: " & name)
             End If

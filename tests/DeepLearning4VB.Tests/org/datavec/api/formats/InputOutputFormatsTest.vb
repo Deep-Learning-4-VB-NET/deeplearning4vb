@@ -37,7 +37,7 @@ Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
-Imports ClassPathResource = DeepLearning4VB.org.nd4j.common.io.ClassPathResource
+Imports ClassPathResource = DeepLearning4VB.org.nd4vb.common.io.ClassPathResource
 
 Namespace org.datavec.api.formats
 
@@ -170,7 +170,7 @@ Namespace org.datavec.api.formats
         Public Sub testOutputFormats()
             Dim conf As New Configuration()
             conf.set(OutputFormatConstants.OUTPUT_PATH, tmpDir)
-            assertEquals("org.nd4j.outputpath", OutputFormatConstants.OUTPUT_PATH)
+            assertEquals("org.nd4vb.outputpath", OutputFormatConstants.OUTPUT_PATH)
 
             Dim csv As OutputFormat = New CSVOutputFormat()
             assertTrue(TypeOf csv.createWriter(conf) Is CSVRecordWriter)

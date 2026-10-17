@@ -3,7 +3,7 @@ Imports System.IO
 Imports Microsoft.VisualStudio.TestTools.UnitTesting
 #Disable Warning BC40000 ' the DataVec ClassPathResource is kept for compatibility and marked obsolete
 Imports ClassPathResource = DeepLearning4VB.org.datavec.api.util.ClassPathResource
-Imports Resource = DeepLearning4VB.org.nd4j.common.io.Resource
+Imports Resource = DeepLearning4VB.org.nd4vb.common.io.Resource
 
 Namespace org.datavec.api.util
 
@@ -68,11 +68,11 @@ Namespace org.datavec.api.util
             End Using
         End Sub
 
-        ''' <summary>The DataVec class is a thin, obsolete subclass of the ND4J resource.</summary>
+        ''' <summary>The DataVec class is a thin, obsolete subclass of the ND4VB resource.</summary>
         <TestMethod>
-        Public Sub testIsAnNd4jClassPathResource()
+        Public Sub testIsAnNd4vbClassPathResource()
             Dim resource As New ClassPathResource("datavec/util/iris.dat")
-            assertTrue(TypeOf resource Is DeepLearning4VB.org.nd4j.common.io.ClassPathResource)
+            assertTrue(TypeOf resource Is Global.DeepLearning4VB.org.nd4vb.common.io.ClassPathResource)
             assertTrue(TypeOf resource Is Resource)
             assertTrue(resource.exists())
             assertFalse(resource.isDirectory())

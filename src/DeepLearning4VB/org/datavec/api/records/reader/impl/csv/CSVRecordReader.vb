@@ -31,7 +31,7 @@ Imports LineRecordReader = DeepLearning4VB.org.datavec.api.records.reader.impl.L
 Imports InputSplit = DeepLearning4VB.org.datavec.api.split.InputSplit
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
 
-Imports Preconditions = DeepLearning4VB.org.nd4j.common.base.Preconditions
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 
 Namespace org.datavec.api.records.reader.impl.csv
 

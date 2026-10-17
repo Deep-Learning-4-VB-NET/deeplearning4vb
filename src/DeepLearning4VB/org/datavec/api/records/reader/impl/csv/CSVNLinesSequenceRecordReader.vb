@@ -22,7 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Linq
 Imports DeepLearning4VB.JavaCompat
-Imports DeepLearning4VB.org.nd4j.common.primitives
+Imports DeepLearning4VB.org.nd4vb.common.primitives
 Imports Configuration = DeepLearning4VB.org.datavec.api.conf.Configuration
 Imports Record = DeepLearning4VB.org.datavec.api.records.Record
 Imports SequenceRecord = DeepLearning4VB.org.datavec.api.records.SequenceRecord
