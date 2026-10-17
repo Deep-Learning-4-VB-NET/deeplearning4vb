@@ -1,0 +1,42 @@
+'
+' *  ******************************************************************************
+' *  *
+' *  *
+' *  * This program and the accompanying materials are made available under the
+' *  * terms of the Apache License, Version 2.0 which is available at
+' *  * https://www.apache.org/licenses/LICENSE-2.0.
+' *  *
+' *  *  See the NOTICE file distributed with this work for additional
+' *  *  information regarding copyright ownership.
+' *  * Unless required by applicable law or agreed to in writing, software
+' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+' *  * License for the specific language governing permissions and limitations
+' *  * under the License.
+' *  *
+' *  * SPDX-License-Identifier: Apache-2.0
+' *  *****************************************************************************
+'
+
+Imports System
+Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
+
+Namespace org.datavec.api.transform.analysis.histogram
+
+    ''' <summary>
+    ''' A histogram of one column built up value by value and merged across partitions. <see cref="Bins"/> holds the
+    ''' bin edges (one more than the number of bins) and <see cref="Counts"/> the number of values per bin.
+    ''' </summary>
+    Public Interface HistogramCounter
+
+        Function add(ByVal w As WritableT) As HistogramCounter
+
+        Function merge(ByVal other As HistogramCounter) As HistogramCounter
+
+        ReadOnly Property Bins As Double()
+
+        ReadOnly Property Counts As Long()
+
+    End Interface
+
+End Namespace
