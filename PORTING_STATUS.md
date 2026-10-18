@@ -42,9 +42,9 @@ tree, which keeps the upstream Java names so each file can be compared with its 
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting **.NET Framework 4.8.1 and .NET 10** (`net481;net10.0`), `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`. |
-| Library | 762 source files, about 112,900 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`), `datavec-local`, and the first part of the phase-2 tensor engine (see below). JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
+| Library | 754 source files, about 112,800 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`), `datavec-local`, and the first part of the phase-2 tensor engine (see below). JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
 | Stand-ins for Java libraries | A Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`), `java.util.concurrent.TimeUnit`, and a binary object-graph serializer that replaces Java serialization and the BinaryFormatter. |
-| Tests | 195 test files, 1,226 tests, all passing on both target frameworks: the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
+| Tests | 187 test files, 1,226 tests, all passing on both target frameworks: the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
 | Everything else | Unchanged in `unported/`: 3,536 files, excluded from the build. |
 
 ## Module table
