@@ -3,6 +3,7 @@ Imports ArrayTypeT = DeepLearning4VB.org.nd4vb.linalg.api.shape.options.ArrayTyp
 Imports DataTypeT = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
 Imports ND4VBIllegalStateException = DeepLearning4VB.org.nd4vb.linalg.exception.ND4VBIllegalStateException
 Imports ND4VBUnknownDataTypeException = DeepLearning4VB.org.nd4vb.linalg.exception.ND4VBUnknownDataTypeException
+Imports ShapeT = DeepLearning4VB.org.nd4vb.linalg.api.shape.Shape
 
 Namespace org.nd4vb.linalg.api.shape.options
 
@@ -10,9 +11,8 @@ Namespace org.nd4vb.linalg.api.shape.options
     ''' Reads and writes the "extras" (options) field of the shape information: the array type bits and the data type
     ''' bits. The shape information layout is <c>[rank, shape..., stride..., extras, elementWiseStride, order]</c>.
     ''' <para>
-    ''' <c>Shape.options</c> and <c>Shape.shapeInfoLength</c> (Shape is ported in a later wave) are replaced by the
-    ''' private helpers <see cref="optionsOf"/> and <see cref="shapeInfoLengthOf"/>. The TensorFlow overload
-    ''' <c>convertToDataType(org.tensorflow.framework.DataType)</c> is fenced with <c>#If MODEL_IMPORT</c>.
+    ''' The TensorFlow overload <c>convertToDataType(org.tensorflow.framework.DataType)</c> is fenced with
+    ''' <c>#If MODEL_IMPORT</c>.
     ''' </para>
     ''' </summary>
     Public Class ArrayOptionsHelper
@@ -37,18 +37,8 @@ Namespace org.nd4vb.linalg.api.shape.options
 
         Public Const HAS_PADDED_BUFFER As Long = 1L << 25
 
-        ''' <summary>Java <c>Shape.shapeInfoLength(long[])</c>: <c>rank * 2 + 4</c>.</summary>
-        Private Shared Function shapeInfoLengthOf(ByVal shapeInfo() As Long) As Integer
-            Return CInt(shapeInfo(0)) * 2 + 4
-        End Function
-
-        ''' <summary>Java <c>Shape.options(long[])</c>: the extras field, third from the end.</summary>
-        Private Shared Function optionsOf(ByVal shapeInfo() As Long) As Long
-            Return shapeInfo(shapeInfoLengthOf(shapeInfo) - 3)
-        End Function
-
         Public Shared Function hasBitSet(ByVal shapeInfo() As Long, ByVal bit As Long) As Boolean
-            Dim opt As Long = optionsOf(shapeInfo)
+            Dim opt As Long = ShapeT.options(shapeInfo)
             Return hasBitSet(opt, bit)
         End Function
 
@@ -57,7 +47,7 @@ Namespace org.nd4vb.linalg.api.shape.options
         End Function
 
         Public Shared Sub setOptionBit(ByVal storage() As Long, ByVal type As ArrayTypeT)
-            Dim length As Integer = shapeInfoLengthOf(storage)
+            Dim length As Integer = ShapeT.shapeInfoLength(storage)
             storage(length - 3) = setOptionBit(storage(length - 3), type)
         End Sub
 
@@ -66,7 +56,7 @@ Namespace org.nd4vb.linalg.api.shape.options
         End Function
 
         Public Shared Function arrayType(ByVal shapeInfo() As Long) As ArrayTypeT
-            Dim opt As Long = optionsOf(shapeInfo)
+            Dim opt As Long = ShapeT.options(shapeInfo)
             If hasBitSet(opt, ATYPE_SPARSE_BIT) Then
                 Return ArrayTypeT.SPARSE
             ElseIf hasBitSet(opt, ATYPE_COMPRESSED_BIT) Then
@@ -108,7 +98,7 @@ Namespace org.nd4vb.linalg.api.shape.options
         End Function
 
         Public Shared Function dataType(ByVal shapeInfo() As Long) As DataTypeT
-            Dim opt As Long = optionsOf(shapeInfo)
+            Dim opt As Long = ShapeT.options(shapeInfo)
             Return dataType(opt)
         End Function
 

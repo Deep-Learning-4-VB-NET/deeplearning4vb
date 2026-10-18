@@ -1,11 +1,12 @@
 Imports System
 Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
+Imports ShapeT = DeepLearning4VB.org.nd4vb.linalg.api.shape.Shape
 
 Namespace org.nd4vb.linalg.api.iter
 
     ''' <summary>
     ''' Caches the conversion of linear indexes to subscripts for one shape and order. The subscripts are computed
-    ''' lazily by the private <c>ind2sub</c> helpers of this package (Java: <c>Shape.ind2sub</c>/<c>ind2subC</c>).
+    ''' lazily by <c>Shape.ind2sub</c>/<c>Shape.ind2subC</c>.
     ''' </summary>
     <Serializable>
     Public Class LinearIndexLookup
@@ -42,7 +43,7 @@ Namespace org.nd4vb.linalg.api.iter
                 Return indexes(index)
             Else
                 exists(index) = True
-                indexes(index) = If(ordering = "c"c, ind2subC(shape, index, numIndexes), ind2sub(shape, index, numIndexes))
+                indexes(index) = If(ordering = "c"c, ShapeT.ind2subC(shape, index, numIndexes), ShapeT.ind2sub(shape, index, numIndexes))
                 Return indexes(index)
             End If
         End Function

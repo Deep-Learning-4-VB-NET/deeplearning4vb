@@ -5,6 +5,7 @@ Imports DataType = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
 Imports ArrayOptionsHelper = DeepLearning4VB.org.nd4vb.linalg.api.shape.options.ArrayOptionsHelper
 Imports ArrayType = DeepLearning4VB.org.nd4vb.linalg.api.shape.options.ArrayType
 Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
+Imports Nd4vbT = DeepLearning4VB.org.nd4vb.linalg.factory.Nd4vb
 
 Namespace org.nd4vb.linalg.api.shape
 
@@ -14,8 +15,8 @@ Namespace org.nd4vb.linalg.api.shape
     ''' <para>
     ''' Differences from Java: Java's <c>isEmpty()</c> is the method <see cref="isEmpty"/> (an <c>Empty</c> property
     ''' would clash with the static <see cref="empty"/>). <c>fromShape(shape, dataType)</c> and
-    ''' <c>fromShape(shape, extras)</c> use C order where Java used <c>Nd4j.order()</c> (the configurable default order,
-    ''' 'c' unless changed); the <c>Nd4j</c> factory is ported in a later wave.
+    ''' <c>fromShape(shape, extras)</c> use the default order <c>Nd4vb.order()</c> and its dense strides
+    ''' (<c>Nd4vb.getStrides</c>), as in Java.
     ''' </para>
     ''' </summary>
     Public Class LongShapeDescriptor
@@ -130,10 +131,10 @@ Namespace org.nd4vb.linalg.api.shape
             Return fromShape(ArrayUtil.toLongArray(shape), dataType)
         End Function
 
-        ''' <summary>A descriptor with C-order strides (Java: <c>Nd4j.order()</c> strides).</summary>
+        ''' <summary>A descriptor with the default order (<c>Nd4vb.order()</c>) and its dense strides.</summary>
         Public Shared Function fromShape(ByVal shape() As Long, ByVal dataType As DataType) As LongShapeDescriptor
-            Dim order As Char = defaultOrder()
-            Return fromShape(shape, stridesFor(shape, order), 1, order, dataType, False)
+            Dim order As Char = Nd4vbT.order()
+            Return fromShape(shape, Nd4vbT.getStrides(shape, order), 1, order, dataType, False)
         End Function
 
         ''' <summary>The descriptor of an empty array of the given data type.</summary>
@@ -154,10 +155,10 @@ Namespace org.nd4vb.linalg.api.shape
             Return New LongShapeDescriptor(shape, strides, 0, ews, order, extras)
         End Function
 
-        ''' <summary>A descriptor with C-order strides and the given extras (Java: <c>Nd4j.order()</c>).</summary>
+        ''' <summary>A descriptor with the default order (<c>Nd4vb.order()</c>), its dense strides and the given extras.</summary>
         Public Shared Function fromShape(ByVal shape() As Long, ByVal extras As Long) As LongShapeDescriptor
-            Dim order As Char = defaultOrder()
-            Return New LongShapeDescriptor(shape, stridesFor(shape, order), 0, 1, order, extras)
+            Dim order As Char = Nd4vbT.order()
+            Return New LongShapeDescriptor(shape, Nd4vbT.getStrides(shape, order), 0, 1, order, extras)
         End Function
 
         ''' <summary>
@@ -175,19 +176,6 @@ Namespace org.nd4vb.linalg.api.shape
         ''' <summary>True if the descriptor describes an empty array (Java <c>isEmpty()</c>).</summary>
         Public Overridable Function isEmpty() As Boolean
             Return ArrayOptionsHelper.hasBitSet(extras, ArrayOptionsHelper.ATYPE_EMPTY_BIT)
-        End Function
-
-        ''' <summary>The default array order (Java <c>Nd4j.order()</c>; 'c' until the <c>Nd4j</c> factory is ported).</summary>
-        Private Shared Function defaultOrder() As Char
-            Return "c"c
-        End Function
-
-        ''' <summary>Java <c>Nd4j.getStrides(shape, order)</c>.</summary>
-        Private Shared Function stridesFor(ByVal shape() As Long, ByVal order As Char) As Long()
-            If order = "f"c Then
-                Return ArrayUtil.calcStridesFortran(shape)
-            End If
-            Return ArrayUtil.calcStrides(shape)
         End Function
 
     End Class

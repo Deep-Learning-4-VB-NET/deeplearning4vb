@@ -1,13 +1,13 @@
 Imports System
 Imports DataBuffer = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataBuffer
 Imports INDArray = DeepLearning4VB.org.nd4vb.linalg.api.ndarray.INDArray
+Imports ShapeT = DeepLearning4VB.org.nd4vb.linalg.api.shape.Shape
 
 Namespace org.nd4vb.linalg.cache
 
     ''' <summary>
     ''' A hashable key for a tensor-along-dimension request: the dimensions and the shape information of the array.
-    ''' Lombok's <c>@Data</c> members are written out; <c>Shape.shapeInfoLength(rank)</c> (Shape is ported in a later
-    ''' wave) is computed inline as <c>rank * 2 + 4</c>.
+    ''' Lombok's <c>@Data</c> members are written out.
     ''' </summary>
     Public Class TadDescriptor
 
@@ -36,7 +36,7 @@ Namespace org.nd4vb.linalg.cache
         ''' <returns> the int array version of this data buffer </returns>
         Public Shared Function dataBufferToArray(ByVal buffer As DataBuffer) As Long()
             Dim rank As Integer = buffer.getInt(0)
-            Dim length As Integer = rank * 2 + 4
+            Dim length As Integer = ShapeT.shapeInfoLength(rank)
             Dim ret(length - 1) As Long
             ret(0) = rank
             For e As Integer = 1 To length - 1

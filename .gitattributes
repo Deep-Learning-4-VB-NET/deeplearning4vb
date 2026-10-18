@@ -4,3 +4,6 @@
 *.slnx text
 *.md text
 *.props text
+
+# Test data is compared byte for byte: check it out exactly as stored, never with CRLF.
+tests/DeepLearning4VB.Tests/resources/** -text

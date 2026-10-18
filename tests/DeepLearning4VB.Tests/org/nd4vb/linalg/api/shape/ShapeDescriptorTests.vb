@@ -99,26 +99,35 @@ Namespace org.nd4vb.linalg.api.shape
         End Sub
 
         <TestMethod>
-        Public Sub testFromShapeUsesCOrderStrides()
-            Dim d As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {2, 3, 4}, DataType.DOUBLE)
-            assertArrayEquals(New Long() {12, 4, 1}, d.getStride())
-            assertEquals("c"c, d.getOrder())
-            assertEquals(3, d.rank())
-            assertEquals(DataType.DOUBLE, d.dataType())
-            assertFalse(d.isEmpty())
-
-            Dim fromInts As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Integer() {2, 3, 4}, DataType.DOUBLE)
-            assertEquals(d, fromInts)
-
-            Dim withExtras As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {5, 2}, ArrayOptionsHelper.DTYPE_INT_BIT)
-            assertArrayEquals(New Long() {2, 1}, withExtras.getStride())
-            assertEquals(DataType.INT, withExtras.dataType())
-
+        Public Sub testFromShapeWithExplicitStrides()
             Dim f As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {2, 3}, New Long() {1, 2}, 1, "f"c, DataType.HALF, False)
             assertEquals("f"c, f.getOrder())
             assertEquals(DataType.HALF, f.dataType())
+            assertArrayEquals(New Long() {1, 2}, f.getStride())
+            assertFalse(f.isEmpty())
             assertThrows(Of ArgumentNullException)(Sub() LongShapeDescriptor.fromShape(Nothing, New Long() {}, 1, "c"c, DataType.FLOAT, False))
             assertThrows(Of ArgumentNullException)(Sub() LongShapeDescriptor.fromShape(New Long() {}, Nothing, 1, "c"c, DataType.FLOAT, False))
+        End Sub
+
+        <TestMethod>
+        Public Sub testFromShapeUsesDefaultOrderStrides()
+            ' fromShape(shape, dataType) and fromShape(shape, extras) use Nd4vb.order() and Nd4vb.getStrides (C order by default)
+            runWithNd4vb(
+                Sub()
+                    Dim d As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {2, 3, 4}, DataType.DOUBLE)
+                    assertArrayEquals(New Long() {12, 4, 1}, d.getStride())
+                    assertEquals("c"c, d.getOrder())
+                    assertEquals(3, d.rank())
+                    assertEquals(DataType.DOUBLE, d.dataType())
+                    assertFalse(d.isEmpty())
+
+                    Dim fromInts As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Integer() {2, 3, 4}, DataType.DOUBLE)
+                    assertEquals(d, fromInts)
+
+                    Dim withExtras As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {5, 2}, ArrayOptionsHelper.DTYPE_INT_BIT)
+                    assertArrayEquals(New Long() {2, 1}, withExtras.getStride())
+                    assertEquals(DataType.INT, withExtras.dataType())
+                End Sub)
         End Sub
 
         <TestMethod>
@@ -133,7 +142,7 @@ Namespace org.nd4vb.linalg.api.shape
             assertEquals(DataType.INT, asInt.dataType())
             assertFalse(e.Equals(asInt))
 
-            Dim d As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {3}, DataType.FLOAT)
+            Dim d As LongShapeDescriptor = LongShapeDescriptor.fromShape(New Long() {3}, New Long() {1}, 1, "c"c, DataType.FLOAT, False)
             Dim asLong As LongShapeDescriptor = d.asDataType(DataType.LONG)
             assertFalse(asLong.isEmpty())
             assertEquals(DataType.LONG, asLong.dataType())

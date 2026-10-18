@@ -2,6 +2,7 @@ Imports System
 Imports System.Collections
 Imports System.Collections.Generic
 Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
+Imports ShapeT = DeepLearning4VB.org.nd4vb.linalg.api.shape.Shape
 
 Namespace org.nd4vb.linalg.api.iter
 
@@ -88,11 +89,11 @@ Namespace org.nd4vb.linalg.api.iter
 
             Select Case order
                 Case "c"c
-                    Dim c As Long() = ind2subC(shape, i)
+                    Dim c As Long() = ShapeT.ind2subC(shape, i)
                     i += 1
                     Return c
                 Case "f"c
-                    Dim f As Long() = ind2sub(shape, i)
+                    Dim f As Long() = ShapeT.ind2sub(shape, i)
                     i += 1
                     Return f
                 Case Else
