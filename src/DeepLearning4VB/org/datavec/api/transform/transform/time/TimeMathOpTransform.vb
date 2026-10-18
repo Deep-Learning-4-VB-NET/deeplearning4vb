@@ -1,6 +1,7 @@
 Imports System
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports LongWritable = DeepLearning4VB.org.datavec.api.writable.LongWritable
 Imports TimeMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.TimeMetaData
@@ -17,6 +18,7 @@ Namespace org.datavec.api.transform.transforms.time
     ''' of milliseconds, as Lombok does).</para>
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "columnNumber", "asMilliseconds"}) @Data
+    <JsonIgnoreProperties("inputSchema", "columnNumber", "asMilliseconds")>
     <Serializable>
     Public Class TimeMathOpTransform
         Inherits BaseColumnTransform

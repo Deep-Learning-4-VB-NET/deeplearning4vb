@@ -1,0 +1,1042 @@
+{
+  "actionList" : [ {
+    "transform" : {
+      "CategoricalToIntegerTransform" : {
+        "columnName" : "Cat"
+      }
+    }
+  }, {
+    "transform" : {
+      "CategoricalToOneHotTransform" : {
+        "columnName" : "Cat2"
+      }
+    }
+  }, {
+    "transform" : {
+      "AppendStringColumnTransform" : {
+        "columnName" : "Str3",
+        "toAppend" : "ToAppend"
+      }
+    }
+  }, {
+    "transform" : {
+      "IntegerToCategoricalTransform" : {
+        "columnName" : "Cat",
+        "map" : {
+          "0" : "State1",
+          "1" : "State2"
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "StringToCategoricalTransform" : {
+        "columnName" : "Str",
+        "stateNames" : [ "State1", "State2" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "DuplicateColumnsTransform" : {
+        "columnsToDuplicate" : [ "Str" ],
+        "newColumnNames" : [ "Str2a" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "RemoveColumnsTransform" : {
+        "columnsToRemove" : [ "Str2a" ],
+        "leftOverColumns" : [ "Cat", "Cat2[State1]", "Cat2[State2]", "Dbl", "Dbl2", "Int", "Int2", "Long", "Long2", "Str", "Str2", "Str3", "TimeCol", "TimeCol2" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "RenameColumnsTransform" : {
+        "newNames" : [ "Str2a" ],
+        "oldNames" : [ "Str2" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "ReorderColumnsTransform" : {
+        "newOrder" : [ "Cat", "Dbl" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "ConditionalCopyValueTransform" : {
+        "columnToReplace" : "Dbl",
+        "condition" : {
+          "DoubleColumnCondition" : {
+            "columnName" : "Dbl",
+            "op" : "Equal",
+            "value" : 0.0
+          }
+        },
+        "sourceColumn" : "Dbl2"
+      }
+    }
+  }, {
+    "transform" : {
+      "ConditionalReplaceValueTransform" : {
+        "columnToReplace" : "Dbl",
+        "condition" : {
+          "DoubleColumnCondition" : {
+            "columnName" : "Dbl",
+            "op" : "Equal",
+            "value" : 1.0
+          }
+        },
+        "newValue" : {
+          "DoubleWritable" : {
+            "value" : 1.0
+          }
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "DoubleColumnsMathOpTransform" : {
+        "columns" : [ "Dbl", "Dbl2" ],
+        "mathOp" : "Add",
+        "newColumnName" : "NewDouble"
+      }
+    }
+  }, {
+    "transform" : {
+      "DoubleMathOpTransform" : {
+        "columnName" : "Dbl",
+        "mathOp" : "Add",
+        "scalar" : 1.0
+      }
+    }
+  }, {
+    "transform" : {
+      "IntegerColumnsMathOpTransform" : {
+        "columns" : [ "Int", "Int2" ],
+        "mathOp" : "Subtract",
+        "newColumnName" : "NewInt"
+      }
+    }
+  }, {
+    "transform" : {
+      "IntegerMathOpTransform" : {
+        "columnName" : "Int",
+        "mathOp" : "Multiply",
+        "scalar" : 2
+      }
+    }
+  }, {
+    "transform" : {
+      "ReplaceEmptyIntegerWithValueTransform" : {
+        "columnName" : "Int",
+        "value" : 1
+      }
+    }
+  }, {
+    "transform" : {
+      "ReplaceInvalidWithIntegerTransform" : {
+        "columnName" : "Int",
+        "value" : 1
+      }
+    }
+  }, {
+    "transform" : {
+      "LongColumnsMathOpTransform" : {
+        "columns" : [ "Long", "Long2" ],
+        "mathOp" : "Multiply",
+        "newColumnName" : "Long"
+      }
+    }
+  }, {
+    "transform" : {
+      "LongMathOpTransform" : {
+        "columnName" : "Long",
+        "mathOp" : "ScalarMax",
+        "scalar" : 0
+      }
+    }
+  }, {
+    "transform" : {
+      "MapAllStringsExceptListTransform" : {
+        "columnName" : "Str",
+        "exceptions" : [ "Ok", "SomeVal" ],
+        "newValue" : "Other"
+      }
+    }
+  }, {
+    "transform" : {
+      "RemoveWhiteSpaceTransform" : {
+        "columnName" : "Str"
+      }
+    }
+  }, {
+    "transform" : {
+      "ReplaceEmptyStringTransform" : {
+        "columnName" : "Str",
+        "value" : "WasEmpty"
+      }
+    }
+  }, {
+    "transform" : {
+      "ReplaceStringTransform" : {
+        "columnName" : "Str",
+        "map" : {
+          "from" : "to",
+          "anotherFrom" : "anotherTo"
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "StringListToCategoricalSetTransform" : {
+        "categoryTokens" : [ "StrA", "StrB" ],
+        "columnName" : "Str",
+        "delimiter" : ",",
+        "newColumnNames" : [ "StrA", "StrB" ]
+      }
+    }
+  }, {
+    "transform" : {
+      "StringMapTransform" : {
+        "columnName" : "Str2a",
+        "map" : {
+          "from" : "to",
+          "anotherFrom" : "anotherTo"
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "DeriveColumnsFromTimeTransform" : {
+        "columnName" : "TimeCol",
+        "derivedColumns" : [ {
+          "columnName" : "Hour",
+          "columnType" : "Integer",
+          "fieldType" : {
+            "fieldType" : "hourOfDay"
+          }
+        }, {
+          "columnName" : "Date",
+          "columnType" : "String",
+          "dateTimeZone" : "UTC",
+          "format" : "YYYY-MM-dd"
+        } ],
+        "inputTimeZone" : "UTC",
+        "insertAfter" : "TimeCol"
+      }
+    }
+  }, {
+    "transform" : {
+      "StringToTimeTransform" : {
+        "columnName" : "Str2a",
+        "timeFormat" : "YYYY-MM-dd hh:mm:ss",
+        "timeZone" : "UTC",
+        "columnNumber" : 11,
+        "inputSchema" : {
+          "Schema" : {
+            "columns" : [ {
+              "Categorical" : {
+                "name" : "Cat",
+                "stateNames" : [ "State1", "State2" ]
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "Dbl"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "Cat2[State1]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "Cat2[State2]"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : true,
+                "maxAllowedValue" : 100.0,
+                "name" : "Dbl2"
+              }
+            }, {
+              "Integer" : {
+                "name" : "Int"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 10,
+                "minAllowedValue" : 0,
+                "name" : "Int2"
+              }
+            }, {
+              "Long" : {
+                "name" : "Long"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : -100,
+                "name" : "Long2"
+              }
+            }, {
+              "Categorical" : {
+                "name" : "StrA",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Categorical" : {
+                "name" : "StrB",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "String" : {
+                "name" : "Str2a"
+              }
+            }, {
+              "String" : {
+                "name" : "Str3"
+              }
+            }, {
+              "Time" : {
+                "name" : "TimeCol",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Integer" : {
+                "name" : "Hour"
+              }
+            }, {
+              "String" : {
+                "name" : "Date"
+              }
+            }, {
+              "Time" : {
+                "maxValidTime" : 1000,
+                "name" : "TimeCol2",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "NewDouble"
+              }
+            }, {
+              "Integer" : {
+                "name" : "NewInt"
+              }
+            }, {
+              "Long" : {
+                "name" : "Long"
+              }
+            } ]
+          }
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "TimeMathOpTransform" : {
+        "columnName" : "TimeCol2",
+        "mathOp" : "Add",
+        "timeQuantity" : 1,
+        "timeUnit" : "HOURS"
+      }
+    }
+  }, {
+    "filter" : {
+      "FilterInvalidValues" : {
+        "columnsToFilterIfInvalid" : [ "Cat", "Str2a" ],
+        "filterAnyInvalid" : false
+      }
+    }
+  }, {
+    "filter" : {
+      "ConditionFilter" : {
+        "condition" : {
+          "NullWritableColumnCondition" : {
+            "columnName" : "Long"
+          }
+        }
+      }
+    }
+  }, {
+    "convertToSequence" : {
+      "comparator" : {
+        "NumericalColumnComparator" : {
+          "ascending" : true,
+          "columnName" : "TimeCol2"
+        }
+      },
+      "singleStepSequencesMode" : false,
+      "keyColumns" : [ "Int" ]
+    }
+  }, {
+    "convertFromSequence" : { }
+  }, {
+    "convertToSequence" : {
+      "comparator" : {
+        "StringComparator" : {
+          "columnName" : "Str2a"
+        }
+      },
+      "singleStepSequencesMode" : false,
+      "keyColumns" : [ "Int" ]
+    }
+  }, {
+    "sequenceSplit" : {
+      "SequenceSplitTimeSeparation" : {
+        "timeColumn" : "TimeCol2",
+        "timeQuantity" : 1,
+        "timeUnit" : "HOURS"
+      }
+    }
+  }, {
+    "reducer" : {
+      "Reducer" : {
+        "conditionalReductions" : { },
+        "customReductions" : { },
+        "defaultOp" : "TakeFirst",
+        "ignoreInvalidInColumns" : [ ],
+        "keyColumns" : [ "TimeCol2" ],
+        "opMap" : {
+          "Cat" : [ "Count" ],
+          "Dbl" : [ "Sum" ]
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "ReduceSequenceByWindowTransform" : {
+        "reducer" : {
+          "Reducer" : {
+            "conditionalReductions" : { },
+            "customReductions" : { },
+            "defaultOp" : "TakeFirst",
+            "ignoreInvalidInColumns" : [ ],
+            "opMap" : {
+              "Cat2" : [ "Count" ],
+              "Dbl2" : [ "Stdev" ]
+            }
+          }
+        },
+        "windowFunction" : {
+          "OverlappingTimeWindowFunction" : {
+            "addWindowEndTimeColumn" : true,
+            "addWindowStartTimeColumn" : true,
+            "excludeEmptyWindows" : true,
+            "offsetAmount" : 5,
+            "offsetUnit" : "MINUTES",
+            "timeColumn" : "TimeCol2",
+            "windowSeparation" : 15,
+            "windowSeparationUnit" : "MINUTES",
+            "windowSize" : 1,
+            "windowSizeUnit" : "HOURS"
+          }
+        }
+      }
+    }
+  }, {
+    "convertFromSequence" : { }
+  }, {
+    "calculateSortedRank" : {
+      "CalculateSortedRank" : {
+        "ascending" : true,
+        "comparator" : {
+          "LongWritableComparator" : { }
+        },
+        "newColumnName" : "rankColName",
+        "sortOnColumn" : "TimeCol2"
+      }
+    }
+  }, {
+    "transform" : {
+      "SequenceMovingWindowReduceTransform" : {
+        "columnName" : "rankColName",
+        "edgeCaseHandling" : "Default",
+        "lookback" : 20,
+        "newColumnName" : "mean(20,rankColName)",
+        "op" : "Mean"
+      }
+    }
+  }, {
+    "transform" : {
+      "AddConstantColumnTransform" : {
+        "fixedValue" : {
+          "IntWritable" : {
+            "value" : 0
+          }
+        },
+        "newColumnName" : "someIntColumn",
+        "newColumnType" : "Integer",
+        "inputSchema" : {
+          "SequenceSchema" : {
+            "columns" : [ {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "takefirst(count(Cat))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(sum(Dbl))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State1]))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State2]))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : true,
+                "maxAllowedValue" : 100.0,
+                "name" : "takefirst(takefirst(Dbl2))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Int))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 10,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Int2))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : -100,
+                "name" : "takefirst(takefirst(Long2))"
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrA))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrB))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(Str2a))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Str3))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(TimeCol))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Hour))"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Date))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(TimeCol2)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(takefirst(NewDouble))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(NewInt))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowStartTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowEndTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "rankColName"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "mean(20,rankColName)"
+              }
+            } ],
+            "maxSequenceLength" : null,
+            "minSequenceLength" : null
+          }
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "IntegerToOneHotTransform" : {
+        "columnName" : "someIntColumn",
+        "maxValue" : 3,
+        "minValue" : 0
+      }
+    }
+  }, {
+    "filter" : {
+      "ConditionFilter" : {
+        "condition" : {
+          "SequenceLengthCondition" : {
+            "length" : 1,
+            "op" : "LessThan"
+          }
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "AddConstantColumnTransform" : {
+        "fixedValue" : {
+          "DoubleWritable" : {
+            "value" : 0.0
+          }
+        },
+        "newColumnName" : "testColSeq",
+        "newColumnType" : "Integer",
+        "inputSchema" : {
+          "SequenceSchema" : {
+            "columns" : [ {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "takefirst(count(Cat))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(sum(Dbl))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State1]))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State2]))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : true,
+                "maxAllowedValue" : 100.0,
+                "name" : "takefirst(takefirst(Dbl2))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Int))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 10,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Int2))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : -100,
+                "name" : "takefirst(takefirst(Long2))"
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrA))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrB))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(Str2a))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Str3))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(TimeCol))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Hour))"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Date))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(TimeCol2)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(takefirst(NewDouble))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(NewInt))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowStartTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowEndTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "rankColName"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "mean(20,rankColName)"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[0]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[1]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[2]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[3]"
+              }
+            } ],
+            "maxSequenceLength" : null,
+            "minSequenceLength" : null
+          }
+        }
+      }
+    }
+  }, {
+    "transform" : {
+      "SequenceOffsetTransform" : {
+        "columnsToOffset" : [ "testColSeq" ],
+        "edgeHandling" : "TrimSequence",
+        "offsetAmount" : 1,
+        "operationType" : "InPlace"
+      }
+    }
+  }, {
+    "transform" : {
+      "AddConstantColumnTransform" : {
+        "fixedValue" : {
+          "Text" : {
+            "bytes" : "c29tZSB2YWx1ZXM=",
+            "length" : 11
+          }
+        },
+        "newColumnName" : "someTextCol",
+        "newColumnType" : "String",
+        "inputSchema" : {
+          "SequenceSchema" : {
+            "columns" : [ {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "takefirst(count(Cat))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(sum(Dbl))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State1]))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Cat2[State2]))"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : true,
+                "maxAllowedValue" : 100.0,
+                "name" : "takefirst(takefirst(Dbl2))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Int))"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 10,
+                "minAllowedValue" : 0,
+                "name" : "takefirst(takefirst(Int2))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : -100,
+                "name" : "takefirst(takefirst(Long2))"
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrA))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Categorical" : {
+                "name" : "takefirst(takefirst(StrB))",
+                "stateNames" : [ "true", "false" ]
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(Str2a))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Str3))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(takefirst(TimeCol))",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(Hour))"
+              }
+            }, {
+              "String" : {
+                "name" : "takefirst(takefirst(Date))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(TimeCol2)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "takefirst(takefirst(NewDouble))"
+              }
+            }, {
+              "Integer" : {
+                "name" : "takefirst(takefirst(NewInt))"
+              }
+            }, {
+              "Long" : {
+                "name" : "takefirst(takefirst(Long))"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowStartTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Time" : {
+                "name" : "takefirst(windowEndTime)",
+                "timeZone" : "UTC"
+              }
+            }, {
+              "Long" : {
+                "minAllowedValue" : 0,
+                "name" : "rankColName"
+              }
+            }, {
+              "Double" : {
+                "allowInfinite" : false,
+                "allowNaN" : false,
+                "name" : "mean(20,rankColName)"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[0]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[1]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[2]"
+              }
+            }, {
+              "Integer" : {
+                "maxAllowedValue" : 1,
+                "minAllowedValue" : 0,
+                "name" : "someIntColumn[3]"
+              }
+            }, {
+              "Integer" : {
+                "name" : "sequenceOffset(1,testColSeq)"
+              }
+            } ],
+            "maxSequenceLength" : null,
+            "minSequenceLength" : null
+          }
+        }
+      }
+    }
+  } ],
+  "initialSchema" : {
+    "Schema" : {
+      "columns" : [ {
+        "Categorical" : {
+          "name" : "Cat",
+          "stateNames" : [ "State1", "State2" ]
+        }
+      }, {
+        "Categorical" : {
+          "name" : "Cat2",
+          "stateNames" : [ "State1", "State2" ]
+        }
+      }, {
+        "Double" : {
+          "allowInfinite" : false,
+          "allowNaN" : false,
+          "name" : "Dbl"
+        }
+      }, {
+        "Double" : {
+          "allowInfinite" : false,
+          "allowNaN" : true,
+          "maxAllowedValue" : 100.0,
+          "name" : "Dbl2"
+        }
+      }, {
+        "Integer" : {
+          "name" : "Int"
+        }
+      }, {
+        "Integer" : {
+          "maxAllowedValue" : 10,
+          "minAllowedValue" : 0,
+          "name" : "Int2"
+        }
+      }, {
+        "Long" : {
+          "name" : "Long"
+        }
+      }, {
+        "Long" : {
+          "minAllowedValue" : -100,
+          "name" : "Long2"
+        }
+      }, {
+        "String" : {
+          "name" : "Str"
+        }
+      }, {
+        "String" : {
+          "minLength" : 1,
+          "name" : "Str2",
+          "regex" : "someregexhere"
+        }
+      }, {
+        "String" : {
+          "name" : "Str3"
+        }
+      }, {
+        "Time" : {
+          "name" : "TimeCol",
+          "timeZone" : "UTC"
+        }
+      }, {
+        "Time" : {
+          "maxValidTime" : 1000,
+          "name" : "TimeCol2",
+          "timeZone" : "UTC"
+        }
+      } ]
+    }
+  }
+}

@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Linq
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceSchemaT = DeepLearning4VB.org.datavec.api.transform.schema.SequenceSchema
 
@@ -35,6 +36,7 @@ Namespace org.datavec.api.transform.sequence
     ''' mode, the key columns and the comparator.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"})
+    <JsonIgnoreProperties("inputSchema")>
     Public Class ConvertToSequence
 
         Private singleStepSequencesMode As Boolean
@@ -60,7 +62,7 @@ Namespace org.datavec.api.transform.sequence
         '''                   examples belong to what sequence (JSON property "keyColumn") </param>
         ''' <param name="comparator"> The comparator to use when deciding the order of each possible time step in the sequence </param>
         <JsonConstructor>
-        Public Sub New(ByVal singleStepSequencesMode As Boolean, ByVal keyColumns() As String, ByVal comparator As SequenceComparator)
+        Public Sub New(ByVal singleStepSequencesMode As Boolean, <JsonProperty("keyColumn")> ByVal keyColumns() As String, ByVal comparator As SequenceComparator)
             Me.singleStepSequencesMode = singleStepSequencesMode
             Me.keyColumns = keyColumns
             Me.comparator = comparator

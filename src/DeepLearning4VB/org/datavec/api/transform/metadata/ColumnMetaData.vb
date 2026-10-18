@@ -19,6 +19,7 @@
 '
 
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 
 Namespace org.datavec.api.transform.metadata
 
@@ -27,8 +28,9 @@ Namespace org.datavec.api.transform.metadata
     ''' decide whether a value is valid for it. Implementations are serializable and cloneable (the Java
     ''' <c>Cloneable</c> marker is replaced by the explicit <see cref="clone"/> method).
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface ColumnMetaData
 
         ''' <summary>

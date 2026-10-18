@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Linq
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
@@ -38,6 +39,7 @@ Namespace org.datavec.api.transform.sequence.trim
     ''' Equality (Lombok <c>@EqualsAndHashCode(exclude = {"schema"})</c>) compares the length, the mode and the padding.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"schema"})
+    <JsonIgnoreProperties("schema")>
     <Serializable>
     Public Class SequenceTrimToLengthTransform
         Implements TransformT

@@ -23,6 +23,7 @@ Imports System.Collections.Generic
 Imports System.Linq
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.writable
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -34,6 +35,7 @@ Namespace org.datavec.api.transform.filter
     ''' metadata of the input schema, either in any column or only in the named columns.
     ''' </summary>
     ' Java: @EqualsAndHashCode(exclude = {"schema", "columnIdxs"}) @JsonIgnoreProperties({"schema", "columnIdxs"}) @Data @ToString(exclude = {"schema", "columnIdxs"})
+    <JsonIgnoreProperties("schema", "columnIdxs")>
     <Serializable>
     Public Class FilterInvalidValues
         Implements Filter

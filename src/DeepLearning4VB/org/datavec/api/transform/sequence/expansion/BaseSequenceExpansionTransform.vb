@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
@@ -37,6 +38,8 @@ Namespace org.datavec.api.transform.sequence.expansion
     ''' the class, the required columns and the expanded column names.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"}) @JsonInclude(NON_NULL)
+    <JsonIgnoreProperties("inputSchema")>
+    <JsonIncludeNonNull>
     <Serializable>
     Public MustInherit Class BaseSequenceExpansionTransform
         Implements TransformT

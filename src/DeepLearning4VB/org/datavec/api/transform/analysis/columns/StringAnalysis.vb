@@ -19,6 +19,7 @@
 '
 
 Imports System
+Imports System.Text.Json.Serialization
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
 
 Namespace org.datavec.api.transform.analysis.columns
@@ -35,6 +36,7 @@ Namespace org.datavec.api.transform.analysis.columns
         Private sampleStdevLength As Double
         Private sampleVarianceLength As Double
         ''' <summary>Java field <c>countTotal</c> (renamed: VB names are case-insensitive and <see cref="CountTotal"/> exists).</summary>
+        <JsonPropertyName("countTotal")>
         Private countTotalValue As Long
         Private histogramBuckets() As Double
         Private histogramBucketCounts() As Long

@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceSplitT = DeepLearning4VB.org.datavec.api.transform.sequence.SequenceSplit
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -37,6 +38,7 @@ Namespace org.datavec.api.transform.sequence.split
     ''' Equality (Lombok <c>@EqualsAndHashCode(exclude = {"inputSchema"})</c>) compares the maximum length and the mode.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"})
+    <JsonIgnoreProperties("inputSchema")>
     <Serializable>
     Public Class SplitMaxLengthSequence
         Implements SequenceSplitT

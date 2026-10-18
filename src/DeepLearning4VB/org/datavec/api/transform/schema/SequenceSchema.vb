@@ -25,6 +25,7 @@ Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
 Imports DeepLearning4VB.org.datavec.api.writable
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnType = DeepLearning4VB.org.datavec.api.transform.ColumnType
 
 Namespace org.datavec.api.transform.schema
@@ -43,7 +44,7 @@ Namespace org.datavec.api.transform.schema
         End Sub
 
         <JsonConstructor>
-        Public Sub New(ByVal columnMetaData As IList(Of ColumnMetaData), ByVal minSequenceLength As Integer?, ByVal maxSequenceLength As Integer?)
+        Public Sub New(<JsonProperty("columns")> ByVal columnMetaData As IList(Of ColumnMetaData), ByVal minSequenceLength As Integer?, ByVal maxSequenceLength As Integer?)
             MyBase.New(columnMetaData)
             Me.MinSequenceLength = minSequenceLength
             Me.MaxSequenceLength = maxSequenceLength

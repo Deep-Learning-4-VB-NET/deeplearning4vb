@@ -1,0 +1,203 @@
+{
+  "actionList" : [ {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.categorical.CategoricalToIntegerTransform",
+      "columnName" : "cat"
+    }
+  }, {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.doubletransform.MinMaxNormalizer",
+      "columnName" : "score",
+      "max" : 100.0,
+      "min" : 0.0,
+      "newMax" : 1.0,
+      "newMin" : 0.0
+    }
+  }, {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.condition.ConditionalReplaceValueTransformWithDefault",
+      "columnToReplace" : "amount",
+      "noVal" : {
+        "@class" : "org.datavec.api.writable.LongWritable",
+        "value" : 1
+      },
+      "yesVal" : {
+        "@class" : "org.datavec.api.writable.LongWritable",
+        "value" : 0
+      },
+      "condition" : {
+        "@class" : "org.datavec.api.transform.condition.column.LongColumnCondition",
+        "columnName" : "amount",
+        "op" : "LessThan",
+        "value" : 10
+      }
+    }
+  }, {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.column.AddConstantColumnTransform",
+      "fixedValue" : {
+        "@class" : "org.datavec.api.writable.Text",
+        "bytes" : "amF2YQ==",
+        "length" : 4
+      },
+      "newColumnName" : "source",
+      "newColumnType" : "String",
+      "inputSchema" : {
+        "@class" : "org.datavec.api.transform.schema.Schema",
+        "columns" : [ {
+          "@class" : "org.datavec.api.transform.metadata.IntegerMetaData",
+          "name" : "id"
+        } ]
+      }
+    }
+  }, {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.time.DeriveColumnsFromTimeTransform",
+      "columnName" : "when",
+      "derivedColumns" : [ {
+        "columnName" : "hour",
+        "columnType" : "Integer",
+        "fieldType" : {
+          "fieldType" : "hourOfDay"
+        }
+      }, {
+        "columnName" : "day",
+        "columnType" : "String",
+        "dateTimeZone" : "UTC",
+        "format" : "YYYY-MM-dd"
+      } ],
+      "inputTimeZone" : "America/New_York",
+      "insertAfter" : "when"
+    }
+  }, {
+    "filter" : {
+      "@class" : "org.datavec.api.transform.filter.ConditionFilter",
+      "condition" : {
+        "@class" : "org.datavec.api.transform.condition.BooleanCondition",
+        "conditions" : [ {
+          "@class" : "org.datavec.api.transform.condition.column.IntegerColumnCondition",
+          "columnName" : "id",
+          "op" : "InSet",
+          "set" : [ 1, 2, 3 ]
+        }, {
+          "@class" : "org.datavec.api.transform.condition.BooleanCondition",
+          "conditions" : [ {
+            "columnName" : "text",
+            "@class" : "org.datavec.api.transform.condition.string.StringRegexColumnCondition",
+            "regex" : "x+",
+            "someFieldFromANewerVersion" : 42
+          } ],
+          "type" : "NOT"
+        } ],
+        "type" : "AND"
+      }
+    }
+  }, {
+    "filter" : {
+      "@class" : "org.datavec.api.transform.filter.ConditionFilter",
+      "condition" : {
+        "@class" : "org.datavec.api.transform.condition.column.DoubleColumnCondition",
+        "columnName" : "score",
+        "op" : "Equal",
+        "value" : "NaN"
+      }
+    }
+  }, {
+    "convertToSequence" : {
+      "comparator" : {
+        "@class" : "org.datavec.api.transform.sequence.comparator.NumericalColumnComparator",
+        "ascending" : true,
+        "columnName" : "when"
+      },
+      "singleStepSequencesMode" : false,
+      "keyColumns" : [ "id" ]
+    }
+  }, {
+    "transform" : {
+      "@class" : "org.datavec.api.transform.transform.sequence.SequenceMovingWindowReduceTransform",
+      "columnName" : "score",
+      "edgeCaseHandling" : "Default",
+      "lookback" : 3,
+      "newColumnName" : "avgScore",
+      "op" : "Mean"
+    }
+  }, {
+    "filter" : {
+      "@class" : "org.datavec.api.transform.filter.ConditionFilter",
+      "condition" : {
+        "@class" : "org.datavec.api.transform.condition.sequence.SequenceLengthCondition",
+        "length" : 2,
+        "op" : "LessThan"
+      }
+    }
+  }, {
+    "convertFromSequence" : { }
+  }, {
+    "reducer" : {
+      "Reducer" : {
+        "conditionalReductions" : { },
+        "customReductions" : { },
+        "defaultOp" : "TakeFirst",
+        "ignoreInvalidInColumns" : [ ],
+        "keyColumns" : [ "id" ],
+        "opMap" : {
+          "amount" : [ "Sum" ],
+          "score" : [ "Mean" ]
+        }
+      }
+    }
+  }, {
+    "calculateSortedRank" : {
+      "@class" : "org.datavec.api.transform.rank.CalculateSortedRank",
+      "ascending" : false,
+      "comparator" : {
+        "@class" : "org.datavec.api.writable.comparator.DoubleWritableComparator"
+      },
+      "newColumnName" : "rank",
+      "sortOnColumn" : "mean(score)"
+    }
+  } ],
+  "initialSchema" : {
+    "@class" : "org.datavec.api.transform.schema.Schema",
+    "columns" : [ {
+      "@class" : "org.datavec.api.transform.metadata.IntegerMetaData",
+      "maxAllowedValue" : 1000,
+      "minAllowedValue" : 0,
+      "name" : "id"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.CategoricalMetaData",
+      "name" : "cat",
+      "stateNames" : [ "a", "b", "c" ]
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.DoubleMetaData",
+      "allowInfinite" : false,
+      "allowNaN" : true,
+      "maxAllowedValue" : 100.0,
+      "minAllowedValue" : 0.0,
+      "name" : "score"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.TimeMetaData",
+      "name" : "when",
+      "timeZone" : "America/New_York"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.StringMetaData",
+      "maxLength" : 20,
+      "minLength" : 1,
+      "name" : "text",
+      "regex" : "\\w+"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.BooleanMetaData",
+      "name" : "flag"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.LongMetaData",
+      "minAllowedValue" : 0,
+      "name" : "amount"
+    }, {
+      "@class" : "org.datavec.api.transform.metadata.FloatMetaData",
+      "allowInfinite" : false,
+      "allowNaN" : false,
+      "maxAllowedValue" : 1.5E10,
+      "name" : "weight"
+    } ]
+  }
+}

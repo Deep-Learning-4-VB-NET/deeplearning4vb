@@ -25,6 +25,7 @@ Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
 Imports DeepLearning4VB.org.datavec.api.writable
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnType = DeepLearning4VB.org.datavec.api.transform.ColumnType
 Imports DateTimeZone = DeepLearning4VB.org.joda.time.DateTimeZone
 
@@ -35,12 +36,15 @@ Namespace org.datavec.api.transform.schema
     ''' Built with <see cref="Schema.Builder"/> (<c>New Schema.Builder().addColumnInteger("x").build()</c>).
     ''' Equality (Lombok <c>@EqualsAndHashCode</c>) compares the column metadata in order.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonIgnoreProperties({"columnNames", "columnNamesIndex"}) @JsonTypeInfo(use = CLASS, property = "@class"))
+    ' Java: @JsonIgnoreProperties({"columnNames", "columnNamesIndex"}) @JsonTypeInfo(use = CLASS, property = "@class")
+    <JsonClassType>
+    <JsonIgnoreProperties("columnNames", "columnNamesIndex")>
     <Serializable>
     Public Class Schema
 
+        <JsonPropertyName("columnNames")>
         Private ReadOnly columnNamesList As IList(Of String)
+        <JsonPropertyName("columns")>
         Private ReadOnly columnMetaDataList As IList(Of ColumnMetaData)
         Private ReadOnly columnNamesIndex As IDictionary(Of String, Integer) 'For efficient lookup
 
@@ -69,7 +73,7 @@ Namespace org.datavec.api.transform.schema
         ''' <param name="columnMetaData"> the metadata to create the
         '''                       schema from </param>
         <JsonConstructor>
-        Public Sub New(ByVal columnMetaData As IList(Of ColumnMetaData))
+        Public Sub New(<JsonProperty("columns")> ByVal columnMetaData As IList(Of ColumnMetaData))
             If columnMetaData Is Nothing OrElse columnMetaData.Count = 0 Then
                 Throw New ArgumentException("Column meta data must be non-empty")
             End If
@@ -339,36 +343,21 @@ Namespace org.datavec.api.transform.schema
         End Function
 
         ''' <summary>
-        ''' Serialize this schema to json </summary>
+        ''' Serialize this schema to json, in the format of Java DataVec (see <see cref="JsonMappers"/>).
+        ''' YAML is not supported: the Java <c>toYaml</c>/<c>fromYaml</c> methods are not ported. </summary>
         ''' <returns> a json representation of this schema </returns>
         Public Overridable Function toJson() As String
-            ' TODO(serde): implemented with JsonMappers in the serde wave
-            Throw New NotSupportedException("Schema JSON serialization is not available yet (added in the serde wave)")
+            Return JsonMappers.writeValueAsString(Me, GetType(Schema))
         End Function
 
         ''' <summary>
-        ''' Serialize this schema to yaml </summary>
-        ''' <returns> the yaml representation of this schema </returns>
-        Public Overridable Function toYaml() As String
-            Throw New NotSupportedException("YAML is not supported in DeepLearning4VB")
-        End Function
-
-        ''' <summary>
-        ''' Create a schema from a given json string </summary>
+        ''' Create a schema from a given json string, written by <see cref="toJson"/> or by Java DataVec (also in the
+        ''' 1.0.0-alpha format). </summary>
         ''' <param name="json"> the json to create the schema from </param>
         ''' <returns> the created schema based on the json </returns>
+        ''' <exception cref="System.Text.Json.JsonException">if the JSON is not a valid schema</exception>
         Public Shared Function fromJson(ByVal json As String) As Schema
-            ' TODO(serde): implemented with JsonMappers in the serde wave (including the legacy 1.0.0-alpha format)
-            Throw New NotSupportedException("Schema JSON deserialization is not available yet (added in the serde wave)")
-        End Function
-
-        ''' <summary>
-        ''' Create a schema from the given
-        ''' yaml string </summary>
-        ''' <param name="yaml"> the yaml to create the schema from </param>
-        ''' <returns> the created schema based on the yaml </returns>
-        Public Shared Function fromYaml(ByVal yaml As String) As Schema
-            Throw New NotSupportedException("YAML is not supported in DeepLearning4VB")
+            Return JsonMappers.readValue(Of Schema)(json)
         End Function
 
         Public Overrides Function Equals(ByVal obj As Object) As Boolean

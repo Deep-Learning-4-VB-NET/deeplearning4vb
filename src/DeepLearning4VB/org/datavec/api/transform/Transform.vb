@@ -19,6 +19,7 @@
 '
 
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 
 Namespace org.datavec.api.transform
 
@@ -26,8 +27,9 @@ Namespace org.datavec.api.transform
     ''' A transformation of a record (or of a sequence of records) into another record: the building block of a
     ''' transform process. Implementations are serializable and carry their input schema.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface Transform
         Inherits ColumnOp
 

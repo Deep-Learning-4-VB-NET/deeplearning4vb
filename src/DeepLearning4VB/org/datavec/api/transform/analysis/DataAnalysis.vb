@@ -22,6 +22,12 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Linq
 Imports System.Text
+Imports System.Text.Json
+Imports System.Text.Json.Nodes
+Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
+Imports CategoricalMetaDataT = DeepLearning4VB.org.datavec.api.transform.metadata.CategoricalMetaData
+Imports ColumnMetaDataT = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
 Imports ColumnAnalysisT = DeepLearning4VB.org.datavec.api.transform.analysis.columns.ColumnAnalysis
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -32,7 +38,7 @@ Namespace org.datavec.api.transform.analysis
     ''' The analysis of a data set: the schema and one <see cref="ColumnAnalysisT"/> per column, in column order.
     ''' </summary>
     ' Java: @AllArgsConstructor @Data @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
+    <JsonClassType>
     <Serializable>
     Public Class DataAnalysis
         Private Const COL_NAME As String = "columnName"
@@ -42,7 +48,9 @@ Namespace org.datavec.api.transform.analysis
         Private Const ANALYSIS As String = "analysis"
         Private Const DATA_ANALYSIS As String = "DataAnalysis"
 
+        <JsonPropertyName("schema")>
         Private schemaValue As SchemaT
+        <JsonPropertyName("columnAnalysis")>
         Private columnAnalysisList As IList(Of ColumnAnalysisT)
 
         Protected Friend Sub New()
@@ -82,9 +90,64 @@ Namespace org.datavec.api.transform.analysis
             Return columnAnalysisList(schemaValue.getIndexOfColumn(column))
         End Function
 
-        ' TODO(serde): toJson/fromJson come with the serde wave
-        ' (toJson, toYaml, fromJson, fromYaml and the legacy-format reader fromMapper use the Jackson-based serde
-        ' package, which is ported in wave D).
+        ''' <summary>
+        ''' Convert this analysis to JSON, in the format of Java DataVec (see <see cref="JsonMappers"/>). The t-digests
+        ''' of the numerical columns are written in the System.Text.Json form of the t-digest stand-in (Java wrote a Java
+        ''' serialization of its MergingDigest in base64). YAML is not supported: the Java <c>toYaml</c>/<c>fromYaml</c>
+        ''' methods are not ported.
+        ''' </summary>
+        Public Overridable Function toJson() As String
+            Return JsonMappers.writeValueAsString(Me)
+        End Function
+
+        ''' <summary>
+        ''' Deserialize a JSON DataAnalysis String that was previously serialized with <see cref="toJson"/> or by Java
+        ''' DataVec, including the legacy format (<c>{"DataAnalysis" : [ {"columnName" : ..., "analysis" : ...} ]}</c>).
+        ''' A t-digest written by Java (Java object serialization) cannot be read: it is dropped with a warning.
+        ''' </summary>
+        ''' <exception cref="JsonException">if the JSON is not a valid data analysis</exception>
+        Public Shared Function fromJson(ByVal json As String) As DataAnalysis
+            Dim root As JsonObject = TryCast(JsonNode.Parse(json), JsonObject)
+            If root IsNot Nothing AndAlso root.ContainsKey(DATA_ANALYSIS) AndAlso Not root.ContainsKey("@class") Then
+                'Legacy format
+                Return fromLegacyJson(root)
+            End If
+            Return JsonMappers.readValue(Of DataAnalysis)(json)
+        End Function
+
+        ''' <summary>Reads the legacy format (Java <c>fromMapper</c>).</summary>
+        Private Shared Function fromLegacyJson(ByVal node As JsonObject) As DataAnalysis
+            Dim meta As IList(Of ColumnMetaDataT) = New List(Of ColumnMetaDataT)()
+            Dim analysisList As IList(Of ColumnAnalysisT) = New List(Of ColumnAnalysisT)()
+            Dim arrayNode As JsonArray = TryCast(node(DATA_ANALYSIS), JsonArray)
+            If arrayNode Is Nothing Then Throw New JsonException("Invalid legacy DataAnalysis JSON: """ & DATA_ANALYSIS & """ is not an array")
+            Dim options As JsonSerializerOptions = JsonMappers.Mapper
+            For i As Integer = 0 To arrayNode.Count - 1
+                Dim analysisNode As JsonObject = DirectCast(arrayNode(i), JsonObject)
+                Dim name As String = analysisNode(COL_NAME).GetValue(Of String)()
+                Dim type As ColumnTypeEnum = ColumnTypeValueOf(analysisNode(COL_TYPE).GetValue(Of String)())
+
+                Dim daNode As JsonNode = analysisNode(ANALYSIS)
+                If daNode IsNot Nothing Then daNode = JsonNode.Parse(daNode.ToJsonString())
+                Dim dataAnalysis As ColumnAnalysisT = DirectCast(JsonMappers.fromNode(daNode, GetType(ColumnAnalysisT), options), ColumnAnalysisT)
+
+                If type = ColumnTypeEnum.Categorical Then
+                    Dim an As JsonArray = DirectCast(analysisNode(CATEGORICAL_STATE_NAMES), JsonArray)
+                    Dim stateNames As IList(Of String) = New List(Of String)(an.Count)
+                    For Each n As JsonNode In an
+                        stateNames.Add(n.GetValue(Of String)())
+                    Next n
+                    meta.Add(New CategoricalMetaDataT(name, stateNames))
+                Else
+                    meta.Add(type.newColumnMetaData(name))
+                End If
+
+                analysisList.Add(dataAnalysis)
+            Next i
+
+            Dim schema As New SchemaT(meta)
+            Return New DataAnalysis(schema, analysisList)
+        End Function
 
         ' ---- Lombok @Data accessors ----
 

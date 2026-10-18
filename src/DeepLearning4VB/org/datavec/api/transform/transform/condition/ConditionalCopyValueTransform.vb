@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
@@ -16,6 +17,7 @@ Namespace org.datavec.api.transform.transforms.condition
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"columnToReplaceIdx", "sourceColumnIdx"})
     '       @EqualsAndHashCode(exclude = {"columnToReplaceIdx", "sourceColumnIdx"}) @Data
+    <JsonIgnoreProperties("columnToReplaceIdx", "sourceColumnIdx")>
     <Serializable>
     Public Class ConditionalCopyValueTransform
         Implements TransformT

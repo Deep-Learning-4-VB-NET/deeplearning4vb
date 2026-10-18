@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceComparatorT = DeepLearning4VB.org.datavec.api.transform.sequence.SequenceComparator
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -34,6 +35,7 @@ Namespace org.datavec.api.transform.sequence.comparator
     ''' the column name.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"schema", "columnIdx"})
+    <JsonIgnoreProperties("schema", "columnIdx")>
     <Serializable>
     Public MustInherit Class BaseColumnComparator
         Implements SequenceComparatorT, ColumnOp

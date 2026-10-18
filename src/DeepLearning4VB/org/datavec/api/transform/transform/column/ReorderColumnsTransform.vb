@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
@@ -16,6 +17,7 @@ Namespace org.datavec.api.transform.transforms.column
     ''' input schema also stores it, so that <see cref="columnNames"/> works.</para>
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "outputOrder"}) @Data
+    <JsonIgnoreProperties("inputSchema", "outputOrder")>
     <Serializable>
     Public Class ReorderColumnsTransform
         Implements TransformT

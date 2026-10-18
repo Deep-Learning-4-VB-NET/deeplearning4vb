@@ -20,6 +20,7 @@
 
 Imports System.Collections.Generic
 Imports DeepLearning4VB.org.datavec.api.transform.ops
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
@@ -30,9 +31,9 @@ Namespace org.datavec.api.transform.reduce
     ''' an associative aggregation: reduce(List(reduce(List(l1, l2)), l3)) = reduce(List(l1, reduce(List(l2, l3))).
     ''' Implementations are serializable.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
-    '  @JsonSubTypes({@Type(value = Reducer.class, name = "Reducer")}))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT) @JsonSubTypes({@Type(value = Reducer.class, name = "Reducer")})
+    <JsonWrapperType(GetType(Reducer), "Reducer")>
+    <JsonIncludeNonNull>
     Public Interface IAssociativeReducer
 
         ''' <summary>

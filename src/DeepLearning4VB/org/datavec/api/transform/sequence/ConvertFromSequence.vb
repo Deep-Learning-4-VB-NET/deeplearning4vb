@@ -20,6 +20,7 @@
 
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceSchemaT = DeepLearning4VB.org.datavec.api.transform.schema.SequenceSchema
@@ -32,6 +33,7 @@ Namespace org.datavec.api.transform.sequence
     ''' <c>@EqualsAndHashCode(exclude = {"inputSchema"})</c>) has no fields to compare: all instances are equal.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"})
+    <JsonIgnoreProperties("inputSchema")>
     Public Class ConvertFromSequence
 
         Private inputSchemaField As SequenceSchemaT

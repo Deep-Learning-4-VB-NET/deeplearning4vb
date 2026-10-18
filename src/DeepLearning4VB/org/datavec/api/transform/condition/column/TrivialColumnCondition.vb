@@ -20,12 +20,14 @@
 
 Imports System
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.transform.condition.column
 
     ''' <summary>A column condition that is always satisfied.</summary>
     ' Java: @JsonIgnoreProperties({"schema"}) @Data; the JSON property is "name".
+    <JsonIgnoreProperties("schema")>
     <Serializable>
     Public Class TrivialColumnCondition
         Inherits BaseColumnCondition

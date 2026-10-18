@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceSplitT = DeepLearning4VB.org.datavec.api.transform.sequence.SequenceSplit
 Imports TimeUnitT = DeepLearning4VB.JavaCompat.TimeUnit
@@ -38,6 +39,7 @@ Namespace org.datavec.api.transform.sequence.split
     ''' compares the time column, the quantity and the unit.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"separationMilliseconds", "timeColumnIdx", "schema"})
+    <JsonIgnoreProperties("separationMilliseconds", "timeColumnIdx", "schema")>
     <Serializable>
     Public Class SequenceSplitTimeSeparation
         Implements SequenceSplitT

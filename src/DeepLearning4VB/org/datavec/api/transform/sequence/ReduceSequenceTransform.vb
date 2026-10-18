@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.transform.ops
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports IAssociativeReducer = DeepLearning4VB.org.datavec.api.transform.reduce.IAssociativeReducer
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -36,6 +37,7 @@ Namespace org.datavec.api.transform.sequence
     ''' Equality (Lombok <c>@EqualsAndHashCode(exclude = {"inputSchema"})</c>) compares the reducer.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"})
+    <JsonIgnoreProperties("inputSchema")>
     <Serializable>
     Public Class ReduceSequenceTransform
         Implements TransformT

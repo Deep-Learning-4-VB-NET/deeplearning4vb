@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports CategoricalMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.CategoricalMetaData
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -12,6 +13,7 @@ Namespace org.datavec.api.transform.transforms.categorical
     ''' Equality compares the class, the column name and the state names.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "columnNumber"}) @Data
+    <JsonIgnoreProperties("inputSchema", "columnNumber")>
     <Serializable>
     Public Class StringToCategoricalTransform
         Inherits BaseColumnTransform

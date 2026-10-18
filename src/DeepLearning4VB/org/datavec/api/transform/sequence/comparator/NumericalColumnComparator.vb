@@ -20,6 +20,7 @@
 
 Imports System
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
@@ -33,6 +34,7 @@ Namespace org.datavec.api.transform.sequence.comparator
     ''' name and the sort order.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"columnType", "schema", "columnIdx"})
+    <JsonIgnoreProperties("columnType", "schema", "columnIdx")>
     <Serializable>
     Public Class NumericalColumnComparator
         Inherits BaseColumnComparator

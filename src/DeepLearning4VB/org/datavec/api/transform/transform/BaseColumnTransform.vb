@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -13,6 +14,7 @@ Namespace org.datavec.api.transform.transforms
     ''' Equality compares the class and the column name; subclasses add their own fields.
     ''' </summary>
     ' Java: @Data @JsonIgnoreProperties({"inputSchema", "columnNumber"}) @NoArgsConstructor
+    <JsonIgnoreProperties("inputSchema", "columnNumber")>
     <Serializable>
     Public MustInherit Class BaseColumnTransform
         Inherits BaseTransform

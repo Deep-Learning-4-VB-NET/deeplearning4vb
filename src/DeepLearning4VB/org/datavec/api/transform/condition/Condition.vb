@@ -19,6 +19,7 @@
 '
 
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 
 Namespace org.datavec.api.transform.condition
 
@@ -26,8 +27,9 @@ Namespace org.datavec.api.transform.condition
     ''' A boolean condition on a record (or a sequence of records): used by filters, conditional transforms and
     ''' conditional reductions. The <c>InputSchema</c> property is inherited from <see cref="ColumnOp"/>.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface Condition
         Inherits ColumnOp
 

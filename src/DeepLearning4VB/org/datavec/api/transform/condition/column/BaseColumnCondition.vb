@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 
 Namespace org.datavec.api.transform.condition.column
 
@@ -33,6 +34,7 @@ Namespace org.datavec.api.transform.condition.column
     ''' own fields.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"columnIdx", "schema", "sequenceMode"})
+    <JsonIgnoreProperties("columnIdx", "schema", "sequenceMode")>
     <Serializable>
     Public MustInherit Class BaseColumnCondition
         Implements ColumnCondition

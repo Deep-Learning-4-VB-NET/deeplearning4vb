@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports LongMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.LongMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -37,9 +38,10 @@ Namespace org.datavec.api.transform.rank
     ''' Equality (Lombok <c>@EqualsAndHashCode(exclude = {"inputSchema"})</c>) compares the column names, the
     ''' comparator and the sort order.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonIgnoreProperties({"inputSchema"}) @JsonInclude(NON_NULL)
-    '  @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonIgnoreProperties({"inputSchema"}) @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
+    <JsonIgnoreProperties("inputSchema")>
     <Serializable>
     Public Class CalculateSortedRank
         Implements ColumnOp

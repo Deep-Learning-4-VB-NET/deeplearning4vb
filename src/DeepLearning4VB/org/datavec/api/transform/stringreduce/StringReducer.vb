@@ -23,6 +23,7 @@ Imports System.Collections
 Imports System.Collections.Generic
 Imports System.Text
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports ColumnReduction = DeepLearning4VB.org.datavec.api.transform.reduce.ColumnReduction
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -41,6 +42,7 @@ Namespace org.datavec.api.transform.stringreduce
     ''' the op, the custom reductions and the output column name.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"schema", "keyColumnsSet"})
+    <JsonIgnoreProperties("schema", "keyColumnsSet")>
     <Serializable>
     Public Class StringReducer
         Implements IStringReducer
@@ -61,7 +63,7 @@ Namespace org.datavec.api.transform.stringreduce
         ''' <param name="customReductions"> custom reductions per column </param>
         ''' <param name="outputColumnName"> name of the output column </param>
         <JsonConstructor>
-        Public Sub New(ByVal inputColumns As IList(Of String), ByVal stringReduceOp As StringReduceOp, ByVal customReductions As IDictionary(Of String, ColumnReduction), ByVal outputColumnName As String)
+        Public Sub New(ByVal inputColumns As IList(Of String), <JsonProperty("op")> ByVal stringReduceOp As StringReduceOp, ByVal customReductions As IDictionary(Of String, ColumnReduction), ByVal outputColumnName As String)
             Me.inputColumnsField = inputColumns
             Me.inputColumnsSet = If(inputColumns Is Nothing, Nothing, New HashSet(Of String)(inputColumns))
             Me.stringReduceOpField = stringReduceOp

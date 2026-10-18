@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports CategoricalMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.CategoricalMetaData
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -18,6 +19,7 @@ Namespace org.datavec.api.transform.transforms.string
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "map", "columnIdx"})
     '       @EqualsAndHashCode(callSuper = false, exclude = {"columnIdx"}) @Data
+    <JsonIgnoreProperties("inputSchema", "map", "columnIdx")>
     <Serializable>
     Public Class StringListToCategoricalSetTransform
         Inherits BaseTransform

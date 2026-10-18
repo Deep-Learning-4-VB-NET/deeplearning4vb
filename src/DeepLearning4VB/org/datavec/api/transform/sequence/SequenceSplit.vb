@@ -19,6 +19,7 @@
 '
 
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
@@ -27,8 +28,9 @@ Namespace org.datavec.api.transform.sequence
     ''' <summary>
     ''' Splits one sequence into several sequences. Implementations are serializable.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface SequenceSplit
 
         ''' <summary>

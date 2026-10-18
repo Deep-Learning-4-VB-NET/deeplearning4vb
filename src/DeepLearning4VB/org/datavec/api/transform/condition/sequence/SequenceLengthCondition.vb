@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
 Imports ConditionOp = DeepLearning4VB.org.datavec.api.transform.condition.ConditionOp
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -34,6 +35,8 @@ Namespace org.datavec.api.transform.condition.sequence
     ''' It cannot be applied to single (non-sequence) examples.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"}) @EqualsAndHashCode(exclude = {"inputSchema"}) @JsonInclude(NON_NULL) @Data
+    <JsonIgnoreProperties("inputSchema")>
+    <JsonIncludeNonNull>
     <Serializable>
     Public Class SequenceLengthCondition
         Implements ConditionT

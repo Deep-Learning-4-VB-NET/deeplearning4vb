@@ -19,6 +19,7 @@
 '
 
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.transform.filter
@@ -27,8 +28,9 @@ Namespace org.datavec.api.transform.filter
     ''' Decides whether an example (or a sequence) is removed from the data. The <c>InputSchema</c>
     ''' property is inherited from <see cref="ColumnOp"/>.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface Filter
         Inherits ColumnOp
 

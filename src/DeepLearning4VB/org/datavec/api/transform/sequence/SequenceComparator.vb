@@ -19,6 +19,7 @@
 '
 
 Imports System.Collections.Generic
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
@@ -28,8 +29,9 @@ Namespace org.datavec.api.transform.sequence
     ''' Compares the time steps (records) of a sequence, for example to sort the time steps collected into a sequence
     ''' (Java: <c>Comparator&lt;List&lt;Writable&gt;&gt;</c>). Implementations are serializable.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface SequenceComparator
         Inherits IComparer(Of IList(Of WritableT))
 

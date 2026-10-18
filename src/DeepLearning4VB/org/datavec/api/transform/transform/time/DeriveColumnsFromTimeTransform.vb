@@ -3,6 +3,7 @@ Imports System.Collections.Generic
 Imports System.Runtime.Serialization
 Imports System.Text
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports DateTimeFieldType = DeepLearning4VB.org.joda.time.DateTimeFieldType
 Imports DateTimeFormat = DeepLearning4VB.org.joda.time.format.DateTimeFormat
@@ -28,6 +29,7 @@ Namespace org.datavec.api.transform.transforms.time
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "insertAfterIdx", "deriveFromIdx"})
     '       @EqualsAndHashCode(exclude = {"inputSchema", "insertAfterIdx", "deriveFromIdx"}) @Data
+    <JsonIgnoreProperties("inputSchema", "insertAfterIdx", "deriveFromIdx")>
     <Serializable>
     Public Class DeriveColumnsFromTimeTransform
         Implements TransformT
@@ -348,6 +350,8 @@ Namespace org.datavec.api.transform.transforms.time
         ''' deserialization (Java <c>readObject</c>). Equality (Lombok, excluding the formatter) compares all other fields.
         ''' </summary>
         ' Java: @JsonInclude(NON_NULL) @EqualsAndHashCode(exclude = "dateTimeFormatter") @Data @JsonIgnoreProperties({"dateTimeFormatter"})
+        <JsonIgnoreProperties("dateTimeFormatter")>
+        <JsonIncludeNonNull>
         <Serializable>
         Public Class DerivedColumn
 

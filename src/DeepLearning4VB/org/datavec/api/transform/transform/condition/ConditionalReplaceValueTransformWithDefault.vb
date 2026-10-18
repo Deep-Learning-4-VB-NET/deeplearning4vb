@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
@@ -17,6 +18,7 @@ Namespace org.datavec.api.transform.transforms.condition
     ''' condition.</para>
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"filterColIdx"}) @EqualsAndHashCode(exclude = {"filterColIdx"}) @Data
+    <JsonIgnoreProperties("filterColIdx")>
     <Serializable>
     Public Class ConditionalReplaceValueTransformWithDefault
         Implements TransformT
@@ -29,7 +31,7 @@ Namespace org.datavec.api.transform.transforms.condition
 
         ' Java names the JSON property of the condition "condiiton" (sic).
         <JsonConstructor>
-        Public Sub New(ByVal columnToReplace As String, ByVal yesVal As WritableT, ByVal noVal As WritableT, ByVal condition As ConditionT)
+        Public Sub New(ByVal columnToReplace As String, ByVal yesVal As WritableT, ByVal noVal As WritableT, <JsonProperty("condiiton")> ByVal condition As ConditionT)
             Me.columnToReplace = columnToReplace
             Me.yesVal = yesVal
             Me.noVal = noVal

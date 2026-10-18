@@ -21,6 +21,7 @@
 Imports System
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 
 Namespace org.datavec.api.writable
 
@@ -29,6 +30,7 @@ Namespace org.datavec.api.writable
     ''' <c>@JsonTypeInfo(use = CLASS, property = "@class")</c> annotation is mapped to System.Text.Json
     ''' polymorphism with the Java class names as discriminators, so JSON written by DataVec can be read.
     ''' </summary>
+    <JsonClassType>
     <JsonPolymorphic(TypeDiscriminatorPropertyName:="@class", UnknownDerivedTypeHandling:=JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor)>
     <JsonDerivedType(GetType(BooleanWritable), "org.datavec.api.writable.BooleanWritable")>
     <JsonDerivedType(GetType(ByteWritable), "org.datavec.api.writable.ByteWritable")>

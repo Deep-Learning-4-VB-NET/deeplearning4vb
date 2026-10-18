@@ -2,6 +2,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
 Imports FloatWritable = DeepLearning4VB.org.datavec.api.writable.FloatWritable
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
@@ -33,6 +34,8 @@ Namespace org.datavec.api.transform.transforms.sequence
     ''' column type.</para>
     ''' </summary>
     ' Java: @JsonInclude(NON_NULL) @JsonIgnoreProperties({"inputSchema", "columnType"}) @Data
+    <JsonIgnoreProperties("inputSchema", "columnType")>
+    <JsonIncludeNonNull>
     <Serializable>
     Public Class SequenceDifferenceTransform
         Implements TransformT

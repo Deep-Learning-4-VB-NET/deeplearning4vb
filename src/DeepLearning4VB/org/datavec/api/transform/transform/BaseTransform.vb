@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -16,6 +17,7 @@ Namespace org.datavec.api.transform.transforms
     ''' schema; subclasses define their own.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"}) @Data
+    <JsonIgnoreProperties("inputSchema")>
     <Serializable>
     Public MustInherit Class BaseTransform
         Implements TransformT

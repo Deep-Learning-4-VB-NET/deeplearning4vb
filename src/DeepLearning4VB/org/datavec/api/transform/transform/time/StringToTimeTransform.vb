@@ -5,6 +5,7 @@ Imports System.Runtime.Serialization
 Imports System.Text
 Imports System.Text.Json.Serialization
 Imports System.Text.RegularExpressions
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports DateTimeFormat = DeepLearning4VB.org.joda.time.format.DateTimeFormat
 Imports DateTimeFormatter = DeepLearning4VB.org.joda.time.format.DateTimeFormatter
@@ -28,6 +29,7 @@ Namespace org.datavec.api.transform.transforms.time
     ''' locale and the valid time range.</para>
     ''' </summary>
     ' Java: @Data @EqualsAndHashCode(exclude = {"formatter", "formatters"}) @JsonIgnoreProperties({"formatters", "formatter"})
+    <JsonIgnoreProperties("formatters", "formatter")>
     <Serializable>
     Public Class StringToTimeTransform
         Inherits BaseColumnTransform

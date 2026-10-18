@@ -20,6 +20,7 @@
 
 Imports System.Collections.Generic
 Imports DeepLearning4VB.org.datavec.api.transform.ops
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
 
@@ -30,8 +31,9 @@ Namespace org.datavec.api.transform.reduce
     ''' <see cref="Reducer.Builder.customReduction"/>). It may produce several output columns. Implementations are
     ''' serializable.
     ''' </summary>
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
-    ' (Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class"))
+    ' Java: @JsonInclude(NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface AggregableColumnReduction
         Inherits ColumnOp
 

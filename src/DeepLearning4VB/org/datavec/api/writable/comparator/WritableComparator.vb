@@ -20,6 +20,7 @@
 
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports Writable = DeepLearning4VB.org.datavec.api.writable.Writable
 
 Namespace org.datavec.api.writable.comparator
@@ -28,6 +29,7 @@ Namespace org.datavec.api.writable.comparator
     ''' A serializable comparer of writables. The Java <c>@JsonTypeInfo(use = CLASS, property = "@class")</c>
     ''' annotation is mapped to System.Text.Json polymorphism with the Java class names as discriminators.
     ''' </summary>
+    <JsonClassType>
     <JsonPolymorphic(TypeDiscriminatorPropertyName:="@class", UnknownDerivedTypeHandling:=JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor)>
     <JsonDerivedType(GetType(DoubleWritableComparator), "org.datavec.api.writable.comparator.DoubleWritableComparator")>
     <JsonDerivedType(GetType(FloatWritableComparator), "org.datavec.api.writable.comparator.FloatWritableComparator")>

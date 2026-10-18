@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports IntegerMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.IntegerMetaData
 Imports IntWritable = DeepLearning4VB.org.datavec.api.writable.IntWritable
@@ -17,6 +18,7 @@ Namespace org.datavec.api.transform.transforms.integer
     ''' </summary>
     ' Java: @Data @EqualsAndHashCode(exclude = {"columnIdx"}, callSuper = false)
     '       @JsonIgnoreProperties({"inputSchema", "columnIdx", "stateNames", "statesMap"})
+    <JsonIgnoreProperties("inputSchema", "columnIdx", "stateNames", "statesMap")>
     <Serializable>
     Public Class IntegerToOneHotTransform
         Inherits BaseTransform

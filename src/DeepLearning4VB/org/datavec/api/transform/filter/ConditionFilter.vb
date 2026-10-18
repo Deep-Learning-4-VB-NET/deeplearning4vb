@@ -33,6 +33,7 @@ Namespace org.datavec.api.transform.filter
     Public Class ConditionFilter
         Implements Filter
 
+        <JsonPropertyName("condition")>
         Private ReadOnly cond As ConditionT
 
         Public Sub New(ByVal condition As ConditionT)

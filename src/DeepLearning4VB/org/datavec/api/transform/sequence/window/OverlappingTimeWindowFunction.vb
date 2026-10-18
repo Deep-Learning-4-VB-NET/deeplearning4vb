@@ -22,6 +22,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports DateTimeZone = DeepLearning4VB.org.joda.time.DateTimeZone
 Imports LongWritable = DeepLearning4VB.org.datavec.api.writable.LongWritable
@@ -45,6 +46,7 @@ Namespace org.datavec.api.transform.sequence.window
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "offsetAmountMilliseconds", "windowSizeMilliseconds",
     '  "windowSeparationMilliseconds", "timeZone"})
+    <JsonIgnoreProperties("inputSchema", "offsetAmountMilliseconds", "windowSizeMilliseconds", "windowSeparationMilliseconds", "timeZone")>
     <Serializable>
     Public Class OverlappingTimeWindowFunction
         Implements WindowFunction
@@ -121,7 +123,7 @@ Namespace org.datavec.api.transform.sequence.window
         ''' <param name="addWindowEndTimeColumn">   If true: add a column (at the end) with the window end time </param>
         ''' <param name="excludeEmptyWindows">      If true: exclude any windows that don't have any values in them </param>
         <JsonConstructor>
-        Public Sub New(ByVal timeColumn As String, ByVal windowSize As Long, ByVal windowSizeUnit As TimeUnitT, ByVal windowSeparation As Long, ByVal windowSeparationUnit As TimeUnitT, ByVal offset As Long, ByVal offsetUnit As TimeUnitT?, ByVal addWindowStartTimeColumn As Boolean, ByVal addWindowEndTimeColumn As Boolean, ByVal excludeEmptyWindows As Boolean)
+        Public Sub New(ByVal timeColumn As String, ByVal windowSize As Long, ByVal windowSizeUnit As TimeUnitT, ByVal windowSeparation As Long, ByVal windowSeparationUnit As TimeUnitT, <JsonProperty("offsetAmount")> ByVal offset As Long, ByVal offsetUnit As TimeUnitT?, ByVal addWindowStartTimeColumn As Boolean, ByVal addWindowEndTimeColumn As Boolean, ByVal excludeEmptyWindows As Boolean)
             Me.timeColumn = timeColumn
             Me.windowSize = windowSize
             Me.windowSizeUnit = windowSizeUnit

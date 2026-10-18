@@ -20,6 +20,7 @@
 
 Imports System
 Imports System.Text
+Imports System.Text.Json.Serialization
 Imports TDigest = DeepLearning4VB.com.tdunning.math.stats.TDigest
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
 
@@ -48,6 +49,7 @@ Namespace org.datavec.api.transform.analysis.columns
         Protected Friend countMinValue As Long
         Protected Friend countMaxValue As Long
         ''' <summary>Java field <c>countTotal</c> (renamed: VB names are case-insensitive and <see cref="CountTotal"/> exists).</summary>
+        <JsonPropertyName("countTotal")>
         Protected Friend countTotalValue As Long
         Protected Friend histogramBuckets() As Double
         Protected Friend histogramBucketCounts() As Long

@@ -1,5 +1,6 @@
 Imports System
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports StringMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.StringMetaData
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
@@ -12,6 +13,7 @@ Namespace org.datavec.api.transform.transforms.string
     ''' Equality compares the class, the column name and the appended string.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "columnNumber"}) @Data
+    <JsonIgnoreProperties("inputSchema", "columnNumber")>
     <Serializable>
     Public Class AppendStringColumnTransform
         Inherits BaseColumnTransform

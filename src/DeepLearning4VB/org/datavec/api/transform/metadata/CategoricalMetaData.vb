@@ -23,6 +23,7 @@ Imports System.Collections.Generic
 Imports System.Text
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.JavaCompat
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
 
 Namespace org.datavec.api.transform.metadata
@@ -32,6 +33,7 @@ Namespace org.datavec.api.transform.metadata
     ''' Equality includes the column name (the Java Lombok <c>@EqualsAndHashCode</c> without <c>callSuper</c>
     ''' compared the state names only).
     ''' </summary>
+    <JsonIgnoreProperties("stateNamesSet")>
     <Serializable>
     Public Class CategoricalMetaData
         Inherits BaseColumnMetaData

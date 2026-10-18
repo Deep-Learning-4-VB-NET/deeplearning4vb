@@ -20,6 +20,7 @@
 
 Imports System
 Imports System.Collections.Generic
+Imports JsonMappers = DeepLearning4VB.org.datavec.api.transform.serde.JsonMappers
 Imports ColumnAnalysisT = DeepLearning4VB.org.datavec.api.transform.analysis.columns.ColumnAnalysis
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports SequenceLengthAnalysisT = DeepLearning4VB.org.datavec.api.transform.analysis.sequence.SequenceLengthAnalysis
@@ -43,7 +44,14 @@ Namespace org.datavec.api.transform.analysis
             'No arg for JSON
         End Sub
 
-        ' TODO(serde): toJson/fromJson come with the serde wave (fromJson and fromYaml use the Jackson-based serde package).
+        ''' <summary>
+        ''' Deserialize a JSON SequenceDataAnalysis written by <see cref="DataAnalysis.toJson"/> (or by Java DataVec).
+        ''' YAML is not supported: the Java <c>fromYaml</c> method is not ported.
+        ''' </summary>
+        ''' <exception cref="System.Text.Json.JsonException">if the JSON is not a valid sequence data analysis</exception>
+        Public Shared Shadows Function fromJson(ByVal json As String) As SequenceDataAnalysis
+            Return JsonMappers.readValue(Of SequenceDataAnalysis)(json)
+        End Function
 
         Public Overrides Function ToString() As String
             Return Objects.toString(sequenceLengthAnalysis) & ControlChars.Lf & MyBase.ToString()

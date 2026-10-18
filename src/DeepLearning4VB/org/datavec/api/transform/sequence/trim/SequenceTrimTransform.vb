@@ -21,6 +21,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports TransformT = DeepLearning4VB.org.datavec.api.transform.Transform
 Imports WritableT = DeepLearning4VB.org.datavec.api.writable.Writable
@@ -33,6 +34,7 @@ Namespace org.datavec.api.transform.sequence.trim
     ''' Equality (Lombok <c>@EqualsAndHashCode(exclude = {"schema"})</c>) compares the number of steps and the side.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"schema"})
+    <JsonIgnoreProperties("schema")>
     <Serializable>
     Public Class SequenceTrimTransform
         Implements TransformT

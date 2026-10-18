@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports CategoricalMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.CategoricalMetaData
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
@@ -24,6 +25,7 @@ Namespace org.datavec.api.transform.transforms.categorical
     ''' equality of <c>BaseTransform</c>, which only compares the input schemas).</para>
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema", "columnIdx"})
+    <JsonIgnoreProperties("inputSchema", "columnIdx")>
     <Serializable>
     Public Class FirstDigitTransform
         Inherits BaseTransform

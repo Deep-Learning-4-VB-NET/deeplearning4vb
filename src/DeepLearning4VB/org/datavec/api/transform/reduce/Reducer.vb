@@ -25,6 +25,7 @@ Imports System.Text
 Imports System.Text.Json.Serialization
 Imports DeepLearning4VB.org.datavec.api.transform.metadata
 Imports DeepLearning4VB.org.datavec.api.transform.ops
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ConditionT = DeepLearning4VB.org.datavec.api.transform.condition.Condition
 Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
@@ -43,6 +44,7 @@ Namespace org.datavec.api.transform.reduce
     ''' the ops and the reductions.
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"schema", "keyColumnsSet"})
+    <JsonIgnoreProperties("schema", "keyColumnsSet")>
     <Serializable>
     Public Class Reducer
         Implements IAssociativeReducer

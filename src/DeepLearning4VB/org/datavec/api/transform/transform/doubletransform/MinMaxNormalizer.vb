@@ -1,5 +1,6 @@
 Imports System
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports DoubleMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.DoubleMetaData
 Imports DoubleWritable = DeepLearning4VB.org.datavec.api.writable.DoubleWritable
@@ -13,6 +14,7 @@ Namespace org.datavec.api.transform.transforms.doubletransform
     ''' Equality compares the class, the column name and the min/max values (and the derived ratio, as Lombok does).
     ''' </summary>
     ' Java: @Data @JsonIgnoreProperties({"ratio", "inputSchema", "columnNumber"})
+    <JsonIgnoreProperties("ratio", "inputSchema", "columnNumber")>
     <Serializable>
     Public Class MinMaxNormalizer
         Inherits BaseDoubleTransform

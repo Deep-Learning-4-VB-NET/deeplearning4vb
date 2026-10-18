@@ -2,6 +2,7 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text
 Imports System.Text.Json.Serialization
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnMetaData = DeepLearning4VB.org.datavec.api.transform.metadata.ColumnMetaData
 Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema
 Imports Text = DeepLearning4VB.org.datavec.api.writable.Text
@@ -17,6 +18,7 @@ Namespace org.datavec.api.transform.transforms.string
     ''' <para>Equality compares the class, the delimiter and the columns to concatenate.</para>
     ''' </summary>
     ' Java: @JsonIgnoreProperties({"inputSchema"}) @Data
+    <JsonIgnoreProperties("inputSchema")>
     <Serializable>
     Public Class ConcatenateStringColumns
         Inherits BaseTransform

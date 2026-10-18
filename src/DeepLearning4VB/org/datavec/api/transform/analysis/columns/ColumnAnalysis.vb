@@ -19,6 +19,7 @@
 '
 
 Imports System
+Imports DeepLearning4VB.org.datavec.api.transform.serde
 Imports ColumnTypeEnum = DeepLearning4VB.org.datavec.api.transform.ColumnType
 
 Namespace org.datavec.api.transform.analysis.columns
@@ -27,7 +28,8 @@ Namespace org.datavec.api.transform.analysis.columns
     ''' The analysis (summary statistics) of one column. The implementations are <see cref="SerializableAttribute"/>.
     ''' </summary>
     ' Java: @JsonInclude(JsonInclude.Include.NON_NULL) @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
-    ' TODO(serde): polymorphic JSON attributes added in the serde wave
+    <JsonClassType>
+    <JsonIncludeNonNull>
     Public Interface ColumnAnalysis
 
         ''' <summary>Number of values analysed.</summary>
