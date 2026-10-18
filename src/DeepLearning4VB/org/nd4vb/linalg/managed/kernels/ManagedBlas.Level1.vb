@@ -518,6 +518,56 @@ Namespace org.nd4vb.linalg.managed.kernels
 
 #End Region
 
+#Region "Level 1 additions: rot"
+
+        ''' <summary>
+        ''' Plane rotation of n point pairs: (x(i), y(i)) becomes (c * x(i) + s * y(i), c * y(i) - s * x(i)), as BLAS
+        ''' <c>srot</c> computes it (negative increments walk backwards from the far end).
+        ''' </summary>
+        Public Shared Sub Rot(ByVal n As Integer, ByVal x As Single(), ByVal xOffset As Long, ByVal incX As Integer,
+                              ByVal y As Single(), ByVal yOffset As Long, ByVal incY As Integer, ByVal c As Single, ByVal s As Single)
+            If n <= 0 Then
+                Return
+            End If
+            CheckVector(x.Length, n, xOffset, incX, NameOf(x))
+            CheckVector(y.Length, n, yOffset, incY, NameOf(y))
+            Dim xi As Integer = CInt(VectorStart(n, xOffset, incX))
+            Dim yi As Integer = CInt(VectorStart(n, yOffset, incY))
+            For i As Integer = 0 To n - 1
+                Dim xv As Single = x(xi)
+                Dim yv As Single = y(yi)
+                x(xi) = c * xv + s * yv
+                y(yi) = c * yv - s * xv
+                xi += incX
+                yi += incY
+            Next
+        End Sub
+
+        ''' <summary>
+        ''' Plane rotation of n point pairs: (x(i), y(i)) becomes (c * x(i) + s * y(i), c * y(i) - s * x(i)), as BLAS
+        ''' <c>drot</c> computes it (negative increments walk backwards from the far end).
+        ''' </summary>
+        Public Shared Sub Rot(ByVal n As Integer, ByVal x As Double(), ByVal xOffset As Long, ByVal incX As Integer,
+                              ByVal y As Double(), ByVal yOffset As Long, ByVal incY As Integer, ByVal c As Double, ByVal s As Double)
+            If n <= 0 Then
+                Return
+            End If
+            CheckVector(x.Length, n, xOffset, incX, NameOf(x))
+            CheckVector(y.Length, n, yOffset, incY, NameOf(y))
+            Dim xi As Integer = CInt(VectorStart(n, xOffset, incX))
+            Dim yi As Integer = CInt(VectorStart(n, yOffset, incY))
+            For i As Integer = 0 To n - 1
+                Dim xv As Double = x(xi)
+                Dim yv As Double = y(yi)
+                x(xi) = c * xv + s * yv
+                y(yi) = c * yv - s * xv
+                xi += incX
+                yi += incY
+            Next
+        End Sub
+
+#End Region
+
     End Class
 
 End Namespace

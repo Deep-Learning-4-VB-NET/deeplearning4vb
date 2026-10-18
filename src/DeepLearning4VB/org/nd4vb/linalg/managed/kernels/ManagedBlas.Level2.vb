@@ -223,6 +223,94 @@ Namespace org.nd4vb.linalg.managed.kernels
 
 #End Region
 
+#Region "Level 2 additions: ger"
+
+        ''' <summary>
+        ''' Rank-1 update A = alpha * x * y' + A, where A is an m x n matrix in the given order with leading dimension
+        ''' lda, x has m elements and y n (BLAS <c>sger</c>; nothing happens when alpha is 0, and columns whose y element is
+        ''' 0 are skipped, as in reference BLAS).
+        ''' </summary>
+        Public Shared Sub Ger(ByVal order As Char, ByVal m As Integer, ByVal n As Integer, ByVal alpha As Single,
+                              ByVal x As Single(), ByVal xOffset As Long, ByVal incX As Integer,
+                              ByVal y As Single(), ByVal yOffset As Long, ByVal incY As Integer,
+                              ByVal a As Single(), ByVal aOffset As Long, ByVal lda As Integer)
+            If m < 0 OrElse n < 0 Then
+                Throw New ArgumentException("Matrix dimensions must not be negative")
+            End If
+            If incX = 0 OrElse incY = 0 Then
+                Throw New ArgumentException("Vector increments must not be 0")
+            End If
+            ' a row-major m x n matrix is a column-major n x m one: A' = alpha * y * x' + A'
+            If IsRowMajor(order) Then
+                Ger("f"c, n, m, alpha, y, yOffset, incY, x, xOffset, incX, a, aOffset, lda)
+                Return
+            End If
+            CheckMatrix(a.Length, m, n, aOffset, lda, NameOf(a))
+            If m = 0 OrElse n = 0 OrElse alpha = 0.0F Then
+                Return
+            End If
+            CheckVector(x.Length, m, xOffset, incX, NameOf(x))
+            CheckVector(y.Length, n, yOffset, incY, NameOf(y))
+            Dim xs As Integer = CInt(VectorStart(m, xOffset, incX))
+            Dim yj As Integer = CInt(VectorStart(n, yOffset, incY))
+            For j As Integer = 0 To n - 1
+                Dim t As Single = alpha * y(yj)
+                If t <> 0.0F Then
+                    Dim col As Integer = CInt(aOffset + CLng(j) * lda)
+                    Dim xi As Integer = xs
+                    For i As Integer = 0 To m - 1
+                        a(col + i) += x(xi) * t
+                        xi += incX
+                    Next
+                End If
+                yj += incY
+            Next
+        End Sub
+
+        ''' <summary>
+        ''' Rank-1 update A = alpha * x * y' + A, where A is an m x n matrix in the given order with leading dimension
+        ''' lda, x has m elements and y n (BLAS <c>dger</c>; nothing happens when alpha is 0, and columns whose y element is
+        ''' 0 are skipped, as in reference BLAS).
+        ''' </summary>
+        Public Shared Sub Ger(ByVal order As Char, ByVal m As Integer, ByVal n As Integer, ByVal alpha As Double,
+                              ByVal x As Double(), ByVal xOffset As Long, ByVal incX As Integer,
+                              ByVal y As Double(), ByVal yOffset As Long, ByVal incY As Integer,
+                              ByVal a As Double(), ByVal aOffset As Long, ByVal lda As Integer)
+            If m < 0 OrElse n < 0 Then
+                Throw New ArgumentException("Matrix dimensions must not be negative")
+            End If
+            If incX = 0 OrElse incY = 0 Then
+                Throw New ArgumentException("Vector increments must not be 0")
+            End If
+            ' a row-major m x n matrix is a column-major n x m one: A' = alpha * y * x' + A'
+            If IsRowMajor(order) Then
+                Ger("f"c, n, m, alpha, y, yOffset, incY, x, xOffset, incX, a, aOffset, lda)
+                Return
+            End If
+            CheckMatrix(a.Length, m, n, aOffset, lda, NameOf(a))
+            If m = 0 OrElse n = 0 OrElse alpha = 0.0 Then
+                Return
+            End If
+            CheckVector(x.Length, m, xOffset, incX, NameOf(x))
+            CheckVector(y.Length, n, yOffset, incY, NameOf(y))
+            Dim xs As Integer = CInt(VectorStart(m, xOffset, incX))
+            Dim yj As Integer = CInt(VectorStart(n, yOffset, incY))
+            For j As Integer = 0 To n - 1
+                Dim t As Double = alpha * y(yj)
+                If t <> 0.0 Then
+                    Dim col As Integer = CInt(aOffset + CLng(j) * lda)
+                    Dim xi As Integer = xs
+                    For i As Integer = 0 To m - 1
+                        a(col + i) += x(xi) * t
+                        xi += incX
+                    Next
+                End If
+                yj += incY
+            Next
+        End Sub
+
+#End Region
+
     End Class
 
 End Namespace

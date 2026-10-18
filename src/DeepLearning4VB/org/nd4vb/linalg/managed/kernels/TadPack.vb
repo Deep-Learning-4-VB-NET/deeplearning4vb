@@ -165,6 +165,49 @@ Namespace org.nd4vb.linalg.managed.kernels
             Return New TadPack(dims, outerDims, tadInfo, offsets, tadLength)
         End Function
 
+        ''' <summary>
+        ''' A pack from TADs computed elsewhere, for example the cached buffers of the managed TAD manager: the array's
+        ''' shape info, the TAD dimensions, and the TAD shape info and offsets <see cref="Create"/> computes for them. The
+        ''' dimensions are normalized as <see cref="Create"/> does; the arrays are used as given (not copied), so they
+        ''' must not change afterwards.
+        ''' </summary>
+        ''' <exception cref="ArgumentException">The TAD length or the number of offsets does not fit the array and the dimensions.</exception>
+        Public Shared Function FromParts(ByVal shapeInfo As Long(), ByVal dimensions As Integer(), ByVal tadShapeInfo As Long(), ByVal tadOffsets As Long()) As TadPack
+            ShapeInfoHelper.Validate(shapeInfo, NameOf(shapeInfo))
+            ShapeInfoHelper.Validate(tadShapeInfo, NameOf(tadShapeInfo))
+            If tadOffsets Is Nothing Then
+                Throw New ArgumentNullException(NameOf(tadOffsets))
+            End If
+            Dim rank As Integer = CInt(shapeInfo(0))
+            Dim dims As Integer() = NormalizeDimensions(rank, dimensions)
+            Dim outer As New List(Of Integer)()
+            Dim numTads As Long = 1
+            Dim tadLength As Long = 1
+            If dims.Length = 0 OrElse dims.Length = rank Then
+                dims = New Integer(rank - 1) {}
+                For d As Integer = 0 To rank - 1
+                    dims(d) = d
+                Next
+                tadLength = ShapeInfoHelper.Length(shapeInfo)
+            Else
+                For d As Integer = 0 To rank - 1
+                    If Array.IndexOf(dims, d) < 0 Then
+                        outer.Add(d)
+                        numTads *= shapeInfo(1 + d)
+                    Else
+                        tadLength *= shapeInfo(1 + d)
+                    End If
+                Next
+            End If
+            If ShapeInfoHelper.Length(tadShapeInfo) <> tadLength Then
+                Throw New ArgumentException("The TAD shape info has " & ShapeInfoHelper.Length(tadShapeInfo) & " elements, expected " & tadLength, NameOf(tadShapeInfo))
+            End If
+            If tadOffsets.LongLength <> numTads Then
+                Throw New ArgumentException("There are " & tadOffsets.LongLength & " TAD offsets, expected " & numTads, NameOf(tadOffsets))
+            End If
+            Return New TadPack(dims, outer.ToArray(), tadShapeInfo, tadOffsets, tadLength)
+        End Function
+
         ''' <summary>The shape of the outer dimensions (the shape of a reduction result without kept unit dimensions).</summary>
         Public Shared Function OuterShape(ByVal shapeInfo As Long(), ByVal ParamArray dimensions As Integer()) As Long()
             Dim rank As Integer = CInt(shapeInfo(0))

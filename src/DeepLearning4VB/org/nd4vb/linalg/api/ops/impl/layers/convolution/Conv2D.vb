@@ -1,0 +1,264 @@
+Imports System
+Imports System.Collections.Generic
+Imports Preconditions = DeepLearning4VB.org.nd4vb.common.base.Preconditions
+Imports DataType = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
+Imports INDArray = DeepLearning4VB.org.nd4vb.linalg.api.ndarray.INDArray
+Imports DynamicCustomOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.DynamicCustomOp
+Imports Conv2DConfig = DeepLearning4VB.org.nd4vb.linalg.api.ops.impl.layers.convolution.config.Conv2DConfig
+Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
+#If SAMEDIFF Then
+Imports SDVariable = DeepLearning4VB.org.nd4vb.autodiff.samediff.SDVariable
+#End If
+#If MODEL_IMPORT Then
+Imports Onnx = onnx.Onnx
+Imports NoOpNameFoundException = DeepLearning4VB.org.nd4vb.imports.NoOpNameFoundException
+Imports DifferentialFunctionClassHolder = DeepLearning4VB.org.nd4vb.imports.converters.DifferentialFunctionClassHolder
+Imports AttributeAdapter = DeepLearning4VB.org.nd4vb.imports.descriptors.properties.AttributeAdapter
+Imports PropertyMapping = DeepLearning4VB.org.nd4vb.imports.descriptors.properties.PropertyMapping
+Imports TFGraphMapper = DeepLearning4VB.org.nd4vb.imports.graphmapper.tf.TFGraphMapper
+Imports AttrValue = org.tensorflow.framework.AttrValue
+Imports GraphDef = org.tensorflow.framework.GraphDef
+Imports NodeDef = org.tensorflow.framework.NodeDef
+#End If
+#If SAMEDIFF OrElse MODEL_IMPORT Then
+Imports SameDiff = DeepLearning4VB.org.nd4vb.autodiff.samediff.SameDiff
+Imports DeepLearning4VB.org.nd4vb.imports.descriptors.properties.adapters
+#End If
+
+'
+' *  ******************************************************************************
+' *  *
+' *  *
+' *  * This program and the accompanying materials are made available under the
+' *  * terms of the Apache License, Version 2.0 which is available at
+' *  * https://www.apache.org/licenses/LICENSE-2.0.
+' *  *
+' *  *  See the NOTICE file distributed with this work for additional
+' *  *  information regarding copyright ownership.
+' *  * Unless required by applicable law or agreed to in writing, software
+' *  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+' *  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+' *  * License for the specific language governing permissions and limitations
+' *  * under the License.
+' *  *
+' *  * SPDX-License-Identifier: Apache-2.0
+' *  *****************************************************************************
+' 
+
+Namespace org.nd4vb.linalg.api.ops.impl.layers.convolution
+
+    ''' <summary>The custom op <c>conv2d</c> (Java <c>org.nd4j.linalg.api.ops.impl.layers.convolution.Conv2D</c>).</summary>
+    Public Class Conv2D
+        Inherits DynamicCustomOp
+
+        Public Sub New()
+        End Sub
+
+        Protected Friend config As Conv2DConfig
+        Private Const INVALID_CONFIGURATION As String = "Invalid Conv2D configuration : sW = %s pH = %s dW = %s "
+
+#If SAMEDIFF Then
+'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+'ORIGINAL LINE: public Conv2D(@NonNull SameDiff sameDiff, @NonNull SDVariable input, @NonNull SDVariable weights, org.nd4j.autodiff.samediff.SDVariable bias, @NonNull Conv2DConfig conv2DConfig)
+		Public Sub New(ByVal sameDiff As SameDiff, ByVal input As SDVariable, ByVal weights As SDVariable, ByVal bias As SDVariable, ByVal conv2DConfig As Conv2DConfig)
+			Me.New(sameDiff, wrapFilterNull(input, weights, bias), conv2DConfig)
+		End Sub
+'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+'ORIGINAL LINE: @Builder(builderMethodName = "sameDiffBuilder") public Conv2D(org.nd4j.autodiff.samediff.SameDiff sameDiff, org.nd4j.autodiff.samediff.SDVariable[] inputFunctions, org.nd4j.linalg.api.ops.impl.layers.convolution.config.Conv2DConfig config)
+		Public Sub New(ByVal sameDiff As SameDiff, ByVal inputFunctions() As SDVariable, ByVal config As Conv2DConfig)
+			MyBase.New(sameDiff, inputFunctions)
+
+			initConfig(config)
+		End Sub
+#End If
+
+        Public Sub New(ByVal inputs() As INDArray, ByVal outputs() As INDArray, ByVal config As Conv2DConfig)
+            MyBase.New(inputs, outputs)
+
+            initConfig(config)
+        End Sub
+
+        Public Sub New(ByVal input As INDArray, ByVal weights As INDArray, ByVal bias As INDArray, ByVal output As INDArray, ByVal config As Conv2DConfig)
+            Me.New(wrapFilterNull(input, weights, bias), wrapOrNull(output), config)
+        End Sub
+
+        Public Sub New(ByVal layerInput As INDArray, ByVal weights As INDArray, ByVal bias As INDArray, ByVal config As Conv2DConfig)
+            Me.New(layerInput, weights, bias, Nothing, config)
+        End Sub
+
+        Protected Friend Overridable Sub initConfig(ByVal config As Conv2DConfig)
+            Me.config = config
+
+            Preconditions.checkState(config.getSW() >= 1 AndAlso config.getPH() >= 0 AndAlso config.getDW() >= 1, INVALID_CONFIGURATION, config.getSH(), config.getPH(), config.getDW())
+            addArgs()
+        End Sub
+
+        Protected Friend Overridable Sub addArgs()
+            addIArgument(config.getKH(), config.getKW(), config.getSH(), config.getSW(), config.getPH(), config.getPW(), config.getDH(), config.getDW(), ArrayUtil.fromBoolean(config.isSameMode()),If(config.getDataFormat().Equals("NCHW", StringComparison.OrdinalIgnoreCase), 0, 1), CInt(config.getWeightsFormat()))
+        End Sub
+
+        Public Overrides Function iArgs() As Long()
+            If iArguments.Count = 0 Then
+                addArgs()
+            End If
+
+            Return MyBase.iArgs()
+        End Function
+
+        Public Overrides Function getValue(ByVal [property] As System.Reflection.FieldInfo) As Object
+            If config Is Nothing Then
+                config = Conv2DConfig.builder().build()
+            End If
+
+            Return config.getValue([property])
+        End Function
+
+        Public Overrides Function propertiesForFunction() As IDictionary(Of String, Object)
+            If config IsNot Nothing Then
+                Return config.toProperties()
+            End If
+            Return New Dictionary(Of String, Object)()
+        End Function
+
+#If MODEL_IMPORT Then
+		Public Overrides Sub initFromTensorFlow(ByVal nodeDef As NodeDef, ByVal initWith As SameDiff, ByVal attributesForNode As IDictionary(Of String, AttrValue), ByVal graph As GraphDef)
+			TFGraphMapper.initFunctionFromProperties(nodeDef.getOp(), Me, attributesForNode, nodeDef, graph)
+			addArgs()
+		End Sub
+#End If
+
+        Public Overrides ReadOnly Property ConfigProperties As Boolean
+            Get
+                Return True
+            End Get
+        End Property
+
+        Public Overrides Function configFieldName() As String
+            Return "config"
+        End Function
+
+#If MODEL_IMPORT Then
+		Public Overrides Sub initFromOnnx(ByVal node As Onnx.NodeProto, ByVal initWith As SameDiff, ByVal attributesForNode As IDictionary(Of String, Onnx.AttributeProto), ByVal graph As Onnx.GraphProto)
+
+		End Sub
+
+		Public Overrides Function attributeAdaptersForFunction() As IDictionary(Of String, IDictionary(Of String, AttributeAdapter))
+			Dim ret As IDictionary(Of String, IDictionary(Of String, AttributeAdapter)) = New Dictionary(Of String, IDictionary(Of String, AttributeAdapter))()
+			Dim tfMappings As IDictionary(Of String, AttributeAdapter) = New LinkedHashMap(Of String, AttributeAdapter)()
+			Dim fields As val = DifferentialFunctionClassHolder.Instance.getFieldsForFunction(Me)
+
+			'TF uses [kH, kW, inC, outC] always for weights
+			tfMappings("kH") = New NDArrayShapeAdapter(0)
+			tfMappings("kW") = New NDArrayShapeAdapter(1)
+			tfMappings("sH") = New ConditionalFieldValueIntIndexArrayAdapter("NCHW", 2, 1, fields.get("dataFormat"))
+			tfMappings("sW") = New ConditionalFieldValueIntIndexArrayAdapter("NCHW", 3, 2, fields.get("dataFormat"))
+			tfMappings("dH") = New ConditionalFieldValueIntIndexArrayAdapter("NCHW", 2, 1, fields.get("dataFormat"))
+			tfMappings("dW") = New ConditionalFieldValueIntIndexArrayAdapter("NCHW", 3, 2, fields.get("dataFormat"))
+			tfMappings("isSameMode") = New StringEqualsAdapter("SAME")
+
+			Dim onnxMappings As IDictionary(Of String, AttributeAdapter) = New Dictionary(Of String, AttributeAdapter)()
+			onnxMappings("kH") = New SizeThresholdIntArrayIntIndexAdapter(0, 2, 0)
+			onnxMappings("kW") = New SizeThresholdIntArrayIntIndexAdapter(1, 2, 0)
+			onnxMappings("dH") = New SizeThresholdIntArrayIntIndexAdapter(0, 2, 0)
+			onnxMappings("dW") = New SizeThresholdIntArrayIntIndexAdapter(1, 2, 0)
+			onnxMappings("sH") = New SizeThresholdIntArrayIntIndexAdapter(0, 2, 0)
+			onnxMappings("sW") = New SizeThresholdIntArrayIntIndexAdapter(1, 2, 0)
+			onnxMappings("isSameMode") = New StringEqualsAdapter("SAME")
+
+			ret(tensorflowName()) = tfMappings
+			ret(onnxName()) = onnxMappings
+			Return ret
+		End Function
+
+		Public Overrides Function mappingsForFunction() As IDictionary(Of String, IDictionary(Of String, PropertyMapping))
+			Dim ret As IDictionary(Of String, IDictionary(Of String, PropertyMapping)) = New Dictionary(Of String, IDictionary(Of String, PropertyMapping))()
+			Dim map As IDictionary(Of String, PropertyMapping) = New Dictionary(Of String, PropertyMapping)()
+			Dim strideMapping As val = PropertyMapping.builder().tfAttrName("strides").onnxAttrName("strides").propertyNames(New String(){"sW", "sH"}).build()
+
+			Dim kernelMappingH As val = PropertyMapping.builder().propertyNames(New String(){"kH"}).tfInputPosition(1).shapePosition(0).onnxAttrName("kernel_shape").build()
+
+			Dim kernelMappingW As val = PropertyMapping.builder().propertyNames(New String(){"kW"}).tfInputPosition(1).shapePosition(1).onnxAttrName("kernel_shape").build()
+
+			Dim dilationMapping As val = PropertyMapping.builder().onnxAttrName("dilations").propertyNames(New String(){"dW", "dH"}).tfAttrName("dilations").build()
+
+			Dim dataFormat As val = PropertyMapping.builder().onnxAttrName("data_format").tfAttrName("data_format").propertyNames(New String(){"dataFormat"}).build()
+
+			Dim sameMode As val = PropertyMapping.builder().onnxAttrName("auto_pad").propertyNames(New String(){"isSameMode"}).tfAttrName("padding").build()
+
+			Dim paddingWidthHeight As val = PropertyMapping.builder().onnxAttrName("padding").propertyNames(New String(){"pH", "pW"}).build()
+
+			map("sW") = strideMapping
+			map("sH") = strideMapping
+			map("kH") = kernelMappingH
+			map("kW") = kernelMappingW
+			map("dW") = dilationMapping
+			map("dH") = dilationMapping
+			map("isSameMode") = sameMode
+			map("pH") = paddingWidthHeight
+			map("pW") = paddingWidthHeight
+			map("dataFormat") = dataFormat
+
+			Try
+				ret(onnxName()) = map
+			Catch e As NoOpNameFoundException
+				'ignore
+			End Try
+
+			Try
+				ret(tensorflowName()) = map
+			Catch e As NoOpNameFoundException
+				'ignore
+			End Try
+
+			Return ret
+		End Function
+#End If
+
+        Public Overrides Function opName() As String
+            Return "conv2d"
+        End Function
+
+#If SAMEDIFF Then
+		Public Overrides Function doDiff(ByVal f1 As IList(Of SDVariable)) As IList(Of SDVariable)
+			Dim inputs As IList(Of SDVariable) = New List(Of SDVariable) From {args()}
+			inputs.Add(f1(0))
+			Dim conv2DDerivative As Conv2DDerivative = Conv2DDerivative.derivativeBuilder().sameDiff(sameDiff).config(config).inputFunctions(CType(inputs, List(Of SDVariable)).ToArray()).build()
+			Dim ret As IList(Of SDVariable) = New List(Of SDVariable) From {conv2DDerivative.outputVariables()}
+			Return ret
+		End Function
+#End If
+
+        Public Overrides Function onnxName() As String
+            Return "Conv"
+        End Function
+
+        Public Overrides Function tensorflowName() As String
+            Return "Conv2D"
+        End Function
+
+        Public Overrides Function tensorflowNames() As String()
+            Return New String(){"Conv2D"}
+        End Function
+
+#If SAMEDIFF Then
+		Public Overrides Function calculateOutputDataTypes(ByVal inputDataTypes As IList(Of DataType)) As IList(Of DataType)
+			Dim n As Integer = args().Length
+			Preconditions.checkState(inputDataTypes IsNot Nothing AndAlso inputDataTypes.Count = n, "Expected %s input data types for %s, got %s", n, Me.GetType(), inputDataTypes)
+			Return Collections.singletonList(inputDataTypes(0))
+		End Function
+#Else
+        Public Overrides Function calculateOutputDataTypes(ByVal inputDataTypes As IList(Of DataType)) As IList(Of DataType)
+            Throw New NotSupportedException("calculateOutputDataTypes needs SameDiff (phase 2 milestone M5)")
+        End Function
+#End If
+
+        ' ---------------------------------------------------------------- Lombok members
+
+        ''' <summary>Lombok getter of <c>config</c>.</summary>
+        Public Overridable Function getConfig() As Conv2DConfig
+            Return config
+        End Function
+
+    End Class
+
+End Namespace
