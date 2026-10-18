@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-18 (phase 1 complete; phase 2, the managed tensor engine: wave 1 done, wave 2 in progress).
+Last updated: 2026-10-18 (phase 1 complete; phase 2, the managed tensor engine: waves 1 and 2 of milestone M1 done).
 
 ## Where the code came from
 
@@ -42,10 +42,10 @@ tree, which keeps the upstream Java names so each file can be compared with its 
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting **.NET Framework 4.8.1 and .NET 10** (`net481;net10.0`), `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`. |
-| Library | 1,008 source files, about 146,700 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`), `datavec-local`, and the first part of the phase-2 tensor engine (see below). JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
+| Library | 1,041 source files, about 154,600 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`), `datavec-local`, and the first part of the phase-2 tensor engine (see below). JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
 | Stand-ins for Java libraries | A Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`), `java.util.concurrent.TimeUnit`, and a binary object-graph serializer that replaces Java serialization and the BinaryFormatter. |
-| Tests | 203 test files, 1,336 tests, all passing on both target frameworks (two wait for the phase-2 `Nd4vb` factory and report as skipped): the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
-| Everything else | Unchanged in `unported/`: 3,283 files, excluded from the build. |
+| Tests | 220 test files, 1,430 tests, all passing on both target frameworks (two wait for the phase-2 `Nd4vb` factory and report as skipped): the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
+| Everything else | Unchanged in `unported/`: 3,263 files, excluded from the build. |
 
 ## Module table
 
@@ -90,7 +90,7 @@ M1 (an `INDArray` with element-wise operations) is being built in three waves.
 | Wave | Contents | State |
 | --- | --- | --- |
 | 1 | Foundation API (161 files in `org.nd4vb.linalg.*` and `org.nd4vb.enums`: `INDArray`, `DataBuffer`, `DataType`, shape descriptors, memory/workspace interfaces, op interfaces, executioner interfaces, backend discovery, profiler, compression, schedules, exceptions); op math registry (`managed.ops`: the math of 171 of the 173 legacy ops, keyed by Java `opName()`, see [docs/phase2/op-inventory.md](docs/phase2/op-inventory.md)); managed kernels (`managed.storage` typed storages, `managed.kernels` element-wise, broadcast, reduction, index reduction, summary statistics, TAD, BLAS gemm/gemv/level 1, xoshiro256** RNG) | Done, 251 tests |
-| 2 | `Shape` (the shape-info utility), indexing (`NDArrayIndex`, the index types, all conditions), `linalg.util`, `ManagedShapeInfoProvider`; `ManagedDataBuffer`, memory/workspace/constant/TAD managers; op base classes, `DifferentialFunction` and the 173 legacy op classes | Shape part done (62 tests); ops part done (204 files: `DifferentialFunction`, the op base classes, the 173 legacy op classes; 48 tests); buffers in progress |
+| 2 | `Shape` (the shape-info utility), indexing (`NDArrayIndex`, the index types, all conditions), `linalg.util`, `ManagedShapeInfoProvider`; data buffers (`BaseDataBuffer`, `ManagedDataBuffer` and its factory), memory and workspaces (`Nd4vbWorkspace`, the managed memory manager, workspace and workspace manager), the constant and TAD caches, `ManagedRandom`, the environment actions; `DifferentialFunction`, the op base classes and the 173 legacy op classes | Done, 204 tests |
 | 3 | `BaseNDArray`, `NDArrayFactory`, `Nd4vb` (Java's `Nd4j`), `Transforms`, the managed op executioner and backend, the M1 upstream tests, then the `INDArray` parts of DataVec | After wave 2 |
 
 Until wave 3 ports them, `src/DeepLearning4VB/org/nd4vb/linalg/factory/Nd4vbStandIn.vb` declares the members of `Nd4vb`, `Broadcast` and `Transforms` that wave-2 code calls; every one of them throws `NotImplementedException`. Wave 3 replaces the file with the real ports. The 403 custom op classes (`DynamicCustomOp` subclasses) are still in `unported/`; [tools/porting](tools/porting/README.md) has the script that converts op classes.
@@ -260,6 +260,28 @@ These are the intentional exceptions.
   key columns; `convertWritableInputToString`/`convertStringInput` return their results (Java returned
   empty lists); `ReducerFunction` uses a single aggregation (Java read the result from a fresh, empty
   one); `AnalyzeLocal.analyzeQualitySequence` no longer throws on the first time step.
+
+### nd4vb linalg (phase 2, in progress)
+
+- **Memory**: every buffer lives on the garbage-collected heap. Workspaces keep their API, scoping rules and
+  exceptions, but only track scope, generations, cycles and statistics; MMAP workspaces map no file;
+  `DeallocatorService` has no threads (it purges every 256 registrations and after `invokeGc`).
+- **Data buffers**: `dup` copies exactly (Java went through `double` and lost `LONG` values above 2^53);
+  UTF8 buffers hold real UTF-8 strings, `length` counts strings, and they are written and read back (Java
+  wrote no elements); UINT64 elements read back unsigned; HALF buffers can be created from arrays (the CPU
+  factory threw).
+- **Random numbers**: `ManagedRandom` (xoshiro256**) is deterministic per seed but not bit-identical to
+  libnd4j; `DefaultRandom` uses an MT19937 stand-in for Commons Math's `MersenneTwister` that matches the
+  reference outputs.
+- **Op classes**: Java fields that clash with a method of the same name (VB names ignore case) carry a
+  `Field` suffix (`xField`, `dimensionsField`, ...); the op-type property became `getOpType()`; `BaseOp.GetHashCode`
+  is consistent with `Equals` (Java mixed in a random name).
+- **Fixed Java bugs**: `IsFinite` returned "is infinite", `NotFinite` missed NaN, `EpsilonNotEquals` tested
+  equality, the epsilon conditions ignored their own epsilon, `StableNumber` threw for every finite number,
+  `DynamicCustomOp.removeIArgument` never removed anything, a circular workspace could recurse forever, the
+  allocations tracker released 1,024 bytes too few.
+- **Names**: environment variables are `ND4VB_*` (`ND4VB_DEBUG`, `ND4VB_FALLBACK`, `ND4VB_VERBOSE`, ...);
+  `ExecutorServiceProvider` returns a `TaskFactory` and `ParallelOptions` and reads `org.nd4vb.parallel.*`.
 
 ## Porting rules
 

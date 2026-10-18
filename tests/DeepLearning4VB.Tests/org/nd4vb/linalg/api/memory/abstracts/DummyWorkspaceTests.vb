@@ -22,7 +22,7 @@ Namespace org.nd4vb.linalg.api.memory.abstracts
     ''' <summary>
     ''' Tests for <c>DummyWorkspace</c> scoping (entering detaches the thread from its current workspace, closing restores
     ''' it) and for <c>WorkspacesCloseable</c>, which closes workspaces in reverse order. The memory manager is a fake
-    ''' supplied through <c>DummyWorkspace.MemoryManagerProvider</c> (Java: <c>Nd4j.getMemoryManager()</c>).
+    ''' passed to the <c>DummyWorkspace(MemoryManager)</c> constructor (Java: <c>Nd4j.getMemoryManager()</c>).
     ''' </summary>
     <TestClass>
     Public Class DummyWorkspaceTests
@@ -116,68 +116,42 @@ Namespace org.nd4vb.linalg.api.memory.abstracts
             End Sub
         End Class
 
-        Private Shared Function withManager(ByVal manager As MemoryManager, ByVal body As Action) As Boolean
-            Dim previous As Func(Of MemoryManager) = DummyWorkspace.MemoryManagerProvider
-            DummyWorkspace.MemoryManagerProvider = Function() manager
-            Try
-                body()
-            Finally
-                DummyWorkspace.MemoryManagerProvider = previous
-            End Try
-            Return True
-        End Function
-
         <TestMethod>
         Public Sub testScopeOutAndRestore()
             Dim manager As New FakeMemoryManager()
-            Dim outer As New DummyWorkspace()
-            withManager(manager,
-                Sub()
-                    manager.CurrentWorkspace = outer
-                    Using ws As MemoryWorkspace = New DummyWorkspace().notifyScopeEntered()
-                        ' inside the scope the thread is outside any workspace
-                        assertNull(manager.CurrentWorkspace)
-                    End Using
-                    ' Dispose (VB Using) closes it, which restores the previous workspace
-                    Assert.AreSame(outer, manager.CurrentWorkspace)
-                End Sub)
+            Dim outer As New DummyWorkspace(manager)
+            manager.CurrentWorkspace = outer
+            Using ws As MemoryWorkspace = New DummyWorkspace(manager).notifyScopeEntered()
+                ' inside the scope the thread is outside any workspace
+                assertNull(manager.CurrentWorkspace)
+            End Using
+            ' Dispose (VB Using) closes it, which restores the previous workspace
+            Assert.AreSame(outer, manager.CurrentWorkspace)
         End Sub
 
         <TestMethod>
         Public Sub testNestedScopes()
             Dim manager As New FakeMemoryManager()
-            Dim outer As New DummyWorkspace()
-            withManager(manager,
-                Sub()
-                    manager.CurrentWorkspace = outer
-                    Dim first As New DummyWorkspace()
-                    first.notifyScopeEntered()
-                    assertNull(manager.CurrentWorkspace)
-                    Dim second As New DummyWorkspace()
-                    second.PreviousWorkspace = first
-                    manager.CurrentWorkspace = second
-                    Dim third As New DummyWorkspace()
-                    third.notifyScopeEntered()
-                    assertNull(manager.CurrentWorkspace)
-                    third.notifyScopeLeft()
-                    Assert.AreSame(second, manager.CurrentWorkspace)
-                    first.close()
-                    Assert.AreSame(outer, manager.CurrentWorkspace)
-                End Sub)
+            Dim outer As New DummyWorkspace(manager)
+            manager.CurrentWorkspace = outer
+            Dim first As New DummyWorkspace(manager)
+            first.notifyScopeEntered()
+            assertNull(manager.CurrentWorkspace)
+            Dim second As New DummyWorkspace(manager)
+            second.PreviousWorkspace = first
+            manager.CurrentWorkspace = second
+            Dim third As New DummyWorkspace(manager)
+            third.notifyScopeEntered()
+            assertNull(manager.CurrentWorkspace)
+            third.notifyScopeLeft()
+            Assert.AreSame(second, manager.CurrentWorkspace)
+            first.close()
+            Assert.AreSame(outer, manager.CurrentWorkspace)
         End Sub
 
         <TestMethod>
-        Public Sub testWithoutMemoryManagerNothingHappens()
-            Dim previous As Func(Of MemoryManager) = DummyWorkspace.MemoryManagerProvider
-            DummyWorkspace.MemoryManagerProvider = Nothing
-            Try
-                Dim ws As New DummyWorkspace()
-                Assert.AreSame(ws, ws.notifyScopeEntered())
-                Assert.AreSame(ws, ws.notifyScopeLeft())
-                ws.Dispose()
-            Finally
-                DummyWorkspace.MemoryManagerProvider = previous
-            End Try
+        Public Sub testMemoryManagerIsRequired()
+            assertThrows(Of ArgumentNullException)(Sub() Call New DummyWorkspace(DirectCast(Nothing, MemoryManager)).close())
         End Sub
 
         <TestMethod>
@@ -214,26 +188,23 @@ Namespace org.nd4vb.linalg.api.memory.abstracts
         <TestMethod>
         Public Sub testWorkspacesCloseableClosesInReverseOrder()
             Dim manager As New FakeMemoryManager()
-            Dim a As New DummyWorkspace()
-            Dim b As New DummyWorkspace()
-            Dim c As New DummyWorkspace()
-            Dim parentA As New DummyWorkspace()
-            Dim parentB As New DummyWorkspace()
-            Dim parentC As New DummyWorkspace()
+            Dim a As New DummyWorkspace(manager)
+            Dim b As New DummyWorkspace(manager)
+            Dim c As New DummyWorkspace(manager)
+            Dim parentA As New DummyWorkspace(manager)
+            Dim parentB As New DummyWorkspace(manager)
+            Dim parentC As New DummyWorkspace(manager)
             a.PreviousWorkspace = parentA
             b.PreviousWorkspace = parentB
             c.PreviousWorkspace = parentC
-            withManager(manager,
-                Sub()
-                    Using closeable As New WorkspacesCloseable(a, b, c)
-                        assertEquals(3, closeable.getWorkspaces().Length)
-                    End Using
-                    ' c is closed first, a last
-                    assertEquals(3, manager.Changes.Count)
-                    Assert.AreSame(parentC, manager.Changes(0))
-                    Assert.AreSame(parentB, manager.Changes(1))
-                    Assert.AreSame(parentA, manager.Changes(2))
-                End Sub)
+            Using closeable As New WorkspacesCloseable(a, b, c)
+                assertEquals(3, closeable.getWorkspaces().Length)
+            End Using
+            ' c is closed first, a last
+            assertEquals(3, manager.Changes.Count)
+            Assert.AreSame(parentC, manager.Changes(0))
+            Assert.AreSame(parentB, manager.Changes(1))
+            Assert.AreSame(parentA, manager.Changes(2))
             assertThrows(Of ArgumentNullException)(Sub() Call New WorkspacesCloseable(DirectCast(Nothing, MemoryWorkspace())).close())
             assertEquals(New WorkspacesCloseable(a, b), New WorkspacesCloseable(a, b))
             assertNotEquals(New WorkspacesCloseable(a, b), New WorkspacesCloseable(b, a))

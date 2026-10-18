@@ -89,8 +89,7 @@ Namespace org.nd4vb.linalg.factory
 
         Public Shared Property PrecisionBoostAllowed As Boolean
 
-        ''' <summary>Typed as Object (late-bound calls) until the managed BasicNDArrayCompressor is committed.</summary>
-        Public Shared ReadOnly Property Compressor As Object
+        Public Shared ReadOnly Property Compressor As Global.DeepLearning4VB.org.nd4vb.linalg.compression.BasicNDArrayCompressor
             Get
                 Throw NotYet()
             End Get
@@ -239,6 +238,36 @@ Namespace org.nd4vb.linalg.factory
         End Function
 
     
+
+        Public Shared preventUnpack As Boolean
+
+        Public Shared ReadOnly Property Backend As Nd4vbBackend
+            Get
+                Throw NotYet()
+            End Get
+        End Property
+
+        Public Shared ReadOnly Property DeallocatorService As Global.DeepLearning4VB.org.nd4vb.linalg.api.memory.deallocation.DeallocatorService
+            Get
+                Throw NotYet()
+            End Get
+        End Property
+
+        Public Shared Sub enableFallbackMode(ByVal reallyEnable As Boolean)
+            Throw NotYet()
+        End Sub
+
+        Public Shared Function create(ByVal dataType As DataType, ByVal shape() As Long, ByVal ordering As Char) As INDArray
+            Throw NotYet()
+        End Function
+
+        Public Shared Function createUninitialized(ByVal shape() As Long, ByVal ordering As Char) As INDArray
+            Throw NotYet()
+        End Function
+
+        Public Shared Function createUninitialized(ByVal shape() As Integer, ByVal ordering As Char) As INDArray
+            Throw NotYet()
+        End Function
 
         Public Shared Function zerosLike(ByVal arr As INDArray) As INDArray
             Throw NotYet()

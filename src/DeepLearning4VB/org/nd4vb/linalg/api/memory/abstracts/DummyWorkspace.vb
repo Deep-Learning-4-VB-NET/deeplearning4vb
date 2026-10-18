@@ -4,6 +4,7 @@ Imports Deallocator = DeepLearning4VB.org.nd4vb.linalg.api.memory.Deallocator
 Imports MemoryManager = DeepLearning4VB.org.nd4vb.linalg.api.memory.MemoryManager
 Imports MemoryWorkspace = DeepLearning4VB.org.nd4vb.linalg.api.memory.MemoryWorkspace
 Imports WorkspaceConfiguration = DeepLearning4VB.org.nd4vb.linalg.api.memory.conf.WorkspaceConfiguration
+Imports Nd4vbT = DeepLearning4VB.org.nd4vb.linalg.factory.Nd4vb
 
 Namespace org.nd4vb.linalg.api.memory.abstracts
 
@@ -12,26 +13,36 @@ Namespace org.nd4vb.linalg.api.memory.abstracts
     ''' allocated outside any workspace) and closing it restores the previous one. Used by
     ''' <c>scopeOutOfWorkspaces()</c>.
     ''' <para>
-    ''' Java reads and sets the current workspace through <c>Nd4j.getMemoryManager()</c>. The <c>Nd4j</c> factory is
-    ''' ported in a later wave, so until then the memory manager comes from <see cref="MemoryManagerProvider"/>; when it
-    ''' is Nothing, entering and closing have no effect. Java's <c>alloc(...)</c> overloads are deleted with the
-    ''' interface's native-only members.
+    ''' Java reads and sets the current workspace through <c>Nd4j.getMemoryManager()</c>; the parameterless constructor
+    ''' does the same through <c>Nd4vbT.MemoryManager</c>, and <see cref="New(MemoryManager)"/> (an ND4VB addition, used
+    ''' by the managed memory and workspace managers) works with a given memory manager. Java's <c>alloc(...)</c>
+    ''' overloads are deleted with the interface's native-only members.
     ''' </para>
     ''' </summary>
     Public Class DummyWorkspace
         Implements MemoryWorkspace
 
-        ''' <summary>
-        ''' Supplies the memory manager whose current workspace this workspace saves and restores (Java:
-        ''' <c>Nd4j.getMemoryManager()</c>). Replace with <c>Nd4vb.getMemoryManager()</c> when the factory is ported.
-        ''' </summary>
-        Friend Shared MemoryManagerProvider As Func(Of MemoryManager)
+        Private ReadOnly memoryManagerField As MemoryManager
 
         Protected Friend parentWorkspaceField As MemoryWorkspace
 
-        Private Shared Function currentMemoryManager() As MemoryManager
-            Dim provider As Func(Of MemoryManager) = MemoryManagerProvider
-            Return If(provider Is Nothing, Nothing, provider())
+        ''' <summary>A dummy workspace that uses <c>Nd4vbT.MemoryManager</c> (Java: <c>Nd4j.getMemoryManager()</c>).</summary>
+        Public Sub New()
+        End Sub
+
+        ''' <summary>A dummy workspace that saves and restores the current workspace of <paramref name="memoryManager"/>.</summary>
+        Public Sub New(ByVal memoryManager As MemoryManager)
+            If memoryManager Is Nothing Then
+                Throw New ArgumentNullException(NameOf(memoryManager))
+            End If
+            Me.memoryManagerField = memoryManager
+        End Sub
+
+        Private Function currentMemoryManager() As MemoryManager
+            If memoryManagerField IsNot Nothing Then
+                Return memoryManagerField
+            End If
+            Return Nd4vbT.MemoryManager
         End Function
 
         ''' <summary>
