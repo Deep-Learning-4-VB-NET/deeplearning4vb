@@ -1,15 +1,8 @@
 Imports System
 Imports DataType = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
 Imports INDArray = DeepLearning4VB.org.nd4vb.linalg.api.ndarray.INDArray
-Imports BroadcastOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.BroadcastOp
-Imports CustomOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.CustomOp
-Imports GridOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.GridOp
-Imports IndexAccumulation = DeepLearning4VB.org.nd4vb.linalg.api.ops.IndexAccumulation
-Imports MetaOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.MetaOp
+Imports BaseOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.BaseOp
 Imports Op = DeepLearning4VB.org.nd4vb.linalg.api.ops.Op
-Imports ReduceOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.ReduceOp
-Imports ScalarOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.ScalarOp
-Imports TransformOp = DeepLearning4VB.org.nd4vb.linalg.api.ops.TransformOp
 
 Namespace org.nd4vb.linalg.api.ops.grid
 
@@ -18,9 +11,8 @@ Namespace org.nd4vb.linalg.api.ops.grid
     ''' executioner). The JavaCPP <c>Pointer</c> fields of the Java class (<c>x</c>, <c>y</c>, <c>z</c>,
     ''' <c>xShapeInfo</c>, <c>yShapeInfo</c>, <c>zShapeInfo</c>, <c>dimensions</c>, <c>tadShape</c>,
     ''' <c>tadOffsets</c>, <c>extraArgs</c>) and therefore Lombok's all-arguments constructor are deleted as
-    ''' native-only. The op type is computed like Java's <c>BaseOp.getOpType(op)</c> (the <c>BaseOp</c> class is
-    ''' ported in a later wave) and is Nothing for other ops, as in Java. Java's Lombok getter <c>getType()</c>
-    ''' shadows <see cref="Object.GetType"/>.
+    ''' native-only. The op type is <see cref="BaseOp.getOpType(Op)"/>, Nothing for other ops, as in Java. Java's
+    ''' Lombok getter <c>getType()</c> shadows <see cref="Object.GetType"/>.
     ''' </summary>
     Public Class GridPointers
 
@@ -45,7 +37,7 @@ Namespace org.nd4vb.linalg.api.ops.grid
         End Sub
 
         Public Sub New(ByVal op As Op, ParamArray ByVal dimensions() As Integer)
-            Me.type = opTypeOf(op)
+            Me.type = BaseOp.getOpType(op)
             Me.dtype = op.x().data().dataType()
             Me.opNum = op.opNum()
 
@@ -72,27 +64,6 @@ Namespace org.nd4vb.linalg.api.ops.grid
             End If
         End Sub
 
-        ''' <summary>Java <c>BaseOp.getOpType(Op)</c>.</summary>
-        Private Shared Function opTypeOf(ByVal op As Op) As Op.Type?
-            If TypeOf op Is CustomOp Then
-                Return Op.Type.CUSTOM
-            ElseIf TypeOf op Is TransformOp Then
-                Return If(op.y() Is Nothing, Op.Type.TRANSFORM_FLOAT, Op.Type.PAIRWISE)
-            ElseIf TypeOf op Is ReduceOp Then
-                Return If(op.y() Is Nothing, DirectCast(op, ReduceOp).OpType, Op.Type.REDUCE3)
-            ElseIf TypeOf op Is ScalarOp Then
-                Return Op.Type.SCALAR
-            ElseIf TypeOf op Is BroadcastOp Then
-                Return Op.Type.BROADCAST
-            ElseIf TypeOf op Is IndexAccumulation Then
-                Return Op.Type.INDEXREDUCE
-            ElseIf TypeOf op Is MetaOp Then
-                Return Op.Type.META
-            ElseIf TypeOf op Is GridOp Then
-                Return Op.Type.GRID
-            End If
-            Return Nothing
-        End Function
 
         Public Overridable Shadows Function [getType]() As Op.Type?
             Return type

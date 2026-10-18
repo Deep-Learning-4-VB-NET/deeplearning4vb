@@ -1,6 +1,7 @@
-' DeepLearning4VB: TEMPORARY STAND-IN for the ND4VB factory class Nd4vb (Java's org.nd4j.linalg.factory.Nd4j).
-' Phase 2 wave 2 code calls these members; phase 2 wave 3 replaces this file with the real port of
-' unported/nd4j/.../linalg/factory/Nd4j.vb. Every member throws NotImplementedException (EPS_THRESHOLD and
+' DeepLearning4VB: TEMPORARY STAND-INS for three classes phase 2 wave 3 ports: the ND4VB factory class Nd4vb
+' (Java's org.nd4j.linalg.factory.Nd4j), Broadcast (org.nd4j.linalg.factory.Broadcast) and Transforms
+' (org.nd4j.linalg.ops.transforms.Transforms). Phase 2 wave 2 code calls these members; wave 3 replaces this file
+' with the real ports of unported/nd4j/.../linalg/factory/Nd4j.vb, Broadcast.vb and ops/transforms/Transforms.vb. Every member throws NotImplementedException (EPS_THRESHOLD and
 ' PrecisionBoostAllowed hold values). Signatures follow the converter text of Nd4j.vb: Java getters getX() are
 ' Shared ReadOnly properties named X, Java Number is Object, varargs are ParamArray.
 
@@ -87,6 +88,13 @@ Namespace org.nd4vb.linalg.factory
         End Property
 
         Public Shared Property PrecisionBoostAllowed As Boolean
+
+        ''' <summary>Typed as Object (late-bound calls) until the managed BasicNDArrayCompressor is committed.</summary>
+        Public Shared ReadOnly Property Compressor As Object
+            Get
+                Throw NotYet()
+            End Get
+        End Property
 
         Public Shared Function order() As Char
             Throw NotYet()
@@ -231,6 +239,32 @@ Namespace org.nd4vb.linalg.factory
         End Function
 
     
+
+        Public Shared Function zerosLike(ByVal arr As INDArray) As INDArray
+            Throw NotYet()
+        End Function
+
+    End Class
+
+    ''' <summary>Temporary stand-in for Broadcast (phase 2 wave 3 ports the real class).</summary>
+    Partial Public Class Broadcast
+
+        Public Shared Sub validateBroadcastDims(ByVal x As INDArray, ByVal y As INDArray, ByVal z As INDArray, ParamArray ByVal dimensions() As Integer)
+            Throw New NotImplementedException("Broadcast stand-in (phase 2 wave 3)")
+        End Sub
+
+    End Class
+
+End Namespace
+
+Namespace org.nd4vb.linalg.ops.transforms
+
+    ''' <summary>Temporary stand-in for Transforms (phase 2 wave 3 ports the real class).</summary>
+    Partial Public Class Transforms
+
+        Public Shared Function abs(ByVal ndArray As INDArray) As INDArray
+            Throw New NotImplementedException("Transforms stand-in (phase 2 wave 3)")
+        End Function
 
     End Class
 

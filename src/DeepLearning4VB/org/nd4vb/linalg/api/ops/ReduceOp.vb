@@ -52,7 +52,11 @@ Namespace org.nd4vb.linalg.api.ops
         ''' <remarks>Deprecated in Java.</remarks>
         ReadOnly Property ComplexAccumulation As Boolean
 
-        ReadOnly Property OpType As Op.Type
+        ''' <summary>
+        ''' The op type the executioner dispatches on (Java <c>getOpType()</c>; a method rather than a property named
+        ''' <c>OpType</c>, which would clash with <c>DifferentialFunction.opType()</c>: VB names are case-insensitive).
+        ''' </summary>
+        Function getOpType() As Op.Type
 
         ''' <summary>
         ''' This method returns TRUE if we're going to keep axis, FALSE otherwise

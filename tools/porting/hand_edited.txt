@@ -1,0 +1,15 @@
+linalg/api/ops/BaseReduceFloatOp.vb
+linalg/api/ops/BaseReduceSameOp.vb
+linalg/api/ops/BaseReduceLongOp.vb
+linalg/api/ops/BaseReduceBoolOp.vb
+linalg/api/ops/BaseIndexAccumulation.vb
+linalg/api/ops/NoOp.vb
+linalg/api/ops/random/BaseRandomOp.vb
+linalg/api/ops/aggregates/BaseAggregate.vb
+linalg/api/ops/aggregates/impl/AggregateAxpy.vb
+linalg/api/ops/aggregates/impl/AggregateGEMM.vb
+linalg/api/ops/impl/indexaccum/FirstIndex.vb
+linalg/api/ops/impl/indexaccum/LastIndex.vb
+linalg/api/ops/impl/reduce3/BaseReduce3Op.vb
+linalg/api/ops/impl/summarystats/Variance.vb
+linalg/api/ops/impl/summarystats/StandardDeviation.vb

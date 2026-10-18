@@ -33,7 +33,11 @@ Namespace org.nd4vb.linalg.api.ops
 
         Function validateDataTypes(ByVal experimentalOp As Boolean) As Boolean
 
-        ReadOnly Property OpType As Op.Type
+        ''' <summary>
+        ''' The op type the executioner dispatches on (Java <c>getOpType()</c>; a method rather than a property named
+        ''' <c>OpType</c>, which would clash with <c>DifferentialFunction.opType()</c>: VB names are case-insensitive).
+        ''' </summary>
+        Function getOpType() As Op.Type
 
         Function dimensions() As INDArray
     End Interface
