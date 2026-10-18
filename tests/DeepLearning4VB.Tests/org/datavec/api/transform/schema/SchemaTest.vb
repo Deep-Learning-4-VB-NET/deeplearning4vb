@@ -289,7 +289,7 @@ Namespace org.datavec.api.transform.schema
             assertThrows(Of InvalidOperationException)(Sub() SchemaT.infer(Arrays.asList(Of WritableT)(NullWritable.INSTANCE)))
         End Sub
 
-        ' Schema.toJson/fromJson/toYaml/fromYaml are not tested: the JSON serde arrives with the serde wave (YAML is not supported).
+        ' Schema.toJson/fromJson are tested in TestJsonYaml (JSON only: YAML is not supported).
 
     End Class
 

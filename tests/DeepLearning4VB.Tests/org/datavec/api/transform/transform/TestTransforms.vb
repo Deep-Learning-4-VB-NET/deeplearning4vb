@@ -991,11 +991,11 @@ Namespace org.datavec.api.transform.transforms
             assertEquals(singleRow(New Text("4.25")), transform.map(singleRow(New Text("  4.25 "))))
         End Sub
 
-        ' testReduceSequenceTransform: not ported here (needs the reduce package and ReduceSequenceTransform).
+        ' testReduceSequenceTransform: see transform/sequence/TestSequenceOperations.
 
-        ' testTrimSequenceTransform: not ported here (needs the sequence.trim package).
+        ' testTrimSequenceTransform: see transform/sequence/TestSequenceOperations.
 
-        ' testSequenceTrimToLengthTransform, testSequenceTrimToLengthTransformTrimOrPad: not ported (need TransformProcess).
+        ' testSequenceTrimToLengthTransform, testSequenceTrimToLengthTransformTrimOrPad: see TestTransformProcessTransforms.
 
         <TestMethod>
         Public Sub testSequenceOffsetTransform()
@@ -1089,7 +1089,7 @@ Namespace org.datavec.api.transform.transforms
 
         ' testStringListToCountsNDArrayTransform, testStringListToIndicesNDArrayTransform: not ported (need INDArray).
 
-        ' testFirstDigitTransform: not ported (needs TransformProcess); see TransformImplementationsTest.testFirstDigitTransform.
+        ' testFirstDigitTransform: see TestTransformProcessTransforms.
 
     End Class
 

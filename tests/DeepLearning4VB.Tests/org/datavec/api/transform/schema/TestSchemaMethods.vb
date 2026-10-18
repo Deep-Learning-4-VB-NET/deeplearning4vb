@@ -29,7 +29,7 @@ Namespace org.datavec.api.transform.schema
             Next i
         End Sub
 
-        ' testToFromJsonYaml / testMissingPrimitives (schema/TestJsonYaml) are not ported: Schema.toJson/fromJson arrive with the serde wave.
+        ' testToFromJsonYaml / testMissingPrimitives are ported in TestJsonYaml (JSON only).
 
     End Class
 

@@ -96,8 +96,13 @@ Namespace org.datavec.api.transform.ui
             assertTrue(html.Contains("2016-01-01 00:00:00.000 UTC"))
 
 
-            'Test JSON: not ported here. DataAnalysis.toJson/fromJson belong to the System.Text.Json serde wave
-            '(TransformProcess and the serde package); the analysis round trip is tested with that wave.
+            'Test JSON (Java: assertEquals(da, da2)). The analysis classes compare by reference in this port,
+            'so the round trip is checked through its JSON text and the schema.
+            Dim json As String = da.toJson()
+            Dim da2 As DataAnalysisT = DataAnalysisT.fromJson(json)
+            assertEquals(json, da2.toJson())
+            assertEquals(da.getSchema(), da2.getSchema())
+            assertEquals(da.getColumnAnalysis().Count, da2.getColumnAnalysis().Count)
 
 
 
@@ -114,7 +119,11 @@ Namespace org.datavec.api.transform.ui
             assertEquals(5, UiTestSupport.countOccurrences(html, "<figure class=""dv-figure dv-histogram"">"))
 
 
-            'JSON: not ported here (SequenceDataAnalysis.toJson/fromJson come with the serde wave, see above).
+            'JSON (Java: assertEquals(sda, sda2)), checked as above
+            Dim json2 As String = sda.toJson()
+            Dim sda2 As SequenceDataAnalysisT = SequenceDataAnalysisT.fromJson(json2)
+            assertEquals(json2, sda2.toJson())
+            assertEquals(sda.getSchema(), sda2.getSchema())
         End Sub
 
 
