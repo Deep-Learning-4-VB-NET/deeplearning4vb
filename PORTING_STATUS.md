@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-15 (step 2 in progress: datavec-api waves A and B are complete, that is the writables, I/O, configuration, splits, record readers and writers, input/output formats and the transform core).
+Last updated: 2026-10-18 (phase 1 complete: DataVec, the data pipeline, is ported apart from the parts that need the tensor engine).
 
 ## Where the code came from
 
@@ -18,195 +18,246 @@ compiled:
 - The generated project file was itself corrupted: 34 of the 4,960 include paths had a stray
   backslash inserted, so the compiler never even started.
 
+## Component names
+
+DeepLearning4VB is for VB.NET developers, so the ported components carry "4vb" where the Java
+originals carry "4j":
+
+| Java original | DeepLearning4VB |
+| --- | --- |
+| Deeplearning4j (DL4J), `org.deeplearning4j` | DeepLearning4VB (DL4VB), `DeepLearning4VB.org.deeplearning4vb` |
+| ND4J, `org.nd4j` | ND4VB, `DeepLearning4VB.org.nd4vb` |
+| RL4J, `org.rl4j` | RL4VB (not ported yet) |
+| DataVec, `org.datavec` | DataVec, `DeepLearning4VB.org.datavec` (no "4j" in the name) |
+
+Class and constant names follow (`ND4VBClassLoading`, `DL4VBResources`, `DL4VBSystemProperties`),
+and so do the system-property and environment-variable names the library reads (`org.nd4vb.*`,
+`org.deeplearning4vb.*`, `ND4VB_*`, `DL4VB_*`). The default resource folder is `~/.deeplearning4vb`.
+Unchanged on purpose: the `dl4jdata` download server (it is an external host), links to the upstream
+project, `org.slf4j` (the name of the third-party logging API the facade mimics), and the `unported/`
+tree, which keeps the upstream Java names so each file can be compared with its Java original.
+
 ## What is done
 
 | Area | State |
 | --- | --- |
-| Solution and projects | SDK-style `.vbproj` files targeting `net481`, `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`, `.gitignore`/`.gitattributes`; the committed `.vs`, `obj` and `packages` folders were removed. |
-| `nd4j-common`, `deeplearning4j-common` and most of `datavec-api` (library) | 339 source files, about 52,600 lines, compile with zero errors and zero warnings. JSON uses System.Text.Json (NuGet). Includes managed stand-ins for the external libraries DataVec uses: a Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`) and `java.util.concurrent.TimeUnit`. |
-| Tests | 90 test files, 595 tests, all passing: the DL4J JUnit test classes for `nd4j-common`, `deeplearning4j-common` and the ported `datavec-api` packages ported to MSTest, plus new tests for the collections, tuples, Java compatibility helpers, logging facade, resources, archives, validation, class loading, writables, splits, configuration, record metadata, the record readers and writers (CSV, line, regex, JSON, LibSVM/SVMLight, file batch, collections), the input/output formats, schemas, column metadata, conditions and filters, and the Joda/t-digest/TimeUnit stand-ins. |
-| Everything else | Moved unchanged to `unported/`, 4,610 files, excluded from the build. |
+| Solution and projects | SDK-style `.vbproj` files targeting **.NET Framework 4.8.1 and .NET 10** (`net481;net10.0`), `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`. |
+| Library | 549 source files, about 83,500 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`) and `datavec-local`. JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
+| Stand-ins for Java libraries | A Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`), `java.util.concurrent.TimeUnit`, and a binary object-graph serializer that replaces Java serialization and the BinaryFormatter. |
+| Tests | 146 test files, 975 tests, all passing on both target frameworks: the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
+| Everything else | Unchanged in `unported/`: 3,706 files, excluded from the build. |
 
 ## Module table
 
-File counts are `.vb` files under `unported/`. "Needs" lists the external Java dependencies that
-files of the module import (number of files in brackets); each of them has to be replaced or
-re-implemented before the module can be ported. `INDArray` means the module needs the ND4J tensor
-API, which in turn needs a tensor backend.
+File counts are `.vb` files under `unported/`. "Needs" lists the external dependencies that block the
+module. `INDArray` means the module needs the ND4J tensor API, which the managed tensor engine of
+phase 2 will provide.
 
-| Module | Files | Needs | Status |
+Module names are the upstream folder names under `unported/`; the ported code uses the "4vb" names.
+
+| Module (upstream name) | Files left | Needs | Status |
 | --- | ---: | --- | --- |
-| nd4j/nd4j-common | 4 remaining | none | **Ported** except the four URL/VFS files listed below |
-| nd4j/nd4j-common-tests | 9 | JavaCPP (1) | Not started |
-| nd4j/nd4j-backends | 1,812 | JavaCPP native backend (116), INDArray (1,044), TensorFlow import (152), ONNX (52), Jackson (74) | Not started. This is the tensor API and the native backend: the core of ND4J. |
-| nd4j/nd4j-parameter-server-parent | 168 | Netty/Aeron (23), INDArray (43) | Not started |
-| nd4j/nd4j-serde | 32 | Netty/Aeron (17), INDArray (14), Arrow, Spark | Not started |
-| nd4j/samediff-import | 21 | INDArray (16), TensorFlow (2) | Not started |
-| nd4j/nd4j-onnxruntime, nd4j-tensorflow, nd4j-tensorflow-lite, nd4j-tvm | 16 | JavaCPP bindings, INDArray | Not started |
-| datavec/datavec-api | 175 remaining | INDArray (9 files) | **In progress.** Ported: `writable` (+comparator, batch), `io` (+converters, filters, labels, serializers), `exceptions`, `util` (+files), `conf`, `split` (+partition, streams), `records` (readers, writers, listeners, mappers, metadata), `formats`, and the transform core (`schema`, `metadata`, `condition`, `filter`, `quality`, `ops`, `split`, the column/math enums). Next (wave C): the transform implementations (`transform/transform/*`), `analysis`, `reduce`, `stringreduce`, `rank`, `join`, `sequence`; then (wave D) `TransformProcess`, `DataAction`, the JSON serde and the `TransformProcess` record readers. |
-| datavec/datavec-data | 55 | JavaCPP (24), Jackson (14), INDArray (18) | Not started |
-| datavec/datavec-local | 61 | INDArray (6), Arrow (1) | Not started |
-| datavec/datavec-spark | 96 | Spark (72) | Not started; Spark has no .NET equivalent here |
-| datavec/datavec-arrow, datavec-excel, datavec-jdbc | 22 | Arrow (5) | Not started |
-| deeplearning4j/deeplearning4j-common | 0 | none | **Ported** (class loading, resources, system properties, temp files) |
-| deeplearning4j/deeplearning4j-nn | 495 | INDArray (343), Jackson (104) | Not started. Needs the tensor API. |
-| deeplearning4j/deeplearning4j-core | 267 | INDArray (174), Jackson (13) | Not started |
-| deeplearning4j/deeplearning4j-data | 80 | INDArray (13) | Not started |
-| deeplearning4j/deeplearning4j-modelimport | 154 | INDArray (39), Jackson, TensorFlow | Not started |
-| deeplearning4j/deeplearning4j-nlp-parent | 198 | INDArray (38), Jackson (11) | Not started |
-| deeplearning4j/deeplearning4j-scaleout | 308 | Spark (174), INDArray (104) | Not started |
-| deeplearning4j/deeplearning4j-ui-parent | 109 | Jackson (25), Netty (6), INDArray | Not started |
-| deeplearning4j/deeplearning4j-graph, deeplearning4j-zoo, deeplearning4j-cuda, solr modules, integration tests | 122 | INDArray, JavaCPP, Solr | Not started |
-| rl4j/rl4j-core | 249 | INDArray (106), environment SDKs (10) | Not started |
-| rl4j/rl4j-api, rl4j-doom, rl4j-gym, rl4j-malmo, rl4j-ale | 46 | VizDoom, Gym, Malmo, ALE SDKs | Not started; the environment SDKs have no .NET bindings |
-| python4j | 26 | JavaCPP/CPython (8) | Not started |
-| contrib | 30 | Jackson, INDArray | Not started; build tooling for the Java project, probably not needed |
+| nd4j/nd4j-common | 4 | none | **Ported** as `nd4vb-common`, except the four URL/VFS files listed below |
+| deeplearning4j/deeplearning4j-common | 0 | none | **Ported** as `deeplearning4vb-common` |
+| datavec/datavec-api | 22 | INDArray | **Ported**, except the INDArray files listed below |
+| datavec/datavec-local | 5 | INDArray | **Ported**, except two NDArray conversion functions and their tests |
+| nd4j/nd4j-backends | 1,812 | native backend | Phase 2. `nd4j-api` (1,409 files) is the tensor API to port; `nd4j-native` and `nd4j-cuda` are JavaCPP bindings to the C++ library, to be replaced by a managed engine; `nd4j-tests` are the reference tests. |
+| nd4j/nd4j-serde, nd4j-common-tests | 41 | INDArray | Phase 2, with the tensor API |
+| deeplearning4j/deeplearning4j-nn | 495 | INDArray | Phase 3: layers, networks, training |
+| deeplearning4j/deeplearning4j-core | 267 | INDArray | Phase 3: evaluation, early stopping, listeners |
+| deeplearning4j/deeplearning4j-nlp-parent | 198 | INDArray | Phase 3: Word2Vec, ParagraphVectors, tokenizers |
+| deeplearning4j/deeplearning4j-modelimport | 154 | INDArray, HDF5 | Phase 3: Keras model import (needs an HDF5 reader for .NET) |
+| deeplearning4j/deeplearning4j-data | 80 | INDArray | Phase 3: dataset iterators (MNIST, CIFAR, Iris, ...) |
+| deeplearning4j/deeplearning4j-graph, deeplearning4j-zoo | 78 | INDArray | Phase 3 |
+| deeplearning4j/deeplearning4j-scaleout | 31 | INDArray | Phase 3: ParallelWrapper (single-machine parallel training and inference) |
+| rl4j/rl4j-core, rl4j-api | 258 | INDArray | Phase 3: reinforcement learning (RL4VB) |
+| datavec/datavec-data | 55 | OpenCV (JavaCPP), INDArray | Phase 3: image, audio and video record readers (needs a .NET imaging library) |
+| nd4j/samediff-import | 21 | INDArray, TensorFlow/ONNX | Phase 3: TensorFlow and ONNX graph import |
+| deeplearning4j/dl4j-integration-tests | 18 | everything | Last, as an end-to-end check |
+| datavec/datavec-excel, datavec-jdbc | 12 | Apache POI, JDBC | Small; port with the Open XML SDK and ADO.NET |
+| datavec/datavec-arrow | 10 | Apache Arrow | Later; the Apache.Arrow NuGet package covers it |
+| deeplearning4j/deeplearning4j-ui-parent | 109 | Vert.x | Later; replace the web dashboard with a simpler statistics export |
+| deeplearning4j/deeplearning4j-cuda | 19 | CUDA | Later; the managed engine is CPU-only at first |
+| nd4j/nd4j-onnxruntime, nd4j-tensorflow, nd4j-tensorflow-lite, nd4j-tvm | 16 | native runtimes | Later; use the ONNX Runtime NuGet package if inference is needed |
+| deeplearning4j/deeplearning4j-common-tests | 1 | none | Test helper; with phase 3 |
 
-Suggested order for the next steps: the rest of `datavec-api` (record readers, the transform
-pipeline), then a managed implementation of the ND4J tensor API (`INDArray`, `DataBuffer`,
-`Shape`, the op executioner) which unblocks `nd4j-backends`, `deeplearning4j-nn` and everything
-above them.
+Next: phase 2, a managed tensor engine (`INDArray`, `DataBuffer`, shapes, the op executioner, written
+in VB on top of the ported `nd4j-api`), which unblocks the INDArray parts of DataVec, `deeplearning4j-nn`,
+`deeplearning4j-core` and everything above them.
 
-## nd4j-common: files left in `unported/`
+### Dropped modules
 
-| File(s) | Why it was deferred |
-| --- | --- |
-| `io/AbstractFileResolvingResource`, `io/ResourceUtils` | Resolve `jar:`/`file:` URLs and `URLConnection`s; `ClassPathResource` was re-implemented on search directories and embedded resources instead, so nothing needs them. |
-| `io/VfsUtils`, `io/VfsResource` | JBoss VFS reflection hooks; no .NET counterpart. |
+These wrapped Java-only platforms or native runtimes and were removed from `unported/` with the
+owner's agreement: Spark training and ETL (`deeplearning4j-scaleout/spark`, `datavec-spark`), the Aeron
+parameter server and its ParallelWrapper bridge, python4j, the RL game environments (Doom, Malmo,
+ALE, Gym), the Solr modules and the Java contrib tools. ParallelWrapper itself (single-machine
+parallel training) is kept for phase 3.
 
-The Jackson serializer/deserializer pair for `AtomicDouble`/`AtomicBoolean` (`primitives/serde`) was
-dropped rather than deferred: System.Text.Json converters are subclasses of `JsonConverter(Of T)`
-whose `Read` method takes the ref struct `Utf8JsonReader`, and the VB.NET compiler cannot declare
-such a parameter. Those two types therefore serialize through their public `Value` property
-(`{"Value": 1.5}` instead of `1.5`).
+## Files left in `unported/` by the ported modules
 
-## datavec-api: files left in `unported/` so far
+| Module | File(s) | Why |
+| --- | --- | --- |
+| nd4j-common | `io/AbstractFileResolvingResource`, `io/ResourceUtils` | Resolve `jar:`/`file:` URLs and `URLConnection`s; `ClassPathResource` was re-implemented on search directories and embedded resources, so nothing needs them. |
+| nd4j-common | `io/VfsUtils`, `io/VfsResource` | JBoss VFS reflection hooks; no .NET counterpart. |
+| datavec-api | `writable/NDArrayWritable`, `writable/batch/NDArrayRecordBatch`, `util/ndarray/*`, `timeseries/util/*`, `transform/ndarray/*`, `transform/analysis/counter/NDArrayAnalysisCounter`, `transform/analysis/histogram/NDArrayHistogramCounter`, `transform/metadata/NDArrayMetaData`, `transform/transform/string/StringListTo*NDArrayTransform`, `vector/*` | Need `INDArray` (phase 2). |
+| datavec-local | `misc/NDArrayToWritablesFunction`, `misc/WritablesToNDArrayFunction` and their tests | Need `INDArray` (phase 2). |
 
-| File(s) | Why it was deferred |
-| --- | --- |
-| `writable/NDArrayWritable`, `writable/batch/NDArrayRecordBatch`, `util/ndarray/*`, `timeseries/util/*`, `transform/ndarray/*`, `transform/analysis/counter/NDArrayAnalysisCounter`, `transform/analysis/histogram/NDArrayHistogramCounter`, `transform/metadata/NDArrayMetaData`, `transform/transform/string/StringListTo*NDArrayTransform` | Need `INDArray`; wait for the managed tensor engine (step 3). |
-| `vector/*` | Vectorizer interfaces over `INDArray`; same reason. |
-| `transform/ui/*` | FreeMarker HTML templates; the templates are not in the dump. |
-| `transform/TransformProcess`, `transform/DataAction`, `records/reader/impl/transform/*` | Waiting for the remaining transform implementations and the System.Text.Json serde (wave D). |
+The Jackson serializer/deserializer pairs for `AtomicDouble`/`AtomicBoolean` (`primitives/serde`) and
+for the t-digest (`analysis/json`) were dropped rather than deferred: System.Text.Json converters
+are subclasses of `JsonConverter(Of T)` whose `Read` method takes the ref struct `Utf8JsonReader`, and
+the VB.NET compiler cannot declare such a parameter. The DataVec JSON layer works around this with
+field-based contracts instead (see "JSON" below).
+
+## JSON
+
+`TransformProcess`, `Schema`, `DataAnalysis` and everything they contain serialize to the same JSON
+as Java DataVec, so JSON written by Java loads here and the other way round (`toJson`/`fromJson`,
+or `JsonMappers.getMapper` for System.Text.Json directly):
+
+- Each class is written field by field under its Java field name, like Jackson with field visibility.
+  Fields marked `<NonSerialized>` or `<JsonIgnore>` are skipped; `<JsonIgnoreProperties("a", "b")>`
+  on a class skips fields by name (Jackson's semantics); `<JsonPropertyName("javaName")>` maps a VB
+  field whose name differs from the Java field; `<JsonIncludeNonNull>` omits null fields;
+  `<JsonProperty("name")>` names a `<JsonConstructor>` parameter after its Java JSON property.
+- Polymorphic base types (`Transform`, `Condition`, `Filter`, `ColumnMetaData`, `Schema`, the
+  analyses, reducers, sequence operations, writables) carry `<JsonClassType>`, and values are written
+  with `"@class": "<Java class name>"`. `IAssociativeReducer` uses Java's wrapper-object form
+  (`{"Reducer": {...}}`).
+- Implementations are discovered in every loaded assembly that references the library. Register your
+  own types with `JsonMappers.registerSubtype(GetType(MyTransform), "com.example.MyTransform")` or
+  `JsonMappers.registerSubtypes(...)`.
+- Reading runs the `<JsonConstructor>` constructor with the matching JSON values (Jackson's creator),
+  then restores the other fields and runs `<OnDeserialized>` methods. Unknown properties are ignored.
+  The legacy pre-1.0 format (wrapper-object names) is converted on read.
+- Not identical to Java: a t-digest written by Java is a Java-serialized blob and is skipped with a
+  warning; locale variants and scripts are not mapped; YAML is not supported (owner's decision).
 
 ## Deliberate differences from the Java original
 
 The port keeps Java behaviour wherever possible (including quirks such as `ArrayUtil.range(5, 0)`
 returning `{4, 3, 2, 1, 0}` and `MathUtils.euclideanDistance` returning the squared distance).
-These are the intentional exceptions:
+These are the intentional exceptions.
 
-- **Lombok members** are written out by hand. `Pair`, `Triple`, `Quad` and friends get a
-  non-generic companion class so `Pair.of(k, v)` works without type arguments (VB cannot call
-  shared members of an open generic type).
-- **`Preconditions`**: formatters are registered with `Preconditions.registerFormat` instead of
-  being discovered through `ServiceLoader`. A custom tag at position 0 of a message is now honoured
-  (the Java code skipped it).
-- **`ArrayUtil`**: `toBFloat16` implements the current upstream semantics (top 16 bits of the
-  float); the 3-D/4-D `toPrimitives` overloads use the loop variable the Java code mistakenly
-  mixed up (infinite loop upstream); `argsort` uses a stable LINQ sort; `read`/`write` take
-  `BinaryReader`/`BinaryWriter` and still use big-endian byte order like Java's data streams.
-- **`Counter`/`CounterMap`**: `keySet()`, `entrySet()` and the iterator work on snapshots, so
-  iteration order is unspecified (as it already was with Java's concurrent maps) and removing while
-  iterating is safe. `CounterMap` implements `IEnumerable(Of Pair)`; `getIterator()` is kept.
-- **`OneTimeLogger.reset()`** forgets the remembered messages as well as the buffer (Java only
-  cleared the buffer, which made `reset` ineffective).
-- **`FileBatch`** stores `Byte()` (Java `byte[]`) and takes path strings instead of `java.io.File`;
-  original URIs are `file:///` URIs from `System.Uri`.
-- **`ND4JFileUtils`** returns path strings instead of `java.io.File`. "System properties" are kept
-  by the `JavaSystem` helper; `java.io.tmpdir` maps to `Path.GetTempPath()`.
-- **`PropertyParser`**: malformed numbers throw `JavaCompat.NumberFormatException`, which derives
-  from `ArgumentException` the way Java's derives from `IllegalArgumentException`; parsing is
-  culture invariant.
-- **`SIS`/`BTools`** take `TextWriter` instead of `PrintStream`; number formatting is culture
-  invariant and rounds half to even like Java's `DecimalFormat`.
-- **`IntArrayKeyMap.IntArray`** is the top-level class `IntArray` (a nested type of a generic class
-  cannot be named without type arguments in VB).
+### Platform
+
+- **Object serialization**: `SerializationUtils` (Java's `ObjectOutputStream`/`ObjectInputStream`)
+  uses DeepLearning4VB's own binary object-graph format (`ObjectGraphSerializer`) instead of the
+  BinaryFormatter, which .NET 9 removed. It writes the fields of `[Serializable]` types (honouring
+  `[NonSerialized]` and the serialization callbacks), keeps identity and cycles, handles the standard
+  collections and `Uri`, `CultureInfo`, `TimeZoneInfo`, `Encoding`, `Regex`, `BigInteger` and `Random`
+  explicitly, and writes type names without assembly names, so data moves between .NET Framework and
+  .NET 10. Reading only creates `[Serializable]` types and the listed framework types. Delegate fields
+  are not written. A `Random` keeps its state only on the same runtime. Data written by the
+  BinaryFormatter in earlier versions cannot be read. Only read data from trusted sources.
 - **Logging**: `org.slf4j.Logger`/`LoggerFactory` is a minimal facade writing to
   `System.Diagnostics.Trace`; applications can replace it through `LoggerFactory.Provider`.
 - **Integer arithmetic wraps on overflow** (`RemoveIntegerChecks` in `Directory.Build.props`),
   matching Java, because hash and shape calculations rely on it.
-
-- **Class loading**: `ND4JClassLoading`/`DL4JClassLoading` search a configurable set of assemblies
+- **Class loading**: `ND4VBClassLoading`/`DL4VBClassLoading` search a configurable set of assemblies
   (default: every assembly loaded in the AppDomain) instead of a class loader, and
   `loadService(Of S)` returns explicitly registered instances (`registerService`) plus one instance of
   every concrete implementation with a public parameterless constructor that it can find.
+- **Files and streams**: `java.io.File` arguments are path strings, `URI`s are `System.Uri`,
+  `InputStream`/`OutputStream` are `Stream`, `PrintStream` is `TextWriter`, `byte[]` is `Byte()` and
+  Java `byte` is `SByte`. `Locale` is `CultureInfo`. Number formatting is culture invariant.
+- **Downloads**: `Downloader` retries inside one lock-file acquisition (the Java code recursed into the
+  lock while holding it). `file:` URLs are copied locally; everything else is fetched with
+  `HttpClient` (TLS 1.2 is enabled on .NET Framework).
+
+### nd4vb-common and deeplearning4vb-common
+
+- **Lombok members** are written out by hand. `Pair`, `Triple`, `Quad` and friends get a
+  non-generic companion class so `Pair.of(k, v)` works without type arguments.
+- **`Preconditions`**: formatters are registered with `Preconditions.registerFormat` instead of
+  being discovered through `ServiceLoader`. A custom tag at position 0 of a message is honoured
+  (the Java code skipped it).
+- **`ArrayUtil`**: `toBFloat16` implements the current upstream semantics; the 3-D/4-D `toPrimitives`
+  overloads use the loop variable the Java code mixed up (infinite loop upstream); `argsort` is a
+  stable sort; `read`/`write` take `BinaryReader`/`BinaryWriter` with big-endian byte order.
+- **`Counter`/`CounterMap`**: `keySet()`, `entrySet()` and the iterator work on snapshots, so removing
+  while iterating is safe. `CounterMap` implements `IEnumerable(Of Pair)`.
+- **`OneTimeLogger.reset()`** forgets the remembered messages as well as the buffer.
+- **`PropertyParser`**: malformed numbers throw `JavaCompat.NumberFormatException`, which derives from
+  `ArgumentException` as Java's derives from `IllegalArgumentException`.
+- **`IntArrayKeyMap.IntArray`** is the top-level class `IntArray`.
 - **`ClassPathResource`** resolves a path first as a file under `ClassPathResource.SearchDirectories`
   (application base directory, current directory and their `resources` sub-folders, plus anything
-  added with `addSearchDirectory`) and then as an embedded manifest resource. Embedded resources are
-  extracted to a temporary file by `File`/`getTempFileFromArchive`, like jar entries were in Java.
-- **`StrumpfResolver`** passes the reference file (not its directory) to `ResourceFile.fromFile`,
-  which the Java code got wrong; `ResourceFile` parses the reference JSON with System.Text.Json.
-- **`Downloader`** retries inside one lock-file acquisition; the Java code recursed into the lock
-  while still holding it, which can never succeed. `file:` URLs are copied locally; everything else
-  is fetched with `HttpClient` (TLS 1.2 is enabled for .NET Framework).
-- **`ArchiveUtils`** uses a small built-in tar reader (ustar, GNU long names, pax paths); zip entries
-  that escape the destination directory are rejected. Like Java, `unzipFileTo` deletes the archive.
-- **`SerializationUtils`** uses the `BinaryFormatter` for `[Serializable]` types and `Byte()` arrays.
-- **`SynchronizedTable.get`** delegates to the wrapped table (the Java method called itself);
-  `JavaCompat.HashBasedTable` is the Guava table implementation it wraps.
+  added with `addSearchDirectory`) and then as an embedded manifest resource.
+- **`StrumpfResolver`** passes the reference file (not its directory) to `ResourceFile.fromFile`, which
+  the Java code got wrong.
+- **`ArchiveUtils`** uses a small built-in tar reader; zip entries that escape the destination
+  directory are rejected. Like Java, `unzipFileTo` deletes the archive.
+- **`SynchronizedTable.get`** delegates to the wrapped table (the Java method called itself).
 - **`WeakIdentityHashMap`** sweeps collected keys on every operation instead of using a reference queue.
-- **Spring utilities (`io/StringUtils`, `ObjectUtils`, `CollectionUtils`, `Assert`, `ReflectionUtils`)**:
-  `Locale` is `CultureInfo` (variants dropped), `Properties` is `JavaCompat.Properties`,
-  `byte[]` is `Byte()`, identity hash codes come from `RuntimeHelpers.GetHashCode`, checked-exception
-  helpers are constant (`isCheckedException` false, `declaresException` false), `makeAccessible` is a
-  no-op, `isEqualsMethod`/`isHashCodeMethod`/`isToStringMethod` match the .NET names, and generic
-  overloads replace raw collections. Details are in each class's XML comments.
+- **Spring utilities** (`io/StringUtils`, `ObjectUtils`, `CollectionUtils`, `Assert`, `ReflectionUtils`):
+  checked-exception helpers are constant, `makeAccessible` is a no-op, identity hash codes come from
+  `RuntimeHelpers.GetHashCode`. Details are in each class's XML comments.
 - **`ValidationResult`** keeps Lombok's builder as `ValidationResult.builder()` returning a
-  `ValidationResultBuilder`; `Nd4jCommonValidator` validates JSON with `JsonDocument` and accepts
-  only a JSON object as the root, as the Java `Map` deserialization did.
+  `ValidationResultBuilder`; `Nd4vbCommonValidator` validates JSON with `JsonDocument`.
 
-- **Joda-Time stand-in (`org.joda.time`)**: `DateTimeZone` wraps `TimeZoneInfo`; ids are UTC and its aliases,
+### Stand-ins for Java libraries
+
+- **Joda-Time (`org.joda.time`)**: `DateTimeZone` wraps `TimeZoneInfo`; ids are UTC and its aliases,
   fixed offsets (`+05:30`), Windows zone ids and a built-in IANA-to-Windows table (extend it with
-  `DateTimeZone.addIanaMapping`). `DateTimeFormat.forPattern` supports the Joda pattern letters
-  (G C Y x w e E y D M d a K h H k m s S z Z and quoted literals); zone names (`z`) print but do not parse,
-  numeric fields not followed by another numeric field accept 1 to 9 digits, and the default culture is the
-  invariant one. With System.Text.Json a `DateTimeZone` serializes as `{"ID":"UTC"}` and a
-  `DateTimeFieldType` as `{"Name":"hourOfDay"}` (Jackson wrote bare strings).
-- **t-digest stand-in (`com.tdunning.math.stats.TDigest`)**: a managed merging digest with the k1 scale
-  function; it keeps roughly half as many centroids as the Java `MergingDigest` for the same compression
-  but meets the same accuracy in the tests. It serializes with System.Text.Json as compression, min, max
-  and the centroid means/weights (Jackson used Java serialization in base64), omitting min/max while empty.
-- **`JavaCompat.TimeUnit`** is an enum; `toMillis`, `convert`, `sleep` and friends are extension methods
-  (import `DeepLearning4VB.JavaCompat`). `TimeUnitValueOf` replaces `TimeUnit.valueOf`.
-- **datavec-api wave A**: Java `byte` is `SByte` (`ByteWritable`, `DataInput.readByte`), `byte[]` is `Byte()`;
-  `java.io.File` arguments are path strings and `URI`s are `System.Uri` (see `FileSplit`, `URIUtil`);
-  `URIUtil.getPath` keeps Java's leading slash for Windows drive paths (`/C:/dir/file`);
-  `TransformSplit.length()` returns the source split's length (Java's `length` field);
-  `Configuration` resources are loaded from files, URIs or streams (XML) and a stream resource is
-  consumed on first load, as in Java; the `SerializationFactory` looks serializations up by assembly-qualified
-  or simple type name through `ND4JClassLoading`. `DataInputStream` reads big-endian with proper widening
-  (a `Byte << 8` stays a `Byte` in VB, which was the one real bug the tests caught).
+  `DateTimeZone.addIanaMapping`). `DateTimeFormat.forPattern` supports the Joda pattern letters; zone
+  names (`z`) print but do not parse, and numeric fields not followed by another numeric field accept
+  1 to 9 digits.
+- **t-digest (`com.tdunning.math.stats.TDigest`)**: a managed merging digest with the k1 scale function;
+  it keeps roughly half as many centroids as the Java `MergingDigest` for the same compression but
+  meets the same accuracy in the tests.
+- **HyperLogLog++**: the dense register representation only; the sparse precision `sp` is accepted and
+  ignored, and the empirical bias-correction tables are not included.
+- **`JavaCompat.TimeUnit`** is an enum; `toMillis`, `convert`, `sleep` and friends are extension methods.
+  `TimeUnitValueOf` replaces `TimeUnit.valueOf`.
 
-- **datavec-api wave B**: the Jackson record readers (`JacksonRecordReader`, `JacksonLineRecordReader`,
-  `JacksonLineSequenceRecordReader`) read JSON only, through `System.Text.Json`; Jackson's YAML and XML
-  factories have no counterpart here. `FileRecordWriter.close()` may be called twice, as Java's streams
-  allow. The `...ValueOf` helpers of the ported enums (`ColumnTypeValueOf`, `ConditionOpValueOf`,
-  `ResourceTypeValueOf`, `TimeUnitValueOf`) reject numeric strings, which `Enum.TryParse` would accept.
-  `SequenceSchema.Builder.buildSequence()` is a typed convenience on top of `build()`; the inherited
-  `addColumn*` methods return the base `Schema.Builder`, so cast the result of `build()` when chaining.
-  The HyperLogLog++ stand-in implements the dense register representation only: the sparse precision
-  `sp` is accepted and ignored, and the empirical bias-correction tables are not included.
-- **Shuffled stream order**: `StreamInputSplit` and the other shuffling splits use `System.Random`, so a
-  given seed produces a different order than `java.util.Random` with the same seed.
+### datavec-api
+
+- **Writables and I/O**: `URIUtil.getPath` keeps Java's leading slash for Windows drive paths;
+  `TransformSplit.length()` returns the source split's length; `DataInputStream` reads big-endian with
+  proper widening; `Configuration` resources load from files, URIs or streams (XML).
+- **Record readers**: the Jackson readers read JSON only, through System.Text.Json. `FileRecordWriter.close()`
+  may be called twice, as Java's streams allow.
+- **Enums**: the `...ValueOf` helpers (`ColumnTypeValueOf`, `ConditionOpValueOf`, `ResourceTypeValueOf`,
+  `TimeUnitValueOf`) reject numeric strings, which `Enum.TryParse` would accept.
+- **Schemas**: `SequenceSchema.Builder.buildSequence()` is a typed convenience on top of `build()`.
+- **Random order**: the shuffling splits use `System.Random`, so a seed gives a different order than
+  `java.util.Random` with the same seed.
+- **Analysis**: `StatCounter.merge` into an empty counter copies the variance (Java assigned it to the
+  mean). Java's raw `AnalysisCounter`/`QualityAnalysisState` types are non-generic interfaces that the
+  generic versions inherit. Java's saturating `(int)`/`(long)` casts are emulated where counters rely
+  on them, and the string-quality patterns use Java's ASCII-only `\d`, `\w`, `\s`.
+- **`TransformProcess`**: YAML is not supported; errors surface as `JsonException`; `inferCategories`
+  sorts ordinally; `OverlappingTimeWindowFunction` keeps its offset across a JSON round trip (Java's
+  creator parameter never matched the field). The NDArray builder steps wait for phase 2.
+- **HTML reports** (`transform/ui`): rewritten without FreeMarker. `HtmlAnalysis` and
+  `HtmlSequencePlotting` produce one self-contained page each (inline CSS and SVG, no scripts or external
+  resources, light and dark themes, every data value HTML-encoded). Each column gets a statistics card
+  with a histogram where the analysis has one; null or unparseable values leave gaps in sequence plots
+  instead of throwing.
+
+### datavec-local
+
+- **`LocalTransformExecutor`** runs every step sequentially and deterministically: records keep their
+  input order, groups (convert-to-sequence, reduce, join) come out in first-occurrence order of the
+  key (Java used hash-map order), and sorts are stable. Java's final Apache Arrow round trip is
+  replaced by converting each value directly to its final-schema column type.
+- Fixed Java bugs: empty input gives empty output (Java threw); try/catch mode drops the failed records
+  (Java's filter was inverted and kept only the failed ones); `executeJoin` keeps a side that holds only
+  key columns; `convertWritableInputToString`/`convertStringInput` return their results (Java returned
+  empty lists); `ReducerFunction` uses a single aggregation (Java read the result from a fresh, empty
+  one); `AnalyzeLocal.analyzeQualitySequence` no longer throws on the first time step.
 
 ## Porting rules
 
-> **Name shadowing.** VB looks up names in the enclosing namespaces before it considers `Imports`
-> aliases, so inside `org.datavec.api.transform.*` the name `Schema` resolves to the namespace
-> `transform.schema`, and in the test project `Writable` resolves to the test namespace
-> `...Tests.org.datavec.api.writable`. The ported code therefore uses aliases with a `T` suffix
-> (`Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema`, `WritableT`,
-> `ConditionT`, `FileBatchT`) or fully qualified names (`System.Text.RegularExpressions.Regex`). The same
-> case-insensitivity makes a `getType()` method hide `Object.GetType()`; write `CObj(x).GetType()` when the
-> .NET type is meant.
-
 Use these when moving the next file from `unported/` to `src/`.
 
-1. `git mv unported/<module>/src/main/java/org/<pkg>/Foo.vb src/DeepLearning4VB/org/<pkg>/Foo.vb`
-   so that history follows the file. Keep the Java package as the namespace.
+1. Move the file from `unported/<module>/src/main/java/org/<pkg>/Foo.vb` to
+   `src/DeepLearning4VB/org/<pkg>/Foo.vb`, applying the component rename (`nd4j` to `nd4vb`,
+   `deeplearning4j` to `deeplearning4vb`). The namespace is the Java package (renamed) under the root
+   namespace `DeepLearning4VB`.
 2. Fix the imports. Alias imports must be fully qualified:
-   `Imports Foo = DeepLearning4VB.org.nd4j.common.base.Preconditions`. Delete imports of `lombok`,
-   `org.slf4j` (use `DeepLearning4VB.org.slf4j`), `org.apache.commons`, `org.nd4j.shade.*` and `java.*`.
+   `Imports Foo = DeepLearning4VB.org.nd4vb.common.base.Preconditions`. Delete imports of `lombok`,
+   `org.apache.commons`, `org.nd4j.shade.*` and `java.*`; use `DeepLearning4VB.org.slf4j` for logging.
 3. Write out what Lombok generated: constructors, `getX`/`setX`, `Equals`, `GetHashCode`, `ToString`.
    Prefer a VB property plus the Java-style accessor, so that both `pair.First` and `pair.getFirst()` work.
 4. Replace Java APIs. The common mappings:
@@ -225,22 +276,44 @@ Use these when moving the next file from `unported/` to `src/`.
    | Guava `Ints`, `Longs` | the `Ints`, `Longs` modules |
    | `String.format("%d %s")` | `JavaString.format` (same specifiers) |
    | `System.getProperty`, `currentTimeMillis`, `nanoTime` | `JavaSystem` |
-   | `java.util.concurrent.atomic.*` | `org.nd4j.common.primitives.AtomicBoolean/AtomicDouble/Atomic` |
+   | `java.util.concurrent.atomic.*` | `org.nd4vb.common.primitives.AtomicBoolean/AtomicDouble/Atomic` |
+   | `java.util.concurrent.TimeUnit` | `JavaCompat.TimeUnit` |
    | `ReentrantReadWriteLock` | `ReaderWriterLockSlim` |
+   | `ObjectOutputStream`/`ObjectInputStream` | `org.nd4vb.common.util.SerializationUtils` (never BinaryFormatter) |
+   | Java streams, Guava `Iterables` | LINQ |
+   | Jackson annotations | the JSON attributes described under "JSON" |
    | `byte[]` | `Byte()` |
    | `java.io.File` | path `String` (or `FileInfo`/`DirectoryInfo`) |
    | `InputStream`/`OutputStream`, `PrintStream` | `Stream`, `TextWriter` |
    | `NumberFormatException` | `JavaCompat.NumberFormatException` |
    | `static <T> Foo<T> of(...)` on a generic class | the same method on a non-generic companion class (see `Pair`) |
 
-5. VB specifics that bite: `get`/`set` as method names need brackets (`[get]()`); keywords used as
-   identifiers (`set`, `single`, `end`) must be renamed or bracketed; VB is case-insensitive, so a
-   field `value` and a property `Value` clash; `New Foo(Of )(x)` needs explicit type arguments;
-   add `Overloads` when a member shares a name with an interface member; `Dim a(n - 1)` has `n`
-   elements; a method named like a type (`Comparer`) hides that type.
+5. VB specifics that bite:
+   - **Case-insensitive names.** A field `value` and a property `Value` clash, as do `builder()` and a
+     nested `Builder`, a local `seq` and a function `Seq`, or a test method named like a type. A
+     Java-style `getType()` member hides `Object.GetType()`: write `CObj(x).GetType()`.
+   - **The root namespace.** `org.deeplearning4vb` matches the root namespace `DeepLearning4VB`, so a
+     fully qualified name written in code (not in an `Imports` line) must start with `Global.`
+     (`Global.DeepLearning4VB.org.datavec...`).
+   - **Name shadowing.** VB looks up names in the enclosing namespaces before `Imports` aliases, so
+     inside `org.datavec.api.transform.*` the name `Schema` resolves to the namespace
+     `transform.schema` ("Type expected"). Use aliases with a `T` suffix
+     (`Imports SchemaT = DeepLearning4VB.org.datavec.api.transform.schema.Schema`, `WritableT`,
+     `ConditionT`) or qualified names. The test project has the same issue with its own namespaces.
+   - **Boxed value types are copied** whenever they pass through an `Object` variable, so code that
+     fills a boxed struct by reflection must hold it in a `ValueType` variable.
+   - **Keywords** used as identifiers (`get`, `set`, `single`, `when`, `step`, `end`) must be bracketed
+     or renamed; `Call New Foo().bar()` is needed when a lambda's body starts with `New`.
+   - **Numbers.** Java integer division and `(int)` casts truncate, VB `CInt` rounds half to even;
+     Java's `Collections.sort` is stable, `List.Sort` is not (use `OrderBy`); `String.matches` is a
+     whole-string match (`\A(?:...)\z`).
+   - **Zero warnings on both frameworks.** Mark intended hiding with `Shadows`/`Overloads`.
+     `Type.IsSerializable` is obsolete on .NET 10 (tests use `isSerializableType`), and code that only
+     works on one framework goes inside `#If NETFRAMEWORK Then`.
 6. The VB compiler reports method-body errors only after every declaration-level error in the
    project is fixed, so expect two or three waves of errors per file.
 7. Port the matching test from `unported/<module>/src/test` into `tests/DeepLearning4VB.Tests`.
    `TestSupport/Assertions.vb` provides JUnit-style `assertEquals`/`assertTrue`/`assertThrows`
-   helpers with Java collection-equality semantics, so the tests keep their original shape.
+   helpers with Java collection-equality semantics, so the tests keep their original shape. Run the
+   tests on both frameworks (`dotnet test DeepLearning4VB.slnx` does).
 8. Record any behaviour that deliberately differs from Java in the list above.
