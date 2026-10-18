@@ -1,4 +1,5 @@
 Imports System.Collections.Concurrent
+Imports System.Threading
 Imports System.Collections.Generic
 Imports System.Text
 Imports Microsoft.VisualBasic
@@ -28,9 +29,12 @@ Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
 Namespace org.nd4vb.linalg.profiler.data
 
 
+    ''' <summary>
+    ''' Counts events per string key (Java <c>StringCounter</c>).
+    ''' </summary>
     Public Class StringCounter
         Private counter As IDictionary(Of String, ComparableAtomicLong) = New ConcurrentDictionary(Of String, ComparableAtomicLong)()
-        Private totals As New AtomicLong(0)
+        Private totals As Long = 0
 
         Public Sub New()
 
@@ -42,7 +46,7 @@ Namespace org.nd4vb.linalg.profiler.data
                 counter(key) = New ComparableAtomicLong(0)
             Next key
 
-            totals.set(0)
+            Interlocked.Exchange(totals, 0)
         End Sub
 
         Public Overridable Function incrementCount(ByVal key As String) As Long
@@ -50,9 +54,7 @@ Namespace org.nd4vb.linalg.profiler.data
                 counter(key) = New ComparableAtomicLong(0)
             End If
 
-            ArrayUtil.allUnique(New Integer() {})
-
-            totals.incrementAndGet()
+            Interlocked.Increment(totals)
 
             Return counter(key).incrementAndGet()
         End Function
@@ -66,7 +68,7 @@ Namespace org.nd4vb.linalg.profiler.data
         End Function
 
         Public Overridable Sub totalsIncrement()
-            totals.incrementAndGet()
+            Interlocked.Increment(totals)
         End Sub
 
         Public Overridable Function asString() As String
@@ -76,7 +78,7 @@ Namespace org.nd4vb.linalg.profiler.data
 
             For Each key As String In sortedCounter.Keys
                 Dim currentCnt As Long = sortedCounter(key).get()
-                Dim totalCnt As Long = totals.get()
+                Dim totalCnt As Long = Interlocked.Read(totals)
 
                 If totalCnt = 0 Then
                     Continue For
@@ -84,7 +86,7 @@ Namespace org.nd4vb.linalg.profiler.data
 
                 Dim perc As Single = currentCnt * 100 \ totalCnt
 
-                builder.Append(key).Append("  >>> [").Append(currentCnt).Append("]").Append(" perc: [").Append(perc).Append("]").Append(vbLf)
+                builder.Append(key).Append("  >>> [").Append(currentCnt).Append("]").Append(" perc: [").Append(Arrays.JavaFloatToString(perc)).Append("]").Append(vbLf)
             Next key
 
             Return builder.ToString()

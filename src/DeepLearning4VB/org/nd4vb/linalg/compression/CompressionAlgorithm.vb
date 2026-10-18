@@ -1,4 +1,5 @@
-Imports System.Collections.Generic
+Imports System
+Imports System.Runtime.CompilerServices
 
 '
 ' *  ******************************************************************************
@@ -22,114 +23,88 @@ Imports System.Collections.Generic
 
 Namespace org.nd4vb.linalg.compression
 
-    Public NotInheritable Class CompressionAlgorithm
-        Public Shared ReadOnly FLOAT8 As New CompressionAlgorithm("FLOAT8", InnerEnum.FLOAT8)
-        Public Shared ReadOnly FLOAT16 As New CompressionAlgorithm("FLOAT16", InnerEnum.FLOAT16)
-        Public Shared ReadOnly GZIP As New CompressionAlgorithm("GZIP", InnerEnum.GZIP)
-        Public Shared ReadOnly INT8 As New CompressionAlgorithm("INT8", InnerEnum.INT8)
-        Public Shared ReadOnly INT16 As New CompressionAlgorithm("INT16", InnerEnum.INT16)
-        Public Shared ReadOnly NOOP As New CompressionAlgorithm("NOOP", InnerEnum.NOOP)
-        Public Shared ReadOnly UNIT8 As New CompressionAlgorithm("UNIT8", InnerEnum.UNIT8)
-        Public Shared ReadOnly CUSTOM As New CompressionAlgorithm("CUSTOM", InnerEnum.CUSTOM)
+    ''' <summary>
+    ''' Compression algorithm enum. The values are the Java ordinals; Java's static methods are
+    ''' <see cref="CompressionAlgorithmExtensions.CompressionAlgorithmFromString"/>,
+    ''' <see cref="CompressionAlgorithmExtensions.CompressionAlgorithmValues"/> and
+    ''' <see cref="CompressionAlgorithmExtensions.CompressionAlgorithmValueOf"/>.
+    ''' </summary>
+    Public Enum CompressionAlgorithm
+        FLOAT8 = 0
+        FLOAT16 = 1
+        GZIP = 2
+        INT8 = 3
+        INT16 = 4
+        NOOP = 5
+        UNIT8 = 6
+        CUSTOM = 7
+    End Enum
 
-        Private Shared ReadOnly valueList As New List(Of CompressionAlgorithm)()
+    ''' <summary>The Java static methods of the <c>CompressionAlgorithm</c> enum.</summary>
+    Public Module CompressionAlgorithmExtensions
 
-        Shared Sub New()
-            valueList.Add(FLOAT8)
-            valueList.Add(FLOAT16)
-            valueList.Add(GZIP)
-            valueList.Add(INT8)
-            valueList.Add(INT16)
-            valueList.Add(NOOP)
-            valueList.Add(UNIT8)
-            valueList.Add(CUSTOM)
-        End Sub
-
-        Public Enum InnerEnum
-            FLOAT8
-            FLOAT16
-            GZIP
-            INT8
-            INT16
-            NOOP
-            UNIT8
-            CUSTOM
-        End Enum
-
-        Public ReadOnly innerEnumValue As InnerEnum
-        Private ReadOnly nameValue As String
-        Private ReadOnly ordinalValue As Integer
-        Private Shared nextOrdinal As Integer = 0
-
-        Private Sub New(ByVal name As String, ByVal thisInnerEnumValue As InnerEnum)
-            nameValue = name
-            ordinalValue = nextOrdinal
-            nextOrdinal += 1
-            innerEnumValue = thisInnerEnumValue
-        End Sub
+        Private ReadOnly AllValues As CompressionAlgorithm() = {CompressionAlgorithm.FLOAT8, CompressionAlgorithm.FLOAT16, CompressionAlgorithm.GZIP, CompressionAlgorithm.INT8, CompressionAlgorithm.INT16, CompressionAlgorithm.NOOP, CompressionAlgorithm.UNIT8, CompressionAlgorithm.CUSTOM}
 
         ''' <summary>
-        ''' Return the appropriate compression algorithm
-        ''' from the given string </summary>
+        ''' Return the appropriate compression algorithm from the given string (Java <c>fromString</c>; case-insensitive).
+        ''' Like Java, "FP16" maps to <c>FLOAT8</c> and "FP32" to <c>FLOAT16</c>.
+        ''' </summary>
         ''' <param name="algorithm"> the algorithm to return </param>
-        ''' <returns> the compression algorithm from the given string
-        ''' or an IllegalArgumentException if the algorithm is invalid </returns>
-        Public Shared Function fromString(ByVal algorithm As String) As CompressionAlgorithm
-            Select Case algorithm.ToUpper()
+        ''' <returns> the compression algorithm from the given string </returns>
+        ''' <exception cref="ArgumentException"> if the algorithm is invalid </exception>
+        Public Function CompressionAlgorithmFromString(ByVal algorithm As String) As CompressionAlgorithm
+            If algorithm Is Nothing Then Throw New ArgumentNullException(NameOf(algorithm))
+            Select Case algorithm.ToUpperInvariant()
                 Case "FP16"
-                    Return FLOAT8
+                    Return CompressionAlgorithm.FLOAT8
                 Case "FP32"
-                    Return FLOAT16
+                    Return CompressionAlgorithm.FLOAT16
                 Case "FLOAT8"
-                    Return FLOAT8
+                    Return CompressionAlgorithm.FLOAT8
                 Case "FLOAT16"
-                    Return FLOAT16
+                    Return CompressionAlgorithm.FLOAT16
                 Case "GZIP"
-                    Return GZIP
+                    Return CompressionAlgorithm.GZIP
                 Case "INT8"
-                    Return INT8
+                    Return CompressionAlgorithm.INT8
                 Case "INT16"
-                    Return INT16
+                    Return CompressionAlgorithm.INT16
                 Case "NOOP"
-                    Return NOOP
+                    Return CompressionAlgorithm.NOOP
                 Case "UNIT8"
-                    Return UNIT8
+                    Return CompressionAlgorithm.UNIT8
                 Case "CUSTOM"
-                    Return CUSTOM
+                    Return CompressionAlgorithm.CUSTOM
                 Case Else
-                    Throw New System.ArgumentException("Wrong algorithm " & algorithm)
+                    Throw New ArgumentException("Wrong algorithm " & algorithm)
             End Select
         End Function
 
-
-        Public Shared Function values() As CompressionAlgorithm()
-            Return valueList.ToArray()
+        ''' <summary>All values in declaration order (Java <c>values()</c>).</summary>
+        Public Function CompressionAlgorithmValues() As CompressionAlgorithm()
+            Return DirectCast(AllValues.Clone(), CompressionAlgorithm())
         End Function
 
-        Public Function ordinal() As Integer
-            Return ordinalValue
-        End Function
-
-        Public Overrides Function ToString() As String
-            Return nameValue
-        End Function
-
-        Public Shared Operator =(ByVal one As CompressionAlgorithm, ByVal two As CompressionAlgorithm) As Boolean
-            Return one.innerEnumValue = two.innerEnumValue
-        End Operator
-
-        Public Shared Operator <>(ByVal one As CompressionAlgorithm, ByVal two As CompressionAlgorithm) As Boolean
-            Return one.innerEnumValue <> two.innerEnumValue
-        End Operator
-
-        Public Shared Function valueOf(ByVal name As String) As CompressionAlgorithm
-            For Each enumInstance As CompressionAlgorithm In CompressionAlgorithm.valueList
-                If enumInstance.nameValue = name Then
-                    Return enumInstance
+        ''' <summary>
+        ''' The value with exactly this name (Java <c>valueOf</c>; case-sensitive, numeric strings are rejected).
+        ''' </summary>
+        ''' <exception cref="ArgumentException"> if there is no such value </exception>
+        Public Function CompressionAlgorithmValueOf(ByVal name As String) As CompressionAlgorithm
+            If name Is Nothing Then Throw New ArgumentNullException(NameOf(name))
+            For Each v As CompressionAlgorithm In AllValues
+                If String.Equals(v.ToString(), name, StringComparison.Ordinal) Then
+                    Return v
                 End If
-            Next
-            Throw New System.ArgumentException(name)
+            Next v
+            Throw New ArgumentException("No enum constant org.nd4j.linalg.compression.CompressionAlgorithm." & name)
         End Function
-    End Class
+
+        ''' <summary>The Java ordinal.</summary>
+        <Extension>
+        Public Function ordinal(ByVal algorithm As CompressionAlgorithm) As Integer
+            Return CInt(algorithm)
+        End Function
+
+    End Module
 
 End Namespace

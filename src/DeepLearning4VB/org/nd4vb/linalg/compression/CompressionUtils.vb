@@ -22,10 +22,9 @@ Imports DataTypeEx = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataTypeEx
 
 Namespace org.nd4vb.linalg.compression
 
+    ''' <summary>Helpers that tell whether a conversion compresses or decompresses (Java <c>CompressionUtils</c>).</summary>
     Public Class CompressionUtils
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public static boolean goingToDecompress(@NonNull DataTypeEx from, @NonNull DataTypeEx to)
         Public Shared Function goingToDecompress(ByVal from As DataTypeEx, ByVal [to] As DataTypeEx) As Boolean
             ' TODO: eventually we want FLOAT16 here
             If [to].Equals(DataTypeEx.FLOAT) OrElse [to].Equals(DataTypeEx.DOUBLE) Then
@@ -35,8 +34,6 @@ Namespace org.nd4vb.linalg.compression
             Return False
         End Function
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public static boolean goingToCompress(@NonNull DataTypeEx from, @NonNull DataTypeEx to)
         Public Shared Function goingToCompress(ByVal from As DataTypeEx, ByVal [to] As DataTypeEx) As Boolean
             If Not goingToDecompress(from, [to]) AndAlso goingToDecompress([to], from) Then
                 Return True

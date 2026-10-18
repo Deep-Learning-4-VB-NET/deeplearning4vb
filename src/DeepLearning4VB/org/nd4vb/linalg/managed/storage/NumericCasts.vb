@@ -4,6 +4,7 @@ Imports System
 Imports System.Globalization
 Imports System.Runtime.InteropServices
 Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.storage
 
@@ -57,7 +58,7 @@ Namespace org.nd4vb.linalg.managed.storage
             If value <= -TwoPow63 Then
                 Return Long.MinValue
             End If
-            Return CLng(Math.Truncate(value))
+            Return CLng(SysMath.Truncate(value))
         End Function
 
         ''' <summary>Java's <c>(int) value</c>: truncates toward zero, saturates, NaN gives 0.</summary>
@@ -71,7 +72,7 @@ Namespace org.nd4vb.linalg.managed.storage
             If value <= -TwoPow31 Then
                 Return Integer.MinValue
             End If
-            Return CInt(Math.Truncate(value))
+            Return CInt(SysMath.Truncate(value))
         End Function
 
         ''' <summary>Java's <c>(short) value</c>: <c>(int)</c> first, then the low 16 bits.</summary>
@@ -178,10 +179,10 @@ Namespace org.nd4vb.linalg.managed.storage
 
         ''' <summary>Converts a single to a half-precision bit pattern (see the class remarks).</summary>
         Public Shared Function SingleToHalf(ByVal value As Single) As UShort
-            Dim magnitude As Single = Math.Abs(value)
+            Dim magnitude As Single = SysMath.Abs(value)
             If magnitude >= ToHalfTinyThreshold AndAlso magnitude < HalfMinNormal Then
                 ' subnormal half: mantissa = |value| / 2^-24, truncated (exact multiplication by 2^24)
-                Dim mantissa As Integer = CInt(Math.Truncate(magnitude * 16777216.0F))
+                Dim mantissa As Integer = CInt(SysMath.Truncate(magnitude * 16777216.0F))
                 Dim sign As Integer = If(value < 0, &H8000, 0)
                 Return CUShort(sign Or mantissa)
             End If

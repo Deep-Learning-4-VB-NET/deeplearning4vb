@@ -190,6 +190,93 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         <TestMethod>
+        Public Sub IntegerOpsWrapAroundAndCastsSaturate()
+            Dim add As PairwiseFunction = Function(a As Double, b As Double, e As Double()) a + b
+            ' BYTE + BYTE -> BYTE wraps like Java's (byte) arithmetic
+            Dim bx As KernelTestArray = KernelTestArray.FromValues(StorageType.BYTE, New Long() {3}, "c"c, New Double() {127, -128, 100}, 1, 2)
+            Dim by As KernelTestArray = KernelTestArray.FromValues(StorageType.BYTE, New Long() {3}, "c"c, New Double() {1, -1, 27})
+            Dim bz As KernelTestArray = KernelTestArray.Create(StorageType.BYTE, New Long() {3}, "f"c, 2)
+            ElementWiseKernels.Pairwise(bx.Storage, bx.Offset, bx.Info, by.Storage, by.Offset, by.Info, bz.Storage, bz.Offset, bz.Info, add, Nothing)
+            bz.AssertValues(New Double() {-128, 127, 127})
+            bz.AssertOutsideUntouched()
+            ' UBYTE + UBYTE -> UBYTE: 250 + 10 = 4 (mod 256)
+            Dim ux As KernelTestArray = KernelTestArray.FromValues(StorageType.UBYTE, New Long() {2}, "c"c, New Double() {250, 255})
+            Dim uz As KernelTestArray = KernelTestArray.Create(StorageType.UBYTE, New Long() {2}, "c"c)
+            ElementWiseKernels.Scalar(ux.Storage, ux.Offset, ux.Info, 10.0, uz.Storage, uz.Offset, uz.Info, add, Nothing)
+            uz.AssertValues(New Double() {4, 9})
+            ' INT: MaxValue + 1 = MinValue; -MinValue = MinValue; SHORT 20000 * 2 = -25536
+            Dim ix As KernelTestArray = KernelTestArray.FromValues(StorageType.INT, New Long() {2, 2}, "f"c, New Double() {Integer.MaxValue, Integer.MinValue, 5, -7}, 1)
+            Dim iz As KernelTestArray = KernelTestArray.Create(StorageType.INT, New Long() {2, 2}, "c"c)
+            ElementWiseKernels.Scalar(ix.Storage, ix.Offset, ix.Info, 1.0, iz.Storage, iz.Offset, iz.Info, add, Nothing)
+            iz.AssertValues(New Double() {Integer.MinValue, Integer.MinValue + 1.0, 6, -6})
+            ElementWiseKernels.Transform(ix.Storage, ix.Offset, ix.Info, iz.Storage, iz.Offset, iz.Info, Function(v As Double, e As Double()) -v, Nothing)
+            iz.AssertValues(New Double() {-Integer.MaxValue, Integer.MinValue, -5, 7})
+            Dim sx As KernelTestArray = KernelTestArray.FromValues(StorageType.SHORT, New Long() {2}, "c"c, New Double() {20000, -3})
+            Dim sz As KernelTestArray = KernelTestArray.Create(StorageType.SHORT, New Long() {2}, "c"c)
+            ElementWiseKernels.Scalar(sx.Storage, sx.Offset, sx.Info, 2.0, sz.Storage, sz.Offset, sz.Info, Function(a As Double, b As Double, e As Double()) a * b, Nothing)
+            sz.AssertValues(New Double() {-25536, -6})
+            ' INT result into a LONG target keeps the exact value; into UINT32 it wraps modulo 2^32
+            Dim lz As KernelTestArray = KernelTestArray.Create(StorageType.LONG, New Long() {2, 2}, "c"c)
+            ElementWiseKernels.Scalar(ix.Storage, ix.Offset, ix.Info, 1.0, lz.Storage, lz.Offset, lz.Info, add, Nothing)
+            lz.AssertValues(New Double() {2147483648.0, -2147483647.0, 6, -6})
+            Dim u32 As KernelTestArray = KernelTestArray.Create(StorageType.UINT32, New Long() {2, 2}, "c"c)
+            ElementWiseKernels.Scalar(ix.Storage, ix.Offset, ix.Info, -6.0, u32.Storage, u32.Offset, u32.Info, add, Nothing)
+            u32.AssertValues(New Double() {2147483641.0, 2147483642.0, 4294967295.0, 4294967283.0})
+            ' with a floating-point operand the store is a cast and saturates, as Java's (int) cast does
+            Dim fx As KernelTestArray = KernelTestArray.FromValues(StorageType.DOUBLE, New Long() {2}, "c"c, New Double() {2147483647.0, -3.0E+10})
+            Dim one As KernelTestArray = KernelTestArray.FromValues(StorageType.INT, New Long() {2}, "c"c, New Double() {1, -1})
+            Dim mz As KernelTestArray = KernelTestArray.Create(StorageType.INT, New Long() {2}, "c"c)
+            ElementWiseKernels.Pairwise(fx.Storage, fx.Offset, fx.Info, one.Storage, one.Offset, one.Info, mz.Storage, mz.Offset, mz.Info, add, Nothing)
+            mz.AssertValues(New Double() {Integer.MaxValue, Integer.MinValue})
+            ' integer division by zero gives an infinite double, which saturates
+            Dim dz As KernelTestArray = KernelTestArray.Create(StorageType.INT, New Long() {2}, "c"c)
+            ElementWiseKernels.Scalar(one.Storage, one.Offset, one.Info, 0.0, dz.Storage, dz.Offset, dz.Info, Function(a As Double, b As Double, e As Double()) a / b, Nothing)
+            dz.AssertValues(New Double() {Integer.MaxValue, Integer.MinValue})
+            ' broadcasting uses the same rule
+            Dim row As KernelTestArray = KernelTestArray.FromValues(StorageType.BYTE, New Long() {2}, "c"c, New Double() {1, 100})
+            Dim mat As KernelTestArray = KernelTestArray.FromValues(StorageType.BYTE, New Long() {2, 2}, "c"c, New Double() {127, 27, -128, 28})
+            Dim bc As KernelTestArray = KernelTestArray.Create(StorageType.BYTE, New Long() {2, 2}, "c"c)
+            BroadcastKernels.BroadcastAlongDimensions(mat.Storage, mat.Offset, mat.Info, row.Storage, row.Offset, row.Info, bc.Storage, bc.Offset, bc.Info, New Integer() {1}, add, Nothing)
+            bc.AssertValues(New Double() {-128, 127, -127, -128})
+        End Sub
+
+        <TestMethod>
+        Public Sub CopyConvertsEveryTypePairOnStridedViews()
+            Dim edge As Double() = Global.DeepLearning4VB.Tests.org.nd4vb.linalg.managed.storage.ManagedStorageTest.EdgeValues
+            Dim values As Double() = New Double(edge.Length) {}
+            Array.Copy(edge, values, edge.Length)
+            values(edge.Length) = 42.0
+            Dim n As Integer = values.Length
+            Dim shape As Long() = {2, n \ 2}
+            Dim otherShape As Long() = {n \ 2, 2}
+            For Each st As StorageType In [Enum].GetValues(GetType(StorageType))
+                If st = StorageType.UTF8 Then
+                    Continue For
+                End If
+                Dim x As KernelTestArray = KernelTestArray.FromValues(st, shape, "f"c, values, 3, 2)
+                For Each dt As StorageType In [Enum].GetValues(GetType(StorageType))
+                    If dt = StorageType.UTF8 Then
+                        Continue For
+                    End If
+                    ' expected: the element rule applied to x's stored values
+                    Dim expected As ManagedStorage = ManagedStorage.Create(dt, n)
+                    For i As Integer = 0 To n - 1
+                        Global.DeepLearning4VB.Tests.org.nd4vb.linalg.managed.storage.ManagedStorageTest.ConvertByRule(x.Storage, x.Offset + ShapeInfoHelper.OffsetOf(x.Info, i), expected, i)
+                    Next
+                    For Each target In {(Dims:=shape, Order:="c"c, Offset:=1L, Spacing:=1L), (Dims:=shape, Order:="f"c, Offset:=0L, Spacing:=3L), (Dims:=otherShape, Order:="c"c, Offset:=2L, Spacing:=2L)}
+                        Dim z As KernelTestArray = KernelTestArray.Create(dt, target.Dims, target.Order, target.Offset, target.Spacing)
+                        ElementWiseKernels.Copy(x.Storage, x.Offset, x.Info, z.Storage, z.Offset, z.Info)
+                        Dim label As String = st.ToString() & " -> " & dt.ToString() & " into " & String.Join("x", target.Dims) & target.Order
+                        For i As Integer = 0 To n - 1
+                            Assert.AreEqual(expected.GetString(i), z.Storage.GetString(z.Offset + ShapeInfoHelper.OffsetOf(z.Info, i)), label & " element " & i)
+                        Next
+                        z.AssertOutsideUntouched()
+                    Next
+                Next
+            Next
+        End Sub
+
+        <TestMethod>
         Public Sub ArgumentValidation()
             Dim x As KernelTestArray = KernelTestArray.Sequence(StorageType.FLOAT, New Long() {2, 3}, "c"c)
             Dim z As KernelTestArray = KernelTestArray.Create(StorageType.FLOAT, New Long() {7}, "c"c)

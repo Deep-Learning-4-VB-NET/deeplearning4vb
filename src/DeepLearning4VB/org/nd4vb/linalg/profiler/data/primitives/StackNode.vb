@@ -24,19 +24,19 @@ Imports System.Text
 
 Namespace org.nd4vb.linalg.profiler.data.primitives
 
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class StackNode implements Comparable<StackNode>
+    ''' <summary>
+    ''' One node of a <see cref="StackTree"/>: a stack element and the elements called from it (Java <c>StackNode</c>).
+    ''' Nodes sort in descending order of their counter.
+    ''' </summary>
     Public Class StackNode
         Implements IComparable(Of StackNode)
 
         Private ReadOnly nodeURI As String
         Protected Friend entries As IDictionary(Of String, StackNode) = New Dictionary(Of String, StackNode)()
-        Protected Friend counter As New AtomicLong(0)
+        Protected Friend counter As New ComparableAtomicLong(0)
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public StackNode(@NonNull String uri)
         Public Sub New(ByVal uri As String)
+            If uri Is Nothing Then Throw New ArgumentNullException(NameOf(uri))
             Me.nodeURI = uri
         End Sub
 
@@ -46,6 +46,12 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
             End Get
         End Property
 
+        ''' <summary>Java <c>getNodes()</c>.</summary>
+        Public Overridable Function getNodes() As ICollection(Of StackNode)
+            Return Nodes
+        End Function
+
+        ''' <summary>Writes this node and its children to the console, indented by level.</summary>
         Public Overridable Sub traverse(ByVal ownLevel As Integer, ByVal displayCounts As Boolean)
             Dim builder As New StringBuilder()
 
@@ -66,18 +72,14 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
             Next node
         End Sub
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public void consume(@NonNull StackDescriptor descriptor, int lastLevel)
         Public Overridable Sub consume(ByVal descriptor As StackDescriptor, ByVal lastLevel As Integer)
             consume(descriptor, lastLevel, 1)
         End Sub
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public void consume(@NonNull StackDescriptor descriptor, int lastLevel, long delta)
         Public Overridable Sub consume(ByVal descriptor As StackDescriptor, ByVal lastLevel As Integer, ByVal delta As Long)
+            If descriptor Is Nothing Then Throw New ArgumentNullException(NameOf(descriptor))
             Dim gotEntry As Boolean = False
-            Dim e As Integer = 0
-            Do While e < descriptor.size()
+            For e As Integer = 0 To descriptor.size() - 1
                 Dim entryName As String = descriptor.getElementName(e)
 
                 ' we look for current entry first
@@ -93,15 +95,15 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
                     End If
 
                     entries(entryName).consume(descriptor, e)
-                    Exit Do
+                    Exit For
                 End If
-                e += 1
-            Loop
+            Next e
         End Sub
 
         Public Overridable Function CompareTo(ByVal o As StackNode) As Integer Implements IComparable(Of StackNode).CompareTo
-            Return Long.compare(o.counter.get(), Me.counter.get())
+            Return o.counter.get().CompareTo(Me.counter.get())
         End Function
+
     End Class
 
 End Namespace

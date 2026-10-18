@@ -1,7 +1,7 @@
 Imports System
+Imports System.IO
 Imports DataBuffer = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataBuffer
 Imports DataType = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
-
 '
 ' *  ******************************************************************************
 ' *  *
@@ -24,9 +24,16 @@ Imports DataType = DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataType
 
 Namespace org.nd4vb.linalg.compression
 
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Data public class CompressionDescriptor implements Cloneable, java.io.Serializable
+    ''' <summary>
+    ''' Describes a compressed buffer: compression type and algorithm, lengths, element count and size, and the original
+    ''' data type (Java <c>CompressionDescriptor</c>). Lombok's <c>@Data</c> members are written out.
+    ''' <para>
+    ''' Java's <c>ByteBuffer</c> becomes a <c>Byte()</c>: <see cref="toByteBuffer"/> returns the 44 bytes Java wrote in
+    ''' native order (always little-endian on the platforms .NET runs on: two Int32 ordinals, four Int64 sizes and the
+    ''' Int32 data-type ordinal), and <see cref="fromByteBuffer(Byte(), Integer)"/> reads them from an array and offset.
+    ''' Like Java, <see cref="COMPRESSION_BYTE_BUFFER_LENGTH"/> says 40.
+    ''' </para>
+    ''' </summary>
     <Serializable>
     Public Class CompressionDescriptor
         Implements ICloneable
@@ -43,7 +50,6 @@ Namespace org.nd4vb.linalg.compression
         Public Const COMPRESSION_BYTE_BUFFER_LENGTH As Integer = 40
 
         Public Sub New()
-
         End Sub
 
         ''' <summary>
@@ -80,65 +86,127 @@ Namespace org.nd4vb.linalg.compression
             Me.compressionType = compressor.CompressionType
         End Sub
 
-
         ''' <summary>
-        ''' Instantiate a compression descriptor from
-        ''' the given bytebuffer </summary>
-        ''' <param name="byteBuffer"> the bytebuffer to instantiate
-        '''                   the descriptor from </param>
-        ''' <returns> the instantiated descriptor based on the given
-        ''' bytebuffer </returns>
-        Public Shared Function fromByteBuffer(ByVal byteBuffer As ByteBuffer) As CompressionDescriptor
-'JAVA TO VB CONVERTER NOTE: The variable compressionDescriptor was renamed since it may cause conflicts with calls to static members of the user-defined type with this name:
-            Dim compressionDescriptor_Conflict As New CompressionDescriptor()
-            'compression opType
-            Dim compressionTypeOrdinal As Integer = byteBuffer.getInt()
-            Dim compressionType As CompressionType = System.Enum.GetValues(GetType(CompressionType))(compressionTypeOrdinal)
-            compressionDescriptor_Conflict.setCompressionType(compressionType)
+        ''' Instantiate a compression descriptor from the bytes written by <see cref="toByteBuffer"/>.
+        ''' </summary>
+        ''' <param name="byteBuffer"> the bytes to read </param>
+        ''' <param name="offset"> the position of the first byte </param>
+        ''' <returns> the instantiated descriptor </returns>
+        Public Shared Function fromByteBuffer(ByVal byteBuffer() As Byte, ByVal offset As Integer) As CompressionDescriptor
+            If byteBuffer Is Nothing Then Throw New ArgumentNullException(NameOf(byteBuffer))
+            Using reader As New BinaryReader(New MemoryStream(byteBuffer, offset, byteBuffer.Length - offset, False))
+                Dim descriptor As New CompressionDescriptor()
+                'compression opType
+                Dim compressionTypeOrdinal As Integer = reader.ReadInt32()
+                If compressionTypeOrdinal < 0 OrElse compressionTypeOrdinal > 1 Then
+                    Throw New IndexOutOfRangeException("Index " & compressionTypeOrdinal & " out of bounds for length 2")
+                End If
+                descriptor.setCompressionType(CType(compressionTypeOrdinal, CompressionType))
 
-            'compression algo
-            Dim compressionAlgoOrdinal As Integer = byteBuffer.getInt()
-            Dim compressionAlgorithm As CompressionAlgorithm = CompressionAlgorithm.values()(compressionAlgoOrdinal)
-            compressionDescriptor_Conflict.setCompressionAlgorithm(compressionAlgorithm.ToString())
-            'from here everything is longs
-            compressionDescriptor_Conflict.setOriginalLength(byteBuffer.getLong())
-            compressionDescriptor_Conflict.setCompressedLength(byteBuffer.getLong())
-            compressionDescriptor_Conflict.setNumberOfElements(byteBuffer.getLong())
-            compressionDescriptor_Conflict.setOriginalElementSize(byteBuffer.getLong())
-            compressionDescriptor_Conflict.setOriginalDataType(DataType.values()(byteBuffer.getInt()))
-            Return compressionDescriptor_Conflict
+                'compression algo
+                Dim compressionAlgoOrdinal As Integer = reader.ReadInt32()
+                Dim algorithm As CompressionAlgorithm = CompressionAlgorithmValues()(compressionAlgoOrdinal)
+                descriptor.setCompressionAlgorithm(algorithm.ToString())
+                'from here everything is longs
+                descriptor.setOriginalLength(reader.ReadInt64())
+                descriptor.setCompressedLength(reader.ReadInt64())
+                descriptor.setNumberOfElements(reader.ReadInt64())
+                descriptor.setOriginalElementSize(reader.ReadInt64())
+                descriptor.setOriginalDataType(Global.DeepLearning4VB.org.nd4vb.linalg.api.buffer.DataTypeExtensions.DataTypeValues()(reader.ReadInt32()))
+                Return descriptor
+            End Using
+        End Function
+
+        ''' <summary>Reads a descriptor from the start of <paramref name="byteBuffer"/>.</summary>
+        Public Shared Function fromByteBuffer(ByVal byteBuffer() As Byte) As CompressionDescriptor
+            Return fromByteBuffer(byteBuffer, 0)
         End Function
 
         ''' <summary>
-        ''' Return a direct allocated
-        ''' bytebuffer from the compression codec.
-        ''' The size of the bytebuffer is calculated to be:
-        ''' 40: 8 + 32
-        ''' two ints representing their enum values
-        ''' for the compression algorithm and opType
-        '''
+        ''' Return the descriptor as bytes. The size is calculated to be:
+        ''' 44: 12 + 32
+        ''' three ints representing the enum values
+        ''' for the compression opType, the compression algorithm and the original data type
         ''' and 4 longs for the compressed and
         ''' original sizes </summary>
-        ''' <returns> the bytebuffer described above </returns>
-        Public Overridable Function toByteBuffer() As ByteBuffer
+        ''' <returns> the bytes described above </returns>
+        Public Overridable Function toByteBuffer() As Byte()
             '3 ints  at 4 bytes a piece, this includes the compression algorithm
             'that we convert to enum
             Dim enumSize As Integer = 3 * 4
             '4 longs at 8 bytes a piece
             Dim sizesLength As Integer = 4 * 8
-            Dim directAlloc As ByteBuffer = ByteBuffer.allocateDirect(enumSize + sizesLength).order(ByteOrder.nativeOrder())
-            directAlloc.putInt(compressionType.ordinal())
-            directAlloc.putInt(CompressionAlgorithm.valueOf(compressionAlgorithm).ordinal())
-            directAlloc.putLong(originalLength)
-            directAlloc.putLong(compressedLength)
-            directAlloc.putLong(numberOfElements)
-            directAlloc.putLong(originalElementSize)
-            directAlloc.putInt(originalDataType.ordinal())
-            CType(directAlloc, Buffer).rewind()
-            Return directAlloc
+            Using stream As New MemoryStream(enumSize + sizesLength)
+                Using writer As New BinaryWriter(stream)
+                    writer.Write(CInt(compressionType))
+                    writer.Write(CompressionAlgorithmValueOf(compressionAlgorithm).ordinal())
+                    writer.Write(originalLength)
+                    writer.Write(compressedLength)
+                    writer.Write(numberOfElements)
+                    writer.Write(originalElementSize)
+                    writer.Write(CInt(originalDataType))
+                End Using
+                Return stream.ToArray()
+            End Using
         End Function
 
-        Public Overrides Function clone() As CompressionDescriptor
+        Public Overridable Function getCompressionType() As CompressionType
+            Return compressionType
+        End Function
+
+        Public Overridable Sub setCompressionType(ByVal compressionType As CompressionType)
+            Me.compressionType = compressionType
+        End Sub
+
+        Public Overridable Function getCompressionAlgorithm() As String
+            Return compressionAlgorithm
+        End Function
+
+        Public Overridable Sub setCompressionAlgorithm(ByVal compressionAlgorithm As String)
+            Me.compressionAlgorithm = compressionAlgorithm
+        End Sub
+
+        Public Overridable Function getOriginalLength() As Long
+            Return originalLength
+        End Function
+
+        Public Overridable Sub setOriginalLength(ByVal originalLength As Long)
+            Me.originalLength = originalLength
+        End Sub
+
+        Public Overridable Function getCompressedLength() As Long
+            Return compressedLength
+        End Function
+
+        Public Overridable Sub setCompressedLength(ByVal compressedLength As Long)
+            Me.compressedLength = compressedLength
+        End Sub
+
+        Public Overridable Function getNumberOfElements() As Long
+            Return numberOfElements
+        End Function
+
+        Public Overridable Sub setNumberOfElements(ByVal numberOfElements As Long)
+            Me.numberOfElements = numberOfElements
+        End Sub
+
+        Public Overridable Function getOriginalElementSize() As Long
+            Return originalElementSize
+        End Function
+
+        Public Overridable Sub setOriginalElementSize(ByVal originalElementSize As Long)
+            Me.originalElementSize = originalElementSize
+        End Sub
+
+        Public Overridable Function getOriginalDataType() As DataType
+            Return originalDataType
+        End Function
+
+        Public Overridable Sub setOriginalDataType(ByVal originalDataType As DataType)
+            Me.originalDataType = originalDataType
+        End Sub
+
+        Public Overridable Function clone() As CompressionDescriptor
             Dim descriptor As New CompressionDescriptor()
             descriptor.compressionType = Me.compressionType
             descriptor.compressionAlgorithm = Me.compressionAlgorithm
@@ -150,6 +218,34 @@ Namespace org.nd4vb.linalg.compression
 
             Return descriptor
         End Function
+
+        Private Function ICloneable_Clone() As Object Implements ICloneable.Clone
+            Return clone()
+        End Function
+
+        Public Overrides Function Equals(ByVal obj As Object) As Boolean
+            If obj Is Me Then Return True
+            Dim o As CompressionDescriptor = TryCast(obj, CompressionDescriptor)
+            If o Is Nothing OrElse CObj(o).GetType() IsNot CObj(Me).GetType() Then Return False
+            Return compressionType.Equals(o.compressionType) AndAlso Object.Equals(compressionAlgorithm, o.compressionAlgorithm) AndAlso originalLength.Equals(o.originalLength) AndAlso compressedLength.Equals(o.compressedLength) AndAlso numberOfElements.Equals(o.numberOfElements) AndAlso originalElementSize.Equals(o.originalElementSize) AndAlso originalDataType.Equals(o.originalDataType)
+        End Function
+
+        Public Overrides Function GetHashCode() As Integer
+            Dim h As Integer = 1
+            h = h * 59 + compressionType.GetHashCode()
+            h = h * 59 + If(compressionAlgorithm Is Nothing, 43, compressionAlgorithm.GetHashCode())
+            h = h * 59 + originalLength.GetHashCode()
+            h = h * 59 + compressedLength.GetHashCode()
+            h = h * 59 + numberOfElements.GetHashCode()
+            h = h * 59 + originalElementSize.GetHashCode()
+            h = h * 59 + originalDataType.GetHashCode()
+            Return h
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return "CompressionDescriptor(" & "compressionType=" & compressionType.ToString() & ", compressionAlgorithm=" & Objects.toString(compressionAlgorithm) & ", originalLength=" & originalLength.ToString() & ", compressedLength=" & compressedLength.ToString() & ", numberOfElements=" & numberOfElements.ToString() & ", originalElementSize=" & originalElementSize.ToString() & ", originalDataType=" & originalDataType.ToString() & ")"
+        End Function
+
     End Class
 
 End Namespace

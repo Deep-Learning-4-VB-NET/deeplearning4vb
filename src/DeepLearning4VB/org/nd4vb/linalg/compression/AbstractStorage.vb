@@ -22,7 +22,7 @@ Imports INDArray = DeepLearning4VB.org.nd4vb.linalg.api.ndarray.INDArray
 
 Namespace org.nd4vb.linalg.compression
 
-    Public Interface AbstractStorage(Of T As Object)
+    Public Interface AbstractStorage(Of T)
 
         ''' <summary>
         ''' Store object into storage
@@ -55,7 +55,7 @@ Namespace org.nd4vb.linalg.compression
         ''' Get object from the storage, by key
         ''' </summary>
         ''' <param name="key"> </param>
-        Function get(ByVal key As T) As INDArray
+        Function [get](ByVal key As T) As INDArray
 
         ''' <summary>
         ''' This method checks, if storage contains specified key

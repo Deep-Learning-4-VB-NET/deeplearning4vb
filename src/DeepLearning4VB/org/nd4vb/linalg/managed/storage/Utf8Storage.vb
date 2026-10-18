@@ -91,7 +91,7 @@ Namespace org.nd4vb.linalg.managed.storage
             Throw NoNumericAccess()
         End Function
 
-        Private Shared Function NoNumericAccess() As Exception
+        Private Shared Function NoNumericAccess() As System.Exception
             Return New NotSupportedException("UTF8 storage has no numeric access")
         End Function
 

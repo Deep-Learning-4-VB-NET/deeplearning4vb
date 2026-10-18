@@ -1,6 +1,7 @@
 ' DeepLearning4VB: reading and building ND4J shape-info arrays for the managed kernels.
 
 Imports System
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -106,12 +107,12 @@ Namespace org.nd4vb.linalg.managed.kernels
             If IsFOrder(order) Then
                 For d As Integer = 0 To r - 1
                     strides(d) = s
-                    s *= Math.Max(1L, shape(d))
+                    s *= SysMath.Max(1L, shape(d))
                 Next
             Else
                 For d As Integer = r - 1 To 0 Step -1
                     strides(d) = s
-                    s *= Math.Max(1L, shape(d))
+                    s *= SysMath.Max(1L, shape(d))
                 Next
             End If
             Return strides

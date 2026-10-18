@@ -3,6 +3,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports DeepLearning4VB.org.nd4vb.linalg.managed.storage
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -93,7 +94,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             If a Is Nothing OrElse b Is Nothing Then
                 Return False
             End If
-            Dim r As Integer = Math.Max(a.Length, b.Length)
+            Dim r As Integer = SysMath.Max(a.Length, b.Length)
             For i As Integer = 1 To r
                 Dim da As Long = If(i <= a.Length, a(a.Length - i), 1L)
                 Dim db As Long = If(i <= b.Length, b(b.Length - i), 1L)
@@ -116,7 +117,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             If b Is Nothing Then
                 Throw New ArgumentNullException(NameOf(b))
             End If
-            Dim r As Integer = Math.Max(a.Length, b.Length)
+            Dim r As Integer = SysMath.Max(a.Length, b.Length)
             Dim result As Long() = New Long(r - 1) {}
             For i As Integer = 1 To r
                 Dim da As Long = If(i <= a.Length, a(a.Length - i), 1L)

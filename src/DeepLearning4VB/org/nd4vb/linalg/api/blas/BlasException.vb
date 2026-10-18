@@ -22,6 +22,10 @@ Imports System
 
 Namespace org.nd4vb.linalg.api.blas
 
+    ''' <summary>
+    ''' A BLAS/LAPACK failure with the library's error code (Java <c>BlasException</c>, an <c>Error</c>; here a
+    ''' <see cref="System.Exception"/>). The message is <c>message &amp; ": " &amp; errorCode</c>, as in Java.
+    ''' </summary>
     Public Class BlasException
         Inherits System.Exception
 

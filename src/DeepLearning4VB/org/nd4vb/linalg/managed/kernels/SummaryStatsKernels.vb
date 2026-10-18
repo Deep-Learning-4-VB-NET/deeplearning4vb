@@ -3,6 +3,7 @@
 Imports System
 Imports System.Threading.Tasks
 Imports DeepLearning4VB.org.nd4vb.linalg.managed.storage
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -33,7 +34,7 @@ Namespace org.nd4vb.linalg.managed.kernels
 
         ''' <summary>Standard deviation of all elements of x (the square root of <see cref="Variance"/>).</summary>
         Public Shared Function StandardDeviation(ByVal x As ManagedStorage, ByVal xOffset As Long, ByVal xShapeInfo As Long(), ByVal biasCorrected As Boolean) As Double
-            Return Math.Sqrt(Variance(x, xOffset, xShapeInfo, biasCorrected))
+            Return SysMath.Sqrt(Variance(x, xOffset, xShapeInfo, biasCorrected))
         End Function
 
         ''' <summary>Variance (or standard deviation) of every tensor of x along <paramref name="dimensions"/> into the matching element of z.</summary>
@@ -71,7 +72,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             ReduceKernels.ForEachTad(numTads, tadLength,
                 Sub(t As Integer, parallelInside As Boolean)
                     Dim v As Double = Finish(Accumulate(x, plan, New Long() {xOffset + tadOffsets(t)}, tadLength, parallelInside), biasCorrected)
-                    z.SetDouble(zOffset + zOffsets(t), If(standardDeviation, Math.Sqrt(v), v))
+                    z.SetDouble(zOffset + zOffsets(t), If(standardDeviation, SysMath.Sqrt(v), v))
                 End Sub)
         End Sub
 

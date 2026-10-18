@@ -14,7 +14,10 @@ Namespace org.nd4vb.linalg.managed.kernels
     ''' logical index (see <see cref="ShapeInfoHelper"/>), so any strides, either order flag and
     ''' different shapes of equal length work. Storages may be of any numeric type and may differ: values
     ''' are read as doubles, the function is evaluated in double, and the result is stored with the
-    ''' target's conversion (Java casts for integers, "f() &lt;&gt; 0" for BOOL). FLOAT-to-FLOAT and
+    ''' target's conversion (Java casts for integers, "f() &lt;&gt; 0" for BOOL). When z and every input
+    ''' are integer storages the op is integer arithmetic, as in libnd4j: a result inside the 64-bit range
+    ''' wraps around to z's width (BYTE 127 + 1 gives -128, UBYTE 250 + 10 gives 4) instead of saturating;
+    ''' values are exact while they fit the 53-bit mantissa of a double. FLOAT-to-FLOAT and
     ''' DOUBLE-to-DOUBLE operands use typed loops.</para>
     ''' <para>x (or y) and z may be the same storage and view (in place). Overlapping but different views of
     ''' one storage give unspecified results, as in ND4J. Large operands are processed in parallel chunks
@@ -85,12 +88,13 @@ Namespace org.nd4vb.linalg.managed.kernels
                         Next
                     End Sub)
             Else
+                Dim wrap As Boolean = KernelUtil.IsIntegerOp(z, x)
                 plan.RunAll(
                     Sub(b As Long(), count As Integer)
                         Dim xs As ManagedStorage = x, zs As ManagedStorage = z, fn As TransformFunction = f, ea As Double() = extra
                         Dim xi As Long = b(0), zi As Long = b(1)
                         For j As Integer = 0 To count - 1
-                            zs.SetDouble(zi, fn(xs.GetDouble(xi), ea))
+                            KernelUtil.StoreResult(zs, zi, fn(xs.GetDouble(xi), ea), wrap)
                             xi += xInc
                             zi += zInc
                         Next
@@ -160,12 +164,13 @@ Namespace org.nd4vb.linalg.managed.kernels
                         Next
                     End Sub)
             Else
+                Dim wrap As Boolean = KernelUtil.IsIntegerOp(z, x)
                 plan.RunAll(
                     Sub(b As Long(), count As Integer)
                         Dim xs As ManagedStorage = x, zs As ManagedStorage = z, fn As PairwiseFunction = f, ea As Double() = extra, sv As Double = s
                         Dim xi As Long = b(0), zi As Long = b(1)
                         For j As Integer = 0 To count - 1
-                            zs.SetDouble(zi, fn(xs.GetDouble(xi), sv, ea))
+                            KernelUtil.StoreResult(zs, zi, fn(xs.GetDouble(xi), sv, ea), wrap)
                             xi += xInc
                             zi += zInc
                         Next
@@ -245,12 +250,13 @@ Namespace org.nd4vb.linalg.managed.kernels
                         Next
                     End Sub)
             Else
+                Dim wrap As Boolean = KernelUtil.IsIntegerOp(z, x, y)
                 plan.RunAll(
                     Sub(b As Long(), count As Integer)
                         Dim xs As ManagedStorage = x, ys As ManagedStorage = y, zs As ManagedStorage = z, fn As PairwiseFunction = f, ea As Double() = extra
                         Dim xi As Long = b(0), yi As Long = b(1), zi As Long = b(2)
                         For j As Integer = 0 To count - 1
-                            zs.SetDouble(zi, fn(xs.GetDouble(xi), ys.GetDouble(yi), ea))
+                            KernelUtil.StoreResult(zs, zi, fn(xs.GetDouble(xi), ys.GetDouble(yi), ea), wrap)
                             xi += xInc
                             yi += yInc
                             zi += zInc

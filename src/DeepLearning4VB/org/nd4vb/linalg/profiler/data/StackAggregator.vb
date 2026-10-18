@@ -1,4 +1,4 @@
-Imports System.Threading
+Imports System.Diagnostics
 Imports StackDescriptor = DeepLearning4VB.org.nd4vb.linalg.profiler.data.primitives.StackDescriptor
 Imports StackTree = DeepLearning4VB.org.nd4vb.linalg.profiler.data.primitives.StackTree
 
@@ -24,6 +24,9 @@ Imports StackTree = DeepLearning4VB.org.nd4vb.linalg.profiler.data.primitives.St
 
 Namespace org.nd4vb.linalg.profiler.data
 
+    ''' <summary>
+    ''' Counts events per call stack (Java <c>StackAggregator</c>); the stack is taken from <see cref="StackTrace"/>.
+    ''' </summary>
     Public Class StackAggregator
         Private tree As New StackTree()
 
@@ -48,7 +51,7 @@ Namespace org.nd4vb.linalg.profiler.data
         End Sub
 
         Public Overridable Sub incrementCount(ByVal time As Long)
-            Dim descriptor As New StackDescriptor(Thread.CurrentThread.getStackTrace())
+            Dim descriptor As New StackDescriptor(New StackTrace(False).GetFrames())
             tree.consumeStackTrace(descriptor, time)
         End Sub
 

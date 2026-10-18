@@ -180,6 +180,29 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         <TestMethod>
+        Public Sub IntegerReductionsWrapLikeIntegerArithmetic()
+            Dim x As KernelTestArray = KernelTestArray.FromValues(StorageType.INT, New Long() {2, 2}, "c"c, New Double() {Integer.MaxValue, 1, -5, 3})
+            Dim zi As KernelTestArray = KernelTestArray.Create(StorageType.INT, New Long() {2}, "c"c)
+            ReduceKernels.ReduceAlongDimensions(x.Storage, x.Offset, x.Info, zi.Storage, zi.Offset, zi.Info, New Integer() {1}, KernelTestUtil.SumDefinition(), Nothing)
+            zi.AssertValues(New Double() {Integer.MinValue, -2})
+            ' a wider or floating-point target receives the exact sum
+            Dim zl As KernelTestArray = KernelTestArray.Create(StorageType.LONG, New Long() {2}, "c"c)
+            ReduceKernels.ReduceAlongDimensions(x.Storage, x.Offset, x.Info, zl.Storage, zl.Offset, zl.Info, New Integer() {1}, KernelTestUtil.SumDefinition(), Nothing)
+            zl.AssertValues(New Double() {2147483648.0, -2})
+            Dim zd As KernelTestArray = KernelTestArray.Create(StorageType.DOUBLE, New Long() {2}, "c"c)
+            ReduceKernels.ReduceAlongDimensions(x.Storage, x.Offset, x.Info, zd.Storage, zd.Offset, zd.Info, New Integer() {1}, KernelTestUtil.SumDefinition(), Nothing)
+            zd.AssertValues(New Double() {2147483648.0, -2})
+            ' a floating-point input makes the store a saturating cast
+            Dim xf As KernelTestArray = KernelTestArray.FromValues(StorageType.DOUBLE, New Long() {2, 2}, "c"c, New Double() {Integer.MaxValue, 1, -5, 3})
+            ReduceKernels.ReduceAlongDimensions(xf.Storage, xf.Offset, xf.Info, zi.Storage, zi.Offset, zi.Info, New Integer() {1}, KernelTestUtil.SumDefinition(), Nothing)
+            zi.AssertValues(New Double() {Integer.MaxValue, -2})
+            ' reduce3 of integer operands into an integer target wraps too
+            Dim y As KernelTestArray = KernelTestArray.FromValues(StorageType.INT, New Long() {2, 2}, "f"c, New Double() {2, 1, 1, 1})
+            ReduceKernels.Reduce3AlongDimensions(x.Storage, x.Offset, x.Info, y.Storage, y.Offset, y.Info, zi.Storage, zi.Offset, zi.Info, New Integer() {1}, KernelTestUtil.DotDefinition(), Nothing)
+            zi.AssertValues(New Double() {-1, -2})
+        End Sub
+
+        <TestMethod>
         Public Sub Reduce3DotAlongEveryDimensionSet()
             Dim xv As Double() = TestValues(24)
             Dim yv As Double() = TestValues(24, 5)

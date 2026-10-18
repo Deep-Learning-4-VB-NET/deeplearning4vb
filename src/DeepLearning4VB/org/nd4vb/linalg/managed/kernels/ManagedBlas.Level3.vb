@@ -2,6 +2,7 @@
 ' The Single and Double sections are the same code for the two precisions; change both together.
 
 Imports System
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -41,6 +42,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemmColumnMajor(ByVal ta As Boolean, ByVal tb As Boolean, ByVal m As Integer, ByVal n As Integer, ByVal k As Integer, ByVal alpha As Single,
                                            ByVal a As Single(), ByVal aOffset As Long, ByVal lda As Integer,
                                            ByVal b As Single(), ByVal bOffset As Long, ByVal ldb As Integer,
@@ -84,18 +86,18 @@ Namespace org.nd4vb.linalg.managed.kernels
 #End If
             Const nr As Integer = 4
             Dim parallelize As Boolean = KernelOptions.MaxDegreeOfParallelism > 1 AndAlso work >= KernelOptions.GemmParallelThreshold
-            Dim kcMax As Integer = Math.Min(GemmKC, k)
-            Dim ncMax As Integer = Math.Min(GemmNC, n)
+            Dim kcMax As Integer = SysMath.Min(GemmKC, k)
+            Dim ncMax As Integer = SysMath.Min(GemmNC, n)
             Dim mSlivers As Integer = (m + mr - 1) \ mr
             Dim ap As Single() = New Single(mSlivers * mr * kcMax - 1) {}
             Dim bp As Single() = New Single(((ncMax + nr - 1) \ nr) * nr * kcMax - 1) {}
-            Dim tileRows As Integer = mr * Math.Max(1, GemmTileRows \ mr)
+            Dim tileRows As Integer = mr * SysMath.Max(1, GemmTileRows \ mr)
             Dim tileCols As Integer = GemmTileCols
             For pc As Integer = 0 To k - 1 Step GemmKC
-                Dim kc As Integer = Math.Min(GemmKC, k - pc)
+                Dim kc As Integer = SysMath.Min(GemmKC, k - pc)
                 PackA(ta, a, ao, lda, m, pc, kc, mr, ap, parallelize)
                 For jc As Integer = 0 To n - 1 Step GemmNC
-                    Dim nc As Integer = Math.Min(GemmNC, n - jc)
+                    Dim nc As Integer = SysMath.Min(GemmNC, n - jc)
                     PackB(tb, b, bo, ldb, jc, nc, pc, kc, nr, bp, parallelize)
                     Dim rowTiles As Integer = (m + tileRows - 1) \ tileRows
                     Dim colTiles As Integer = (nc + tileCols - 1) \ tileCols
@@ -107,14 +109,14 @@ Namespace org.nd4vb.linalg.managed.kernels
                         Sub(tIndex As Integer)
                             Dim r0 As Integer = (tIndex \ colTiles) * tileRows
                             Dim c0 As Integer = (tIndex Mod colTiles) * tileCols
-                            Dim r1 As Integer = Math.Min(r0 + tileRows, m)
-                            Dim c1 As Integer = Math.Min(c0 + tileCols, ncl)
+                            Dim r1 As Integer = SysMath.Min(r0 + tileRows, m)
+                            Dim c1 As Integer = SysMath.Min(c0 + tileCols, ncl)
                             For colStart As Integer = c0 To c1 - 1 Step nr
                                 Dim bIndex As Integer = (colStart \ nr) * nr * kcl
-                                Dim nrv As Integer = Math.Min(nr, ncl - colStart)
+                                Dim nrv As Integer = SysMath.Min(nr, ncl - colStart)
                                 For rowStart As Integer = r0 To r1 - 1 Step mr
                                     Dim aIndex As Integer = (rowStart \ mr) * mr * kcl
-                                    Dim mrv As Integer = Math.Min(mr, m - rowStart)
+                                    Dim mrv As Integer = SysMath.Min(mr, m - rowStart)
                                     Dim cIndex As Integer = co + rowStart + (jcl + colStart) * ldc
 #If NET Then
                                     If useSimd Then
@@ -137,6 +139,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Next
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemmNaive(ByVal ta As Boolean, ByVal tb As Boolean, ByVal m As Integer, ByVal n As Integer, ByVal k As Integer, ByVal alpha As Single,
                                      ByVal a As Single(), ByVal ao As Integer, ByVal lda As Integer,
                                      ByVal b As Single(), ByVal bo As Integer, ByVal ldb As Integer,
@@ -161,6 +164,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>Packs rows [0, m) and columns [pc, pc + kc) of op(A) into slivers of mr rows: sliver s holds, for each p, its mr values contiguously (zero padded).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub PackA(ByVal ta As Boolean, ByVal a As Single(), ByVal ao As Integer, ByVal lda As Integer, ByVal m As Integer,
                                  ByVal pc As Integer, ByVal kc As Integer, ByVal mr As Integer, ByVal ap As Single(), ByVal parallelize As Boolean)
             Dim slivers As Integer = (m + mr - 1) \ mr
@@ -168,7 +172,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 Sub(s As Integer)
                     Dim baseIndex As Integer = s * mr * kc
                     Dim i0 As Integer = s * mr
-                    Dim rowsHere As Integer = Math.Min(mr, m - i0)
+                    Dim rowsHere As Integer = SysMath.Min(mr, m - i0)
                     If ta Then
                         ' op(A)(i, p) = A(p, i): contiguous along p
                         For ii As Integer = 0 To mr - 1
@@ -211,6 +215,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>Packs rows [pc, pc + kc) and columns [jc, jc + nc) of op(B) into slivers of nr columns: sliver t holds, for each p, its nr values contiguously (zero padded).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub PackB(ByVal tb As Boolean, ByVal b As Single(), ByVal bo As Integer, ByVal ldb As Integer,
                                  ByVal jc As Integer, ByVal nc As Integer, ByVal pc As Integer, ByVal kc As Integer, ByVal nr As Integer,
                                  ByVal bp As Single(), ByVal parallelize As Boolean)
@@ -219,7 +224,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 Sub(t As Integer)
                     Dim baseIndex As Integer = t * nr * kc
                     Dim j0 As Integer = jc + t * nr
-                    Dim colsHere As Integer = Math.Min(nr, jc + nc - j0)
+                    Dim colsHere As Integer = SysMath.Min(nr, jc + nc - j0)
                     For jj As Integer = 0 To nr - 1
                         Dim dst As Integer = baseIndex + jj
                         If jj >= colsHere Then
@@ -255,6 +260,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>4 x 4 register-blocked micro-kernel: C(0..mrv, 0..nrv) += alpha * (A sliver x B sliver).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub MicroKernel4x4(ByVal ap As Single(), ByVal ai As Integer, ByVal bp As Single(), ByVal bi As Integer, ByVal kc As Integer,
                                           ByVal c As Single(), ByVal ci As Integer, ByVal ldc As Integer, ByVal alpha As Single,
                                           ByVal mrv As Integer, ByVal nrv As Integer)
@@ -322,6 +328,7 @@ Namespace org.nd4vb.linalg.managed.kernels
 
 #If NET Then
         ''' <summary>SIMD micro-kernel (2 vectors x 4 columns): C(0..mrv, 0..nrv) += alpha * (A sliver x B sliver).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub MicroKernelSimd(ByVal ap As Single(), ByVal ai As Integer, ByVal bp As Single(), ByVal bi As Integer, ByVal kc As Integer,
                                            ByVal c As Single(), ByVal ci As Integer, ByVal ldc As Integer, ByVal alpha As Single,
                                            ByVal mrv As Integer, ByVal nrv As Integer)
@@ -417,6 +424,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemmColumnMajor(ByVal ta As Boolean, ByVal tb As Boolean, ByVal m As Integer, ByVal n As Integer, ByVal k As Integer, ByVal alpha As Double,
                                            ByVal a As Double(), ByVal aOffset As Long, ByVal lda As Integer,
                                            ByVal b As Double(), ByVal bOffset As Long, ByVal ldb As Integer,
@@ -460,18 +468,18 @@ Namespace org.nd4vb.linalg.managed.kernels
 #End If
             Const nr As Integer = 4
             Dim parallelize As Boolean = KernelOptions.MaxDegreeOfParallelism > 1 AndAlso work >= KernelOptions.GemmParallelThreshold
-            Dim kcMax As Integer = Math.Min(GemmKC, k)
-            Dim ncMax As Integer = Math.Min(GemmNC, n)
+            Dim kcMax As Integer = SysMath.Min(GemmKC, k)
+            Dim ncMax As Integer = SysMath.Min(GemmNC, n)
             Dim mSlivers As Integer = (m + mr - 1) \ mr
             Dim ap As Double() = New Double(mSlivers * mr * kcMax - 1) {}
             Dim bp As Double() = New Double(((ncMax + nr - 1) \ nr) * nr * kcMax - 1) {}
-            Dim tileRows As Integer = mr * Math.Max(1, GemmTileRows \ mr)
+            Dim tileRows As Integer = mr * SysMath.Max(1, GemmTileRows \ mr)
             Dim tileCols As Integer = GemmTileCols
             For pc As Integer = 0 To k - 1 Step GemmKC
-                Dim kc As Integer = Math.Min(GemmKC, k - pc)
+                Dim kc As Integer = SysMath.Min(GemmKC, k - pc)
                 PackA(ta, a, ao, lda, m, pc, kc, mr, ap, parallelize)
                 For jc As Integer = 0 To n - 1 Step GemmNC
-                    Dim nc As Integer = Math.Min(GemmNC, n - jc)
+                    Dim nc As Integer = SysMath.Min(GemmNC, n - jc)
                     PackB(tb, b, bo, ldb, jc, nc, pc, kc, nr, bp, parallelize)
                     Dim rowTiles As Integer = (m + tileRows - 1) \ tileRows
                     Dim colTiles As Integer = (nc + tileCols - 1) \ tileCols
@@ -483,14 +491,14 @@ Namespace org.nd4vb.linalg.managed.kernels
                         Sub(tIndex As Integer)
                             Dim r0 As Integer = (tIndex \ colTiles) * tileRows
                             Dim c0 As Integer = (tIndex Mod colTiles) * tileCols
-                            Dim r1 As Integer = Math.Min(r0 + tileRows, m)
-                            Dim c1 As Integer = Math.Min(c0 + tileCols, ncl)
+                            Dim r1 As Integer = SysMath.Min(r0 + tileRows, m)
+                            Dim c1 As Integer = SysMath.Min(c0 + tileCols, ncl)
                             For colStart As Integer = c0 To c1 - 1 Step nr
                                 Dim bIndex As Integer = (colStart \ nr) * nr * kcl
-                                Dim nrv As Integer = Math.Min(nr, ncl - colStart)
+                                Dim nrv As Integer = SysMath.Min(nr, ncl - colStart)
                                 For rowStart As Integer = r0 To r1 - 1 Step mr
                                     Dim aIndex As Integer = (rowStart \ mr) * mr * kcl
-                                    Dim mrv As Integer = Math.Min(mr, m - rowStart)
+                                    Dim mrv As Integer = SysMath.Min(mr, m - rowStart)
                                     Dim cIndex As Integer = co + rowStart + (jcl + colStart) * ldc
 #If NET Then
                                     If useSimd Then
@@ -513,6 +521,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Next
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemmNaive(ByVal ta As Boolean, ByVal tb As Boolean, ByVal m As Integer, ByVal n As Integer, ByVal k As Integer, ByVal alpha As Double,
                                      ByVal a As Double(), ByVal ao As Integer, ByVal lda As Integer,
                                      ByVal b As Double(), ByVal bo As Integer, ByVal ldb As Integer,
@@ -537,6 +546,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>Packs rows [0, m) and columns [pc, pc + kc) of op(A) into slivers of mr rows: sliver s holds, for each p, its mr values contiguously (zero padded).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub PackA(ByVal ta As Boolean, ByVal a As Double(), ByVal ao As Integer, ByVal lda As Integer, ByVal m As Integer,
                                  ByVal pc As Integer, ByVal kc As Integer, ByVal mr As Integer, ByVal ap As Double(), ByVal parallelize As Boolean)
             Dim slivers As Integer = (m + mr - 1) \ mr
@@ -544,7 +554,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 Sub(s As Integer)
                     Dim baseIndex As Integer = s * mr * kc
                     Dim i0 As Integer = s * mr
-                    Dim rowsHere As Integer = Math.Min(mr, m - i0)
+                    Dim rowsHere As Integer = SysMath.Min(mr, m - i0)
                     If ta Then
                         ' op(A)(i, p) = A(p, i): contiguous along p
                         For ii As Integer = 0 To mr - 1
@@ -587,6 +597,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>Packs rows [pc, pc + kc) and columns [jc, jc + nc) of op(B) into slivers of nr columns: sliver t holds, for each p, its nr values contiguously (zero padded).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub PackB(ByVal tb As Boolean, ByVal b As Double(), ByVal bo As Integer, ByVal ldb As Integer,
                                  ByVal jc As Integer, ByVal nc As Integer, ByVal pc As Integer, ByVal kc As Integer, ByVal nr As Integer,
                                  ByVal bp As Double(), ByVal parallelize As Boolean)
@@ -595,7 +606,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 Sub(t As Integer)
                     Dim baseIndex As Integer = t * nr * kc
                     Dim j0 As Integer = jc + t * nr
-                    Dim colsHere As Integer = Math.Min(nr, jc + nc - j0)
+                    Dim colsHere As Integer = SysMath.Min(nr, jc + nc - j0)
                     For jj As Integer = 0 To nr - 1
                         Dim dst As Integer = baseIndex + jj
                         If jj >= colsHere Then
@@ -631,6 +642,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         End Sub
 
         ''' <summary>4 x 4 register-blocked micro-kernel: C(0..mrv, 0..nrv) += alpha * (A sliver x B sliver).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub MicroKernel4x4(ByVal ap As Double(), ByVal ai As Integer, ByVal bp As Double(), ByVal bi As Integer, ByVal kc As Integer,
                                           ByVal c As Double(), ByVal ci As Integer, ByVal ldc As Integer, ByVal alpha As Double,
                                           ByVal mrv As Integer, ByVal nrv As Integer)
@@ -698,6 +710,7 @@ Namespace org.nd4vb.linalg.managed.kernels
 
 #If NET Then
         ''' <summary>SIMD micro-kernel (2 vectors x 4 columns): C(0..mrv, 0..nrv) += alpha * (A sliver x B sliver).</summary>
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub MicroKernelSimd(ByVal ap As Double(), ByVal ai As Integer, ByVal bp As Double(), ByVal bi As Integer, ByVal kc As Integer,
                                            ByVal c As Double(), ByVal ci As Integer, ByVal ldc As Integer, ByVal alpha As Double,
                                            ByVal mrv As Integer, ByVal nrv As Integer)

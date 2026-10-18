@@ -34,7 +34,7 @@ Namespace org.nd4vb.linalg.factory
                         Return t
                     End If
                     Return threadRandom.Value
-                Catch e As Exception
+                Catch e As System.Exception
                     Throw New InvalidOperationException(e.Message, e)
                 End Try
             End Get
@@ -65,7 +65,7 @@ Namespace org.nd4vb.linalg.factory
                 Dim t As RandomT = DirectCast(Activator.CreateInstance(randomClass), RandomT)
                 t.setSeed(seed)
                 Return t
-            Catch e As Exception
+            Catch e As System.Exception
                 Throw New InvalidOperationException(e.Message, e)
             End Try
         End Function
@@ -84,7 +84,7 @@ Namespace org.nd4vb.linalg.factory
                     Throw New MissingMethodException(randomClass.FullName & " has no (Long, Long) constructor")
                 End If
                 Return DirectCast(constructor.Invoke(New Object() {seed, size}), RandomT)
-            Catch e As Exception
+            Catch e As System.Exception
                 Throw New InvalidOperationException(e.Message, e)
             End Try
         End Function

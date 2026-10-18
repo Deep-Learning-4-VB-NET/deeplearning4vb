@@ -1,4 +1,5 @@
 Imports System
+Imports System.Threading
 
 '
 ' *  ******************************************************************************
@@ -22,22 +23,58 @@ Imports System
 
 Namespace org.nd4vb.linalg.profiler.data.primitives
 
-
+    ''' <summary>
+    ''' An atomic counter that sorts in descending order of its value (Java <c>ComparableAtomicLong</c>, which extends
+    ''' <c>java.util.concurrent.atomic.AtomicLong</c>; here the value is updated with <see cref="Interlocked"/> and
+    ''' the <c>AtomicLong</c> methods the profiler uses are written out).
+    ''' </summary>
     Public Class ComparableAtomicLong
-        Inherits AtomicLong
         Implements IComparable(Of ComparableAtomicLong)
 
+        Private value As Long
+
         Public Sub New()
-            MyBase.New()
+            Me.New(0)
         End Sub
 
         Public Sub New(ByVal startingValue As Long)
-            MyBase.New(startingValue)
+            value = startingValue
         End Sub
 
-        Public Overridable Function CompareTo(ByVal o As ComparableAtomicLong) As Integer Implements IComparable(Of ComparableAtomicLong).CompareTo
-            Return Long.compare(o.get(), Me.get())
+        ''' <summary>The current value (Java <c>get()</c>).</summary>
+        Public Function [get]() As Long
+            Return Interlocked.Read(value)
         End Function
+
+        ''' <summary>The current value (Java <c>longValue()</c>).</summary>
+        Public Function longValue() As Long
+            Return [get]()
+        End Function
+
+        ''' <summary>Sets the value (Java <c>set(long)</c>).</summary>
+        Public Sub [set](ByVal newValue As Long)
+            Interlocked.Exchange(value, newValue)
+        End Sub
+
+        ''' <summary>Adds one and returns the new value.</summary>
+        Public Function incrementAndGet() As Long
+            Return Interlocked.Increment(value)
+        End Function
+
+        ''' <summary>Adds <paramref name="delta"/> and returns the new value.</summary>
+        Public Function addAndGet(ByVal delta As Long) As Long
+            Return Interlocked.Add(value, delta)
+        End Function
+
+        ''' <summary>Descending order: a larger value sorts first.</summary>
+        Public Overridable Function CompareTo(ByVal o As ComparableAtomicLong) As Integer Implements IComparable(Of ComparableAtomicLong).CompareTo
+            Return o.get().CompareTo(Me.get())
+        End Function
+
+        Public Overrides Function ToString() As String
+            Return [get]().ToString(Globalization.CultureInfo.InvariantCulture)
+        End Function
+
     End Class
 
 End Namespace

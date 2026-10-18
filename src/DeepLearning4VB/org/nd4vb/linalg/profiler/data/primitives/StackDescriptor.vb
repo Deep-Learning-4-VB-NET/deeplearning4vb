@@ -1,5 +1,8 @@
+Imports System
+Imports System.Diagnostics
+Imports System.Linq
+Imports System.Reflection
 Imports System.Text
-Imports Microsoft.VisualBasic
 
 '
 ' *  ******************************************************************************
@@ -23,25 +26,24 @@ Imports Microsoft.VisualBasic
 
 Namespace org.nd4vb.linalg.profiler.data.primitives
 
-
     ''' <summary>
-    ''' @author raver119
+    ''' A call stack with the profiler's own frames cut off, outermost frame first (Java <c>StackDescriptor</c>).
+    ''' Java's <c>StackTraceElement[]</c> is an array of <see cref="StackFrame"/>; an element's name is
+    ''' <c>declaringType.method:line</c> (the line is 0 without debugging symbols), and two descriptors are equal when
+    ''' their element names are equal (Java compared the elements, which compare class, method, file and line).
     ''' </summary>
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class StackDescriptor
     Public Class StackDescriptor
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter protected StackTraceElement stackTrace[];
-        Protected Friend stackTrace() As StackTraceElement
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public StackDescriptor(@NonNull StackTraceElement stack[])
-        Public Sub New(ByVal stack() As StackTraceElement)
+        Protected Friend stackTrace() As StackFrame
+        Private ReadOnly names() As String
+
+        Public Sub New(ByVal stack() As StackFrame)
+            If stack Is Nothing Then Throw New ArgumentNullException(NameOf(stack))
             ' we cut off X first elements from stack, because they belong to profiler
             ' basically, we just want to make sure, no profiler-related code is mentioned in stack trace
             Dim start As Integer = 0
             Do While start < stack.Length
-                If stack(start).getClassName().contains("DefaultOpExecutioner") Then
+                If classNameOf(stack(start)).Contains("DefaultOpExecutioner") Then
                     Exit Do
                 End If
                 start += 1
@@ -49,15 +51,17 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
 
             ' in tests it's quite possible to have no DefaultOpExecutioner calls being used
             If start = stack.Length Then
-
-                For start = 0 To stack.Length - 1
-                    If Not stack(start + 1).getClassName().contains("OpProfiler") AndAlso Not stack(start + 1).getClassName().contains("StackAggregator") Then
-                        Exit For
+                start = 0
+                ' Java read stack[start + 1] without a bounds check
+                Do While start + 1 < stack.Length
+                    If Not classNameOf(stack(start + 1)).Contains("OpProfiler") AndAlso Not classNameOf(stack(start + 1)).Contains("StackAggregator") Then
+                        Exit Do
                     End If
-                Next start
+                    start += 1
+                Loop
             Else
                 Do While start < stack.Length
-                    If Not stack(start).getClassName().contains("DefaultOpExecutioner") Then
+                    If Not classNameOf(stack(start)).Contains("DefaultOpExecutioner") Then
                         Exit Do
                     End If
                     start += 1
@@ -65,15 +69,38 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
             End If
 
             Do While start < stack.Length
-                If Not stack(start).getClassName().contains("OpProfiler") Then
+                If Not classNameOf(stack(start)).Contains("OpProfiler") Then
                     Exit Do
                 End If
                 start += 1
             Loop
 
-            Me.stackTrace = Arrays.CopyOfRange(stack, start, stack.Length)
-            ArrayUtils.reverse(Me.stackTrace)
+            Dim cut(stack.Length - start - 1) As StackFrame
+            Array.Copy(stack, start, cut, 0, cut.Length)
+            Array.Reverse(cut)
+            Me.stackTrace = cut
+            Me.names = cut.Select(Function(f) elementNameOf(f)).ToArray()
         End Sub
+
+        ''' <summary>The frames, outermost first (Java <c>getStackTrace()</c>).</summary>
+        Public Overridable Function getStackTrace() As StackFrame()
+            Return stackTrace
+        End Function
+
+        Private Shared Function classNameOf(ByVal frame As StackFrame) As String
+            Dim method As MethodBase = If(frame Is Nothing, Nothing, frame.GetMethod())
+            If method Is Nothing OrElse method.DeclaringType Is Nothing Then
+                Return ""
+            End If
+            Return If(method.DeclaringType.FullName, method.DeclaringType.Name)
+        End Function
+
+        Private Shared Function elementNameOf(ByVal frame As StackFrame) As String
+            Dim method As MethodBase = If(frame Is Nothing, Nothing, frame.GetMethod())
+            Dim methodName As String = If(method Is Nothing, "<unknown>", method.Name)
+            Dim line As Integer = If(frame Is Nothing, 0, frame.GetFileLineNumber())
+            Return classNameOf(frame) & "." & methodName & ":" & line.ToString(Globalization.CultureInfo.InvariantCulture)
+        End Function
 
         Public Overridable ReadOnly Property EntryName As String
             Get
@@ -82,43 +109,44 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
         End Property
 
         Public Overridable Function getElementName(ByVal idx As Integer) As String
-            Return stackTrace(idx).getClassName() & "." & stackTrace(idx).getMethodName() & ":" & stackTrace(idx).getLineNumber()
+            Return names(idx)
         End Function
 
         Public Overridable Function size() As Integer
-            Return stackTrace.Length
+            Return names.Length
         End Function
 
         Public Overrides Function Equals(ByVal o As Object) As Boolean
             If Me Is o Then
                 Return True
             End If
-            If o Is Nothing OrElse Me.GetType() <> o.GetType() Then
+            Dim that As StackDescriptor = TryCast(o, StackDescriptor)
+            If that Is Nothing OrElse CObj(that).GetType() IsNot CObj(Me).GetType() Then
                 Return False
             End If
 
-            Dim that As StackDescriptor = DirectCast(o, StackDescriptor)
-
-            ' Probably incorrect - comparing Object[] arrays with Arrays.equals
-            Return stackTrace.SequenceEqual(that.stackTrace)
+            Return names.SequenceEqual(that.names)
         End Function
 
         Public Overrides Function GetHashCode() As Integer
-            Return Arrays.hashCode(stackTrace)
+            Dim h As Integer = 1
+            For Each n As String In names
+                h = 31 * h + n.GetHashCode()
+            Next n
+            Return h
         End Function
 
         Public Overrides Function ToString() As String
             Dim builder As New StringBuilder()
             builder.Append("Stack trace: " & vbLf)
 
-            Dim i As Integer = 0
-            Do While i < size()
+            For i As Integer = 0 To size() - 1
                 builder.Append("         ").Append(i).Append(": ").Append(getElementName(i)).Append(vbLf)
-                i += 1
-            Loop
+            Next i
 
             Return builder.ToString()
         End Function
+
     End Class
 
 End Namespace

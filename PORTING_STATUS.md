@@ -1,6 +1,6 @@
 # Porting status
 
-Last updated: 2026-10-18 (phase 1 complete: DataVec, the data pipeline, is ported apart from the parts that need the tensor engine).
+Last updated: 2026-10-18 (phase 1 complete; phase 2, the managed tensor engine, has finished its first wave: the ND4VB foundation API, the op math registry and the managed kernels).
 
 ## Where the code came from
 
@@ -42,10 +42,10 @@ tree, which keeps the upstream Java names so each file can be compared with its 
 | Area | State |
 | --- | --- |
 | Solution and projects | SDK-style `.vbproj` files targeting **.NET Framework 4.8.1 and .NET 10** (`net481;net10.0`), `.slnx` solution for Visual Studio 2026, shared `Directory.Build.props`. |
-| Library | 549 source files, about 83,500 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`) and `datavec-local`. JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
+| Library | 762 source files, about 112,900 lines, zero errors and zero warnings on both target frameworks. Ported modules: `nd4vb-common` (all but four Java-only URL/VFS helpers), `deeplearning4vb-common`, `datavec-api` (all but the parts that need `INDArray`), `datavec-local`, and the first part of the phase-2 tensor engine (see below). JSON uses System.Text.Json (in the box on .NET 10, a NuGet package on .NET Framework). |
 | Stand-ins for Java libraries | A Joda-Time subset (`org.joda.time`), a t-digest (`com.tdunning.math.stats.TDigest`), a HyperLogLog++ distinct counter (`com.clearspring.analytics.stream.cardinality.HyperLogLogPlus`), `java.util.concurrent.TimeUnit`, and a binary object-graph serializer that replaces Java serialization and the BinaryFormatter. |
-| Tests | 146 test files, 975 tests, all passing on both target frameworks: the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
-| Everything else | Unchanged in `unported/`: 3,706 files, excluded from the build. |
+| Tests | 195 test files, 1,226 tests, all passing on both target frameworks: the upstream JUnit tests of the ported modules converted to MSTest, plus new tests for code the upstream tests did not cover. |
+| Everything else | Unchanged in `unported/`: 3,536 files, excluded from the build. |
 
 ## Module table
 
@@ -81,9 +81,21 @@ Module names are the upstream folder names under `unported/`; the ported code us
 | nd4j/nd4j-onnxruntime, nd4j-tensorflow, nd4j-tensorflow-lite, nd4j-tvm | 16 | native runtimes | Later; use the ONNX Runtime NuGet package if inference is needed |
 | deeplearning4j/deeplearning4j-common-tests | 1 | none | Test helper; with phase 3 |
 
-Next: phase 2, a managed tensor engine (`INDArray`, `DataBuffer`, shapes, the op executioner, written
-in VB on top of the ported `nd4j-api`), which unblocks the INDArray parts of DataVec, `deeplearning4j-nn`,
-`deeplearning4j-core` and everything above them.
+### Phase 2 progress: the managed tensor engine
+
+Phase 2 replaces `nd4j-api` + the native backend with the Java API ported to VB and a managed backend
+written in VB; [docs/PHASE2_DESIGN.md](docs/PHASE2_DESIGN.md) has the design and milestones. Milestone
+M1 (an `INDArray` with element-wise operations) is being built in three waves.
+
+| Wave | Contents | State |
+| --- | --- | --- |
+| 1 | Foundation API (161 files in `org.nd4vb.linalg.*` and `org.nd4vb.enums`: `INDArray`, `DataBuffer`, `DataType`, shape descriptors, memory/workspace interfaces, op interfaces, executioner interfaces, backend discovery, profiler, compression, schedules, exceptions); op math registry (`managed.ops`: the math of 171 of the 173 legacy ops, keyed by Java `opName()`, see [docs/phase2/op-inventory.md](docs/phase2/op-inventory.md)); managed kernels (`managed.storage` typed storages, `managed.kernels` element-wise, broadcast, reduction, index reduction, summary statistics, TAD, BLAS gemm/gemv/level 1, xoshiro256** RNG) | Done, 251 tests |
+| 2 | `Shape`, indexing, `ManagedDataBuffer`, memory/workspace/constant/TAD managers, op base classes and the transform, scalar, pairwise and broadcast op classes | Next |
+| 3 | `BaseNDArray`, `NDArrayFactory`, `Nd4j`, `Transforms`, the managed op executioner and backend, the M1 upstream tests, then the `INDArray` parts of DataVec | After wave 2 |
+
+After M1 come reductions, BLAS and random numbers (M2), advanced indexing (M3), neural-network kernels
+(M4) and SameDiff (M5); together they unblock `deeplearning4j-nn`, `deeplearning4j-core` and everything
+above them.
 
 ### Dropped modules
 

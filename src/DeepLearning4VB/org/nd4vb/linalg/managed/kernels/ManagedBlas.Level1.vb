@@ -2,6 +2,7 @@
 ' The Single and Double sections are the same code for the two precisions; change both together.
 
 Imports System
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -25,6 +26,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Return CSng(DotRange(x, xs, incX, y, ys, incY, 0, n))
         End Function
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Function DotRange(ByVal x As Single(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Single(), ByVal ys As Integer, ByVal incY As Integer,
                                          ByVal s As Integer, ByVal e As Integer) As Double
             Dim acc As Double = 0.0
@@ -70,6 +72,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub AxpyRange(ByVal alpha As Single, ByVal x As Single(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Single(), ByVal ys As Integer, ByVal incY As Integer,
                                      ByVal s As Integer, ByVal e As Integer)
             Dim i As Integer = s
@@ -108,6 +111,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub ScalRange(ByVal alpha As Single, ByVal x As Single(), ByVal xs As Integer, ByVal incX As Integer, ByVal s As Integer, ByVal e As Integer)
             Dim i As Integer = s
 #If NET Then
@@ -142,6 +146,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Return CSng(AsumRange(x, xs, incX, 0, n))
         End Function
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Function AsumRange(ByVal x As Single(), ByVal xs As Integer, ByVal incX As Integer, ByVal s As Integer, ByVal e As Integer) As Double
             Dim acc As Double = 0.0
             Dim i As Integer = s
@@ -158,7 +163,7 @@ Namespace org.nd4vb.linalg.managed.kernels
 #End If
             Dim xi As Integer = xs + i * incX
             Do While i < e
-                acc += Math.Abs(CDbl(x(xi)))
+                acc += SysMath.Abs(CDbl(x(xi)))
                 xi += incX
                 i += 1
             Loop
@@ -178,7 +183,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             For i As Integer = 0 To n - 1
                 Dim v As Double = x(xi)
                 If v <> 0.0 Then
-                    Dim av As Double = Math.Abs(v)
+                    Dim av As Double = SysMath.Abs(v)
                     If scale < av Then
                         Dim r As Double = scale / av
                         ssq = 1.0 + ssq * r * r
@@ -190,7 +195,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 End If
                 xi += incX
             Next
-            Return CSng(scale * Math.Sqrt(ssq))
+            Return CSng(scale * SysMath.Sqrt(ssq))
         End Function
 
         ''' <summary>
@@ -204,10 +209,10 @@ Namespace org.nd4vb.linalg.managed.kernels
             CheckVector(x.Length, n, xOffset, incX, NameOf(x))
             Dim xi As Integer = CInt(xOffset)
             Dim best As Integer = 0
-            Dim bestValue As Single = Math.Abs(x(xi))
+            Dim bestValue As Single = SysMath.Abs(x(xi))
             For i As Integer = 1 To n - 1
                 xi += incX
-                Dim v As Single = Math.Abs(x(xi))
+                Dim v As Single = SysMath.Abs(x(xi))
                 If v > bestValue Then
                     bestValue = v
                     best = i
@@ -276,6 +281,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Return CDbl(DotRange(x, xs, incX, y, ys, incY, 0, n))
         End Function
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Function DotRange(ByVal x As Double(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Double(), ByVal ys As Integer, ByVal incY As Integer,
                                          ByVal s As Integer, ByVal e As Integer) As Double
             Dim acc As Double = 0.0
@@ -321,6 +327,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub AxpyRange(ByVal alpha As Double, ByVal x As Double(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Double(), ByVal ys As Integer, ByVal incY As Integer,
                                      ByVal s As Integer, ByVal e As Integer)
             Dim i As Integer = s
@@ -359,6 +366,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub ScalRange(ByVal alpha As Double, ByVal x As Double(), ByVal xs As Integer, ByVal incX As Integer, ByVal s As Integer, ByVal e As Integer)
             Dim i As Integer = s
 #If NET Then
@@ -393,6 +401,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Return CDbl(AsumRange(x, xs, incX, 0, n))
         End Function
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Function AsumRange(ByVal x As Double(), ByVal xs As Integer, ByVal incX As Integer, ByVal s As Integer, ByVal e As Integer) As Double
             Dim acc As Double = 0.0
             Dim i As Integer = s
@@ -409,7 +418,7 @@ Namespace org.nd4vb.linalg.managed.kernels
 #End If
             Dim xi As Integer = xs + i * incX
             Do While i < e
-                acc += Math.Abs(CDbl(x(xi)))
+                acc += SysMath.Abs(CDbl(x(xi)))
                 xi += incX
                 i += 1
             Loop
@@ -429,7 +438,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             For i As Integer = 0 To n - 1
                 Dim v As Double = x(xi)
                 If v <> 0.0 Then
-                    Dim av As Double = Math.Abs(v)
+                    Dim av As Double = SysMath.Abs(v)
                     If scale < av Then
                         Dim r As Double = scale / av
                         ssq = 1.0 + ssq * r * r
@@ -441,7 +450,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 End If
                 xi += incX
             Next
-            Return CDbl(scale * Math.Sqrt(ssq))
+            Return CDbl(scale * SysMath.Sqrt(ssq))
         End Function
 
         ''' <summary>
@@ -455,10 +464,10 @@ Namespace org.nd4vb.linalg.managed.kernels
             CheckVector(x.Length, n, xOffset, incX, NameOf(x))
             Dim xi As Integer = CInt(xOffset)
             Dim best As Integer = 0
-            Dim bestValue As Double = Math.Abs(x(xi))
+            Dim bestValue As Double = SysMath.Abs(x(xi))
             For i As Integer = 1 To n - 1
                 xi += incX
-                Dim v As Double = Math.Abs(x(xi))
+                Dim v As Double = SysMath.Abs(x(xi))
                 If v > bestValue Then
                     bestValue = v
                     best = i

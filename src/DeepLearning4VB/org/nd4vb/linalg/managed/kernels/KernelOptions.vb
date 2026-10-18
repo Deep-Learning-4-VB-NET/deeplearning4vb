@@ -2,6 +2,7 @@
 
 Imports System
 Imports System.Threading.Tasks
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -47,7 +48,7 @@ Namespace org.nd4vb.linalg.managed.kernels
         ''' <summary>Parallel options honouring <see cref="MaxDegreeOfParallelism"/>.</summary>
         Friend Shared Function CreateParallelOptions() As ParallelOptions
             Dim po As New ParallelOptions()
-            po.MaxDegreeOfParallelism = Math.Max(1, MaxDegreeOfParallelism)
+            po.MaxDegreeOfParallelism = SysMath.Max(1, MaxDegreeOfParallelism)
             Return po
         End Function
 
@@ -58,9 +59,9 @@ Namespace org.nd4vb.linalg.managed.kernels
 
         ''' <summary>Number of chunks for parallel element-wise work over <paramref name="size"/> elements (chunks of at least a quarter of the threshold).</summary>
         Friend Shared Function ChunkCount(ByVal size As Long) As Integer
-            Dim maxChunks As Long = Math.Max(1, MaxDegreeOfParallelism) * 4L
-            Dim bySize As Long = Math.Max(1L, size \ Math.Max(1L, ParallelThreshold \ 4L))
-            Return CInt(Math.Max(1L, Math.Min(maxChunks, bySize)))
+            Dim maxChunks As Long = SysMath.Max(1, MaxDegreeOfParallelism) * 4L
+            Dim bySize As Long = SysMath.Max(1L, size \ SysMath.Max(1L, ParallelThreshold \ 4L))
+            Return CInt(SysMath.Max(1L, SysMath.Min(maxChunks, bySize)))
         End Function
 
     End Class

@@ -380,6 +380,88 @@ Namespace org.nd4vb.linalg.managed.storage
             Assert.AreEqual("SHORT[2]", fromArray.ToString())
         End Sub
 
+        ''' <summary>Edge values for conversions: fractions, integer boundaries of every width, half/float limits, NaN and infinities.</summary>
+        Friend Shared ReadOnly EdgeValues As Double() = {
+            0.0, 1.0, -1.0, 2.5, -2.5, 127.9, 128.0, -128.5, -129.0, 255.0, 256.0, 32767.5, -32769.0, 65535.0, 65536.0,
+            2147483647.0, 2147483648.0, -2147483649.0, 4294967295.0, 4294967296.0, 1.0E+10, 9007199254740993.0, -9.2233720368547758E+18,
+            1.0E+19, 1.0E+20, 1.0E-5, -3.0E-8, 0.1, 65504.0, 65520.0, 70000.0, 3.4E+38, 1.0E+300, -1.0E+300,
+            Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity}
+
+        ''' <summary>The documented element rule of a converting copy (see ManagedStorage.CopyTo).</summary>
+        Friend Shared Sub ConvertByRule(ByVal source As ManagedStorage, ByVal sourceIndex As Long, ByVal destination As ManagedStorage, ByVal destinationIndex As Long)
+            Select Case destination.StorageType
+                Case StorageType.FLOAT, StorageType.HALF, StorageType.BFLOAT16
+                    destination.SetFloat(destinationIndex, source.GetFloat(sourceIndex))
+                Case StorageType.DOUBLE
+                    destination.SetDouble(destinationIndex, source.GetDouble(sourceIndex))
+                Case Else
+                    If StorageTypes.IsFloatingPoint(source.StorageType) Then
+                        destination.SetDouble(destinationIndex, source.GetDouble(sourceIndex))
+                    Else
+                        destination.SetLong(destinationIndex, source.GetLong(sourceIndex))
+                    End If
+            End Select
+        End Sub
+
+        ''' <summary>Asserts that two storages of the same type hold identical elements (raw values, so NaN and bit patterns compare exactly).</summary>
+        Friend Shared Sub AssertSameElements(ByVal expected As ManagedStorage, ByVal actual As ManagedStorage, ByVal label As String)
+            Assert.AreEqual(expected.StorageType, actual.StorageType, label)
+            CollectionAssert.AreEqual(expected.RawArray, actual.RawArray, label)
+        End Sub
+
+        <TestMethod>
+        Public Sub BulkConversionsFollowTheElementRuleForEveryTypePair()
+            Dim numeric As New System.Collections.Generic.List(Of StorageType)()
+            For Each t As StorageType In AllTypes
+                If t <> StorageType.UTF8 Then
+                    numeric.Add(t)
+                End If
+            Next
+            Dim n As Integer = EdgeValues.Length
+            For Each st As StorageType In numeric
+                Dim src As ManagedStorage = ManagedStorage.Create(st, n + 2)
+                For i As Integer = 0 To n - 1
+                    src.SetDouble(i + 1, EdgeValues(i))
+                Next
+                For Each dt As StorageType In numeric
+                    Dim label As String = st.ToString() & " -> " & dt.ToString()
+                    Dim expected As ManagedStorage = ManagedStorage.Create(dt, n + 1)
+                    For i As Integer = 0 To n - 1
+                        ConvertByRule(src, i + 1, expected, i)
+                    Next
+                    Dim viaCopy As ManagedStorage = ManagedStorage.Create(dt, n + 1)
+                    src.CopyTo(1, viaCopy, 0, n)
+                    AssertSameElements(expected, viaCopy, label & " (CopyTo)")
+                    Dim viaConvert As ManagedStorage = src.Clone(1, n).ConvertTo(dt)
+                    For i As Integer = 0 To n - 1
+                        Assert.AreEqual(expected.GetString(i), viaConvert.GetString(i), label & " (ConvertTo) element " & i)
+                    Next
+                    ' to and from .NET arrays of the destination's element type (HALF/BFLOAT16 arrays are raw bits)
+                    If dt <> StorageType.HALF AndAlso dt <> StorageType.BFLOAT16 Then
+                        Dim arr As Array = Array.CreateInstance(StorageTypes.ElementType(dt), n)
+                        src.CopyToArray(1, arr, 0, n)
+                        Dim wrapped As ManagedStorage = ManagedStorage.Wrap(arr)
+                        Dim halfSource As Boolean = st = StorageType.HALF OrElse st = StorageType.BFLOAT16
+                        For i As Integer = 0 To n - 1
+                            If halfSource AndAlso dt = StorageType.UINT16 Then
+                                ' documented: HALF/BFLOAT16 into a UShort() array copies the raw bit patterns
+                                Assert.AreEqual(src.HalfBits(i + 1), wrapped.UShorts(i), label & " (CopyToArray raw bits) element " & i)
+                            Else
+                                Assert.AreEqual(expected.GetString(i), wrapped.GetString(i), label & " (CopyToArray) element " & i)
+                            End If
+                        Next
+                        Dim back As ManagedStorage = ManagedStorage.Create(dt, n + 1)
+                        back.CopyFrom(src.RawArray, 1, 0, n)
+                        If st = StorageType.HALF OrElse st = StorageType.BFLOAT16 Then
+                            ' a UShort() source is read as UINT16 values, not as half bit patterns
+                            Continue For
+                        End If
+                        AssertSameElements(expected, back, label & " (CopyFrom)")
+                    End If
+                Next
+            Next
+        End Sub
+
         <TestMethod>
         Public Sub StorageTypeFacts()
             Assert.IsTrue(StorageTypes.IsFloatingPoint(StorageType.HALF))

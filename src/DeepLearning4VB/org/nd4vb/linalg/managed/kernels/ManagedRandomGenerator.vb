@@ -1,6 +1,7 @@
 ' DeepLearning4VB: the managed random number generator of the ND4VB engine.
 
 Imports System
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -17,6 +18,9 @@ Namespace org.nd4vb.linalg.managed.kernels
     ''' <para>Instances are not thread-safe; use one generator per thread or synchronize.</para>
     ''' </remarks>
     Public NotInheritable Class ManagedRandomGenerator
+
+        ''' <summary>The name of the algorithm (generator and seeding), recorded so that saved seeds can be tied to the sequence they produce.</summary>
+        Public Const AlgorithmName As String = "xoshiro256**/splitmix64"
 
         Private _seed As Long
         Private _s0 As ULong
@@ -64,6 +68,19 @@ Namespace org.nd4vb.linalg.managed.kernels
         ''' <summary>The seed last set.</summary>
         Public Function getSeed() As Long
             Return _seed
+        End Function
+
+        ''' <summary>The algorithm name (<see cref="AlgorithmName"/>).</summary>
+        Public ReadOnly Property Algorithm As String
+            Get
+                Return AlgorithmName
+            End Get
+        End Property
+
+        ''' <summary>An independent generator in the same state (same seed, position and cached Gaussian), whose sequence continues exactly as this one's would.</summary>
+        Public Function Copy() As ManagedRandomGenerator
+            Dim c As ManagedRandomGenerator = DirectCast(MemberwiseClone(), ManagedRandomGenerator)
+            Return c
         End Function
 
         ''' <summary>Number of 64-bit outputs drawn since the seed was set.</summary>
@@ -150,7 +167,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 v2 = 2.0 * nextDouble() - 1.0
                 s = v1 * v1 + v2 * v2
             Loop While s >= 1.0 OrElse s = 0.0
-            Dim multiplier As Double = Math.Sqrt(-2.0 * Math.Log(s) / s)
+            Dim multiplier As Double = SysMath.Sqrt(-2.0 * SysMath.Log(s) / s)
             _nextGaussian = v2 * multiplier
             _haveNextGaussian = True
             Return v1 * multiplier

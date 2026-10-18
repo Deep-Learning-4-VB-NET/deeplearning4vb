@@ -84,8 +84,6 @@ Namespace org.nd4vb.linalg.api.buffer
 
         Sub read(ByVal s As DataInputStream, ByVal allocationMode As AllocationMode, ByVal length As Long, ByVal dataType As DataType)
 
-'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-'ORIGINAL LINE: void write(DataOutputStream out) throws IOException;
         Sub write(ByVal [out] As DataOutputStream)
 
         ''' <summary>

@@ -7,8 +7,9 @@ Namespace org.nd4vb.linalg.api.iter
 
     ''' <summary>
     ''' Java's coordinate iterator over a shape (Java <c>FlatIterator</c>), kept as it is: it counts
-    ''' <c>prod(shape)</c> steps but only advances the last coordinate (the Java implementation never carries into
-    ''' the other dimensions). Java's <c>Iterator</c> methods are kept and the class is also an
+    ''' <c>prod(shape)</c> steps but only advances the first coordinate, and once that coordinate passes the end of its
+    ''' dimension the next step fails with an <see cref="IndexOutOfRangeException"/> (Java:
+    ''' <c>ArrayIndexOutOfBoundsException</c>); only one-dimensional shapes iterate completely. Java's <c>Iterator</c> methods are kept and the class is also an
     ''' <see cref="IEnumerator(Of T)"/>; the returned array is the iterator's own coordinate buffer.
     ''' </summary>
     Public Class FlatIterator

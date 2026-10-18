@@ -23,87 +23,78 @@ Imports System.Collections.Generic
 
 Namespace org.nd4vb.linalg.profiler.data.primitives
 
-
-
+    ''' <summary>
+    ''' The recorded times of one profiler key (Java <c>TimeSet</c>). Sets sort in descending order of their sum.
+    ''' Like Java, <see cref="getMedian"/> returns the middle element in insertion order (the times are not sorted).
+    ''' </summary>
     Public Class TimeSet
         Implements IComparable(Of TimeSet)
 
-        Private times As IList(Of ComparableAtomicLong) = New List(Of ComparableAtomicLong)()
-'JAVA TO VB CONVERTER NOTE: The field sum was renamed since Visual Basic does not allow fields to have the same name as other class members:
-        Private sum_Conflict As Long = 0
+        Private ReadOnly times As New List(Of ComparableAtomicLong)()
+        Private sumValue As Long = 0
 
         Public Overridable Sub addTime(ByVal time As Long)
             times.Add(New ComparableAtomicLong(time))
-            sum_Conflict = 0
+            sumValue = 0
         End Sub
 
-        Public Overridable ReadOnly Property Sum As Long
-            Get
-                If sum_Conflict = 0 Then
-                    For Each time As ComparableAtomicLong In times
-                        sum_Conflict += time.get()
-                    Next time
-                End If
-
-                Return sum_Conflict
-            End Get
-        End Property
-
-        Public Overridable ReadOnly Property Average As Long
-            Get
-                If times.Count = 0 Then
-                    Return 0L
-                End If
-
-                Dim tSum As Long = Sum
-                Return tSum \ times.Count
-            End Get
-        End Property
-
-        Public Overridable ReadOnly Property Median As Long
-            Get
-                If times.Count = 0 Then
-                    Return 0L
-                End If
-
-                Return times(times.Count \ 2).longValue()
-            End Get
-        End Property
-
-        Public Overridable ReadOnly Property Minimum As Long
-            Get
-                Dim min As Long = Long.MaxValue
+        Public Overridable Function getSum() As Long
+            If sumValue = 0 Then
                 For Each time As ComparableAtomicLong In times
-                    If time.get() < min Then
-                        min = time.get()
-                    End If
+                    sumValue += time.get()
                 Next time
+            End If
 
-                Return min
-            End Get
-        End Property
+            Return sumValue
+        End Function
 
-        Public Overridable ReadOnly Property Maximum As Long
-            Get
-                Dim max As Long = Long.MinValue
-                For Each time As ComparableAtomicLong In times
-                    If time.get() > max Then
-                        max = time.get()
-                    End If
-                Next time
+        Public Overridable Function getAverage() As Long
+            If times.Count = 0 Then
+                Return 0L
+            End If
 
-                Return max
-            End Get
-        End Property
+            Dim tSum As Long = getSum()
+            Return tSum \ times.Count
+        End Function
+
+        Public Overridable Function getMedian() As Long
+            If times.Count = 0 Then
+                Return 0L
+            End If
+
+            Return times(times.Count \ 2).longValue()
+        End Function
+
+        Public Overridable Function getMinimum() As Long
+            Dim min As Long = Long.MaxValue
+            For Each time As ComparableAtomicLong In times
+                If time.get() < min Then
+                    min = time.get()
+                End If
+            Next time
+
+            Return min
+        End Function
+
+        Public Overridable Function getMaximum() As Long
+            Dim max As Long = Long.MinValue
+            For Each time As ComparableAtomicLong In times
+                If time.get() > max Then
+                    max = time.get()
+                End If
+            Next time
+
+            Return max
+        End Function
 
         Public Overridable Function size() As Integer
             Return times.Count
         End Function
 
-
         Public Overridable Function CompareTo(ByVal o As TimeSet) As Integer Implements IComparable(Of TimeSet).CompareTo
-            Return Long.compare(o.Sum, Me.Sum)
+            Return o.getSum().CompareTo(Me.getSum())
         End Function
+
     End Class
 
 End Namespace

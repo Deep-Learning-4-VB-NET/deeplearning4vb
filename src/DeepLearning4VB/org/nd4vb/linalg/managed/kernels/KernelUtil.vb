@@ -2,6 +2,7 @@
 
 Imports System
 Imports DeepLearning4VB.org.nd4vb.linalg.managed.storage
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -67,6 +68,40 @@ Namespace org.nd4vb.linalg.managed.kernels
                 Throw New ArgumentException(aName & " has " & a & " elements but " & bName & " has " & b)
             End If
         End Sub
+
+        ''' <summary>
+        ''' True when the op is integer arithmetic in libnd4j's sense: z and every input are integer
+        ''' storages (signed or unsigned, not BOOL). Such results wrap around like Java's integer
+        ''' arithmetic (see <see cref="StoreResult"/>); with any floating-point or BOOL operand the result
+        ''' is a cast and saturates.
+        ''' </summary>
+        Friend Shared Function IsIntegerOp(ByVal z As ManagedStorage, ByVal ParamArray inputs As ManagedStorage()) As Boolean
+            If Not StorageTypes.IsInteger(z.StorageType) Then
+                Return False
+            End If
+            For Each s As ManagedStorage In inputs
+                If s IsNot Nothing AndAlso Not StorageTypes.IsInteger(s.StorageType) Then
+                    Return False
+                End If
+            Next
+            Return True
+        End Function
+
+        ''' <summary>
+        ''' Stores a result computed in double. For an integer op (<paramref name="wrap"/>) a finite value
+        ''' inside the signed 64-bit range is truncated to a long and narrowed with wrap-around (Java's
+        ''' <c>(int) (long) v</c>, so 127 + 1 stored in a BYTE gives -128); anything else, and every
+        ''' non-integer op, goes through <see cref="ManagedStorage.SetDouble"/> (Java's saturating cast).
+        ''' </summary>
+        Friend Shared Sub StoreResult(ByVal z As ManagedStorage, ByVal index As Long, ByVal value As Double, ByVal wrap As Boolean)
+            If wrap AndAlso value > -TwoPow63 AndAlso value < TwoPow63 Then
+                z.SetLong(index, CLng(SysMath.Truncate(value)))
+            Else
+                z.SetDouble(index, value)
+            End If
+        End Sub
+
+        Private Const TwoPow63 As Double = 9.2233720368547758E+18
 
         ''' <summary>A dense row-major rank-1 shape info of length <paramref name="n"/>.</summary>
         Friend Shared Function VectorInfo(ByVal n As Long) As Long()

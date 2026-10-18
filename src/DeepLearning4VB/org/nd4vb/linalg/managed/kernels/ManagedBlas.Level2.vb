@@ -83,6 +83,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemvRows(ByVal rows As Integer, ByVal cols As Integer, ByVal alpha As Single, ByVal a As Single(), ByVal ao As Integer, ByVal lda As Integer,
                                     ByVal x As Single(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Single(), ByVal ys As Integer, ByVal incY As Integer,
                                     ByVal r0 As Integer, ByVal r1 As Integer)
@@ -190,6 +191,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             End If
         End Sub
 
+        <Global.System.Runtime.CompilerServices.MethodImpl(HotLoop)>
         Private Shared Sub GemvRows(ByVal rows As Integer, ByVal cols As Integer, ByVal alpha As Double, ByVal a As Double(), ByVal ao As Integer, ByVal lda As Integer,
                                     ByVal x As Double(), ByVal xs As Integer, ByVal incX As Integer, ByVal y As Double(), ByVal ys As Integer, ByVal incY As Integer,
                                     ByVal r0 As Integer, ByVal r1 As Integer)

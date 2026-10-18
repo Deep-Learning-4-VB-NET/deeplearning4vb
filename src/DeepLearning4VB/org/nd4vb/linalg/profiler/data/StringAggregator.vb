@@ -31,6 +31,9 @@ Imports ArrayUtil = DeepLearning4VB.org.nd4vb.common.util.ArrayUtil
 Namespace org.nd4vb.linalg.profiler.data
 
 
+    ''' <summary>
+    ''' Collects timings per string key (Java <c>StringAggregator</c>).
+    ''' </summary>
     Public Class StringAggregator
 
         Private times As IDictionary(Of String, TimeSet) = New ConcurrentDictionary(Of String, TimeSet)()
@@ -122,25 +125,24 @@ Namespace org.nd4vb.linalg.profiler.data
 
             Dim sortedTimes As IDictionary(Of String, TimeSet) = ArrayUtil.sortMapByValue(times)
 
-            Dim sum As New AtomicLong(0)
+            Dim lSum As Long = 0
             For Each key As String In sortedTimes.Keys
-                sum.addAndGet(getSum(key))
+                lSum += getSum(key)
             Next key
-            Dim lSum As Long = sum.get()
             builder.Append("Total time spent: ").Append(lSum \ 1000000).Append(" ms.").Append(vbLf)
 
             For Each key As String In sortedTimes.Keys
                 Dim currentSum As Long = getSum(key)
                 Dim perc As Single
                 If lSum = 0 Then
-                    perc = 0.0f
+                    perc = 0.0F
                 Else
-                    perc = currentSum * 100.0f / sum.get()
+                    perc = CSng(currentSum * 100.0F / lSum)
                 End If
 
                 Dim sumMs As Long = currentSum \ 1000000
 
-                builder.Append(key).Append("  >>> ").Append(" perc: ").Append(perc).Append(" ").Append("Time spent: ").Append(sumMs).Append(" ms")
+                builder.Append(key).Append("  >>> ").Append(" perc: ").Append(Arrays.JavaFloatToString(perc)).Append(" ").Append("Time spent: ").Append(sumMs).Append(" ms")
 
                 builder.Append(vbLf)
             Next key

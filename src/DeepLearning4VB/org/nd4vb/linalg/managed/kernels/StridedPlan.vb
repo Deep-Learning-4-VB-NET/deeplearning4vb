@@ -3,6 +3,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Threading.Tasks
+Imports SysMath = System.Math
 
 Namespace org.nd4vb.linalg.managed.kernels
 
@@ -79,7 +80,7 @@ Namespace org.nd4vb.linalg.managed.kernels
                 For i As Integer = 1 To dims.Count - 1
                     Dim cur As Integer = dims(i)
                     Dim j As Integer = i - 1
-                    Do While j >= 0 AndAlso Math.Abs(key(dims(j))) < Math.Abs(key(cur))
+                    Do While j >= 0 AndAlso SysMath.Abs(key(dims(j))) < SysMath.Abs(key(cur))
                         dims(j + 1) = dims(j)
                         j -= 1
                     Loop
@@ -214,7 +215,7 @@ Namespace org.nd4vb.linalg.managed.kernels
             Next
             Dim remaining As Long = count
             Do
-                Dim runLength As Long = Math.Min(inner - col, remaining)
+                Dim runLength As Long = SysMath.Min(inner - col, remaining)
                 For k As Integer = 0 To ops - 1
                     bases(k) = rowBase(k) + col * InnerStrides(k)
                 Next
@@ -278,8 +279,8 @@ Namespace org.nd4vb.linalg.managed.kernels
             If Not KernelOptions.ShouldParallelize(n) Then
                 Return 1
             End If
-            Dim size As Long = Math.Max(16L, KernelOptions.ReductionChunkSize)
-            Return CInt(Math.Max(1L, (n + size - 1) \ size))
+            Dim size As Long = SysMath.Max(16L, KernelOptions.ReductionChunkSize)
+            Return CInt(SysMath.Max(1L, (n + size - 1) \ size))
         End Function
 
         ''' <summary>First element of chunk <paramref name="c"/> of <paramref name="chunks"/>.</summary>
@@ -287,8 +288,8 @@ Namespace org.nd4vb.linalg.managed.kernels
             If chunks = 1 Then
                 Return If(c = 0, 0L, n)
             End If
-            Dim size As Long = Math.Max(16L, KernelOptions.ReductionChunkSize)
-            Return Math.Min(n, c * size)
+            Dim size As Long = SysMath.Max(16L, KernelOptions.ReductionChunkSize)
+            Return SysMath.Min(n, c * size)
         End Function
 
     End Class

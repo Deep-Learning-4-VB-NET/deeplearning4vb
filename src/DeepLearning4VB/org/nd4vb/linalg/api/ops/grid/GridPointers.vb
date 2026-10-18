@@ -94,7 +94,7 @@ Namespace org.nd4vb.linalg.api.ops.grid
             Return Nothing
         End Function
 
-        Public Overridable Shadows Function getType() As Op.Type?
+        Public Overridable Shadows Function [getType]() As Op.Type?
             Return type
         End Function
 

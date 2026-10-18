@@ -1,3 +1,4 @@
+Imports System
 Imports System.Collections.Generic
 Imports System.Text
 
@@ -23,21 +24,27 @@ Imports System.Text
 
 Namespace org.nd4vb.linalg.profiler.data.primitives
 
-
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Slf4j public class StackTree
+    ''' <summary>
+    ''' A tree of the call stacks the profiler has seen, with a counter per node (Java <c>StackTree</c>).
+    ''' </summary>
     Public Class StackTree
+
         Protected Friend basement As IDictionary(Of String, StackNode) = New Dictionary(Of String, StackNode)()
-        Protected Friend eventsCount As New AtomicLong(0)
+        Protected Friend eventsCount As New ComparableAtomicLong(0)
         Protected Friend branches As IDictionary(Of StackDescriptor, ComparableAtomicLong) = New Dictionary(Of StackDescriptor, ComparableAtomicLong)()
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: @Getter protected StackDescriptor lastDescriptor;
         Protected Friend lastDescriptor As StackDescriptor
 
         Public Sub New()
-            '
         End Sub
 
+        ''' <summary>The descriptor consumed last (Java <c>getLastDescriptor()</c>).</summary>
+        Public Overridable Function getLastDescriptor() As StackDescriptor
+            Return lastDescriptor
+        End Function
+
+        ''' <summary>
+        ''' Writes the tree to the console. Like Java, the returned string is empty (the nodes print themselves).
+        ''' </summary>
         Public Overridable Function renderTree(ByVal displayCounts As Boolean) As String
             Dim builder As New StringBuilder()
 
@@ -49,15 +56,12 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
             Return builder.ToString()
         End Function
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public void consumeStackTrace(@NonNull StackDescriptor descriptor)
         Public Overridable Sub consumeStackTrace(ByVal descriptor As StackDescriptor)
             consumeStackTrace(descriptor, 1)
         End Sub
 
-'JAVA TO VB CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
-'ORIGINAL LINE: public void consumeStackTrace(@NonNull StackDescriptor descriptor, long increment)
         Public Overridable Sub consumeStackTrace(ByVal descriptor As StackDescriptor, ByVal increment As Long)
+            If descriptor Is Nothing Then Throw New ArgumentNullException(NameOf(descriptor))
             eventsCount.incrementAndGet()
 
             lastDescriptor = descriptor
@@ -94,6 +98,7 @@ Namespace org.nd4vb.linalg.profiler.data.primitives
             eventsCount.set(0)
             branches.Clear()
         End Sub
+
     End Class
 
 End Namespace
