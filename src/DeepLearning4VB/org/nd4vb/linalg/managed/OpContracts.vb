@@ -31,6 +31,20 @@ Namespace org.nd4vb.linalg.managed
         Public Property Merge As PairwiseFunction
         ''' <summary>Final value from the accumulator and the number of elements reduced (mean divides by n, norm2 takes the square root).</summary>
         Public Property PostProcess As Func(Of Double, Long, Double(), Double)
+        ''' <summary>
+        ''' Optional per-reduction state (libnd4j's extra-params accumulators, used by cosine similarity, cosine distance
+        ''' and Jaccard distance). When set, the kernel calls it once for every reduction it runs (every TAD, and every
+        ''' parallel partial of a TAD) and passes the returned array as <c>extraArgs</c> to <c>Map</c>/<c>MapPair</c>,
+        ''' <c>Update</c> and <c>PostProcess</c> of that reduction, so delegates may write into it. Nothing means the op
+        ''' is stateless and every delegate receives the op's shared, read-only extra arguments.
+        ''' </summary>
+        Public Property CreateState As Func(Of Double(), Double())
+        ''' <summary>
+        ''' Optional, set together with <see cref="CreateState"/>: folds a partial reduction's state (second argument) into
+        ''' the total's (first argument). The kernel calls it whenever <see cref="Merge"/> combines two partials, and passes
+        ''' the merged state to <see cref="PostProcess"/>.
+        ''' </summary>
+        Public Property MergeState As Action(Of Double(), Double())
     End Class
 
     ''' <summary>
